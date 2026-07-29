@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Vidriera.Api.Common;
@@ -8,6 +9,13 @@ using Vidriera.Application.Catalogs;
 using Vidriera.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Render (y plataformas similares) inyectan el puerto real via la variable PORT.
+var port = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrEmpty(port))
+{
+    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+}
 
 builder.Services.AddControllers(options =>
 {
@@ -71,7 +79,19 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// Detrás del proxy de Render la conexión externa ya es HTTPS aunque Kestrel reciba HTTP;
+// sin esto, UseHttpsRedirection entraría en loop de redirects.
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
+    KnownIPNetworks = { },
+    KnownProxies = { }
+});
+
+if (app.Environment.IsProduction())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseCors();
 
