@@ -38,7 +38,10 @@ public class R2BlobStorageService : IBlobStorageService
             Key = key,
             InputStream = content,
             ContentType = contentType,
-            AutoCloseStream = false
+            AutoCloseStream = false,
+            // R2 no implementa ningún modo de firma "streaming" (con o sin trailer) del SDK;
+            // solo el clásico payload firmado de una. Esto evita que el SDK intente chunkear.
+            DisablePayloadSigning = true
         };
 
         await _client.PutObjectAsync(request, cancellationToken);
