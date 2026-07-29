@@ -32,7 +32,6 @@ public class ProductMapping : ClassMapping<Product>
         Property(x => x.Code, m =>
         {
             m.Column("code");
-            m.NotNullable(true);
             m.Length(100);
         });
 

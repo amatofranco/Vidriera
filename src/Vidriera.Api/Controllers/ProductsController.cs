@@ -26,6 +26,20 @@ public class ProductsController : ControllerBase
         return Ok(result);
     }
 
+    [HttpPost]
+    [RequestSizeLimit(20_000_000)]
+    public async Task<ActionResult<ProductDto>> CreateProduct([FromForm] CreateProductRequest request, CancellationToken cancellationToken)
+    {
+        var companyId = User.GetCompanyId();
+
+        await using var stream = request.File.OpenReadStream();
+        var result = await _mediator.Send(
+            new CreateProductCommand(companyId, stream, request.File.FileName, request.Name),
+            cancellationToken);
+
+        return CreatedAtAction(nameof(GetProducts), null, result);
+    }
+
     [HttpPut("{id:guid}/stock")]
     public async Task<IActionResult> UpdateStock(Guid id, [FromBody] UpdateStockRequest request, CancellationToken cancellationToken)
     {
@@ -48,3 +62,5 @@ public class ProductsController : ControllerBase
 }
 
 public record UpdateStockRequest(bool HasStock);
+
+public record CreateProductRequest(IFormFile File, string? Name);
