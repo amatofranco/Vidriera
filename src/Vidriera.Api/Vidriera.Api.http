@@ -1,0 +1,6 @@
+@Vidriera.Api_HostAddress = http://localhost:5116
+
+GET {{Vidriera.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

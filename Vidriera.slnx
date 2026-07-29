@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Vidriera.Api/Vidriera.Api.csproj" />
+    <Project Path="src/Vidriera.Application/Vidriera.Application.csproj" />
+    <Project Path="src/Vidriera.Domain/Vidriera.Domain.csproj" />
+    <Project Path="src/Vidriera.Infrastructure/Vidriera.Infrastructure.csproj" />
+  </Folder>
+</Solution>
