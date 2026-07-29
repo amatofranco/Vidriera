@@ -1,3 +1,4 @@
+using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Microsoft.Extensions.Options;
@@ -18,7 +19,12 @@ public class R2BlobStorageService : IBlobStorageService
         var config = new AmazonS3Config
         {
             ServiceURL = r2.ServiceUrl,
-            ForcePathStyle = true
+            ForcePathStyle = true,
+            // R2 no soporta el streaming con checksum-por-trailer que el SDK
+            // usa por default desde 3.7.300+ ("STREAMING-AWS4-HMAC-SHA256-PAYLOAD-TRAILER
+            // not implemented"); con esto vuelve al firmado clásico.
+            RequestChecksumCalculation = RequestChecksumCalculation.WHEN_REQUIRED,
+            ResponseChecksumValidation = ResponseChecksumValidation.WHEN_REQUIRED
         };
 
         _client = new AmazonS3Client(r2.AccessKeyId, r2.SecretAccessKey, config);
