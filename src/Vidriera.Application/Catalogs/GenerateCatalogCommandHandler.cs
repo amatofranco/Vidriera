@@ -66,8 +66,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
 
         var mergedPdf = await _pdfMergeService.MergeAsync(pdfBytesInOrder, cancellationToken);
 
-        var catalogId = Guid.NewGuid();
-        var generatedBlobKey = $"companies/{request.CompanyId}/catalogs/{catalogId}.pdf";
+        var generatedBlobKey = $"companies/{request.CompanyId}/catalogs/{Guid.NewGuid()}.pdf";
 
         using (var mergedStream = new MemoryStream(mergedPdf))
         {
@@ -82,7 +81,6 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
 
         var catalog = new GeneratedCatalog
         {
-            Id = catalogId,
             Company = company,
             User = user,
             GeneratedAt = now,
@@ -104,7 +102,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         await _session.SaveAsync(catalog, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
-        var url = $"{_options.PublicBaseUrl.TrimEnd('/')}/api/catalogs/{catalogId}";
-        return new GenerateCatalogResult(catalogId, url, expiresAt);
+        var url = $"{_options.PublicBaseUrl.TrimEnd('/')}/api/catalogs/{catalog.Id}";
+        return new GenerateCatalogResult(catalog.Id, url, expiresAt);
     }
 }
