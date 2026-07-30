@@ -71,7 +71,7 @@ public static class CatalogHtmlBuilder
                 document.getElementById("prev").addEventListener("click", () => { if (pageNum > 1) { pageNum--; renderPage(pageNum); } });
                 document.getElementById("next").addEventListener("click", () => { if (pdfDoc && pageNum < pdfDoc.numPages) { pageNum++; renderPage(pageNum); } });
 
-                pdfjsLib.getDocument(url).promise.then(doc => {
+                pdfjsLib.getDocument({ url }).promise.then(doc => {
                     pdfDoc = doc;
                     renderPage(pageNum);
                 });
