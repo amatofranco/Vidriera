@@ -9,6 +9,7 @@ import {
   deleteProduct,
   generateCatalog,
   getProducts,
+  reorderProducts,
   updateStock,
   uploadSheet,
   type GenerateCatalogResult,
@@ -33,6 +34,9 @@ export default function ProductsPage() {
 
   const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const [search, setSearch] = useState("");
+  const [draggedId, setDraggedId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !auth) {
@@ -83,7 +87,7 @@ export default function ProductsPage() {
     setError(null);
     try {
       const created = await createProduct(auth.token, newFile, newName.trim() || undefined);
-      setProducts((prev) => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)));
+      setProducts((prev) => [...prev, created]);
       setNewFile(null);
       setNewName("");
       if (newFileInputRef.current) newFileInputRef.current.value = "";
@@ -121,6 +125,36 @@ export default function ProductsPage() {
     }
   }
 
+  async function persistReorder(newOrder: Product[]) {
+    if (!auth) return;
+    try {
+      await reorderProducts(auth.token, newOrder.map((p) => p.id));
+    } catch {
+      setError("No se pudo guardar el nuevo orden.");
+      loadProducts(auth.token);
+    }
+  }
+
+  function handleDrop(targetId: string) {
+    if (!draggedId || draggedId === targetId) {
+      setDraggedId(null);
+      return;
+    }
+
+    setProducts((prev) => {
+      const fromIndex = prev.findIndex((p) => p.id === draggedId);
+      const toIndex = prev.findIndex((p) => p.id === targetId);
+      if (fromIndex === -1 || toIndex === -1) return prev;
+
+      const next = [...prev];
+      const [moved] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, moved);
+      persistReorder(next);
+      return next;
+    });
+    setDraggedId(null);
+  }
+
   async function handleGenerateCatalog() {
     if (!auth) return;
     const selected = products.filter((p) => p.hasStock && p.hasSheet);
@@ -144,6 +178,9 @@ export default function ProductsPage() {
   }
 
   const selectableCount = products.filter((p) => p.hasStock && p.hasSheet).length;
+  const filteredProducts = products.filter((p) =>
+    p.name.toLowerCase().includes(search.trim().toLowerCase())
+  );
 
   return (
     <div className="mx-auto w-full max-w-3xl flex-1 px-4 py-8">
@@ -207,14 +244,42 @@ export default function ProductsPage() {
         </p>
       )}
 
+      {products.length > 0 && (
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Buscar por nombre..."
+          className="mb-3 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+        />
+      )}
+
       {isLoading ? (
         <p className="text-zinc-500">Cargando productos...</p>
       ) : products.length === 0 ? (
         <p className="text-zinc-500">Todavía no hay productos cargados.</p>
+      ) : filteredProducts.length === 0 ? (
+        <p className="mb-8 text-zinc-500">Ningún producto coincide con la búsqueda.</p>
       ) : (
         <ul className="mb-8 divide-y divide-zinc-200 rounded-lg border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
-          {products.map((product) => (
-            <li key={product.id} className="flex items-center justify-between gap-4 px-4 py-3">
+          {filteredProducts.map((product) => (
+            <li
+              key={product.id}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={() => handleDrop(product.id)}
+              className={`flex items-center justify-between gap-4 px-4 py-3 ${
+                draggedId === product.id ? "opacity-40" : ""
+              }`}
+            >
+              <span
+                draggable
+                onDragStart={() => setDraggedId(product.id)}
+                onDragEnd={() => setDraggedId(null)}
+                title="Arrastrar para reordenar"
+                className="cursor-grab select-none text-zinc-400 dark:text-zinc-600"
+              >
+                ⠿
+              </span>
               <label className="flex flex-1 items-center gap-3">
                 <input
                   type="checkbox"

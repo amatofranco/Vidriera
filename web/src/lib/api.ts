@@ -94,6 +94,15 @@ export function deleteProduct(token: string, productId: string) {
   });
 }
 
+export function reorderProducts(token: string, productIds: string[]) {
+  return request<void>("/api/products/reorder", {
+    method: "PUT",
+    token,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ productIds }),
+  });
+}
+
 export function uploadSheet(token: string, productId: string, file: File) {
   const formData = new FormData();
   formData.append("file", file);
