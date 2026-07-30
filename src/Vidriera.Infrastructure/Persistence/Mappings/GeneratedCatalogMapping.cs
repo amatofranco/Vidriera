@@ -41,11 +41,10 @@ public class GeneratedCatalogMapping : ClassMapping<GeneratedCatalog>
 
         Property(x => x.Status, m => m.Column("status"));
 
-        Bag(x => x.Products, m =>
+        Property(x => x.ProductsSnapshotJson, m =>
         {
-            m.Key(k => k.Column("generated_catalog_id"));
-            m.Inverse(true);
-            m.Cascade(Cascade.All | Cascade.DeleteOrphans);
-        }, r => r.OneToMany());
+            m.Column("products_snapshot");
+            m.NotNullable(true);
+        });
     }
 }

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using MediatR;
 using Microsoft.Extensions.Options;
 using NHibernate;
@@ -79,6 +80,11 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         var now = DateTime.UtcNow;
         var expiresAt = now.AddDays(_options.ExpirationDays);
 
+        var productsSnapshot = request.ProductIds
+            .Select(id => productsById[id])
+            .Select(p => new CatalogProductSnapshot(p.Id, p.Name, p.Code))
+            .ToList();
+
         var catalog = new GeneratedCatalog
         {
             Company = company,
@@ -86,17 +92,9 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             GeneratedAt = now,
             GeneratedPdfBlobKey = generatedBlobKey,
             ExpiresAt = expiresAt,
-            Status = CatalogStatus.Active
+            Status = CatalogStatus.Active,
+            ProductsSnapshotJson = JsonSerializer.Serialize(productsSnapshot)
         };
-
-        foreach (var productId in request.ProductIds)
-        {
-            catalog.Products.Add(new GeneratedCatalogProduct
-            {
-                GeneratedCatalog = catalog,
-                Product = productsById[productId]
-            });
-        }
 
         using var transaction = _session.BeginTransaction();
         await _session.SaveAsync(catalog, cancellationToken);

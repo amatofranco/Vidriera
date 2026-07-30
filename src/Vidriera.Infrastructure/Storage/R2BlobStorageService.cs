@@ -57,4 +57,9 @@ public class R2BlobStorageService : IBlobStorageService
         memoryStream.Position = 0;
         return memoryStream;
     }
+
+    public async Task DeleteAsync(string key, CancellationToken cancellationToken)
+    {
+        await _client.DeleteObjectAsync(_bucketName, key, cancellationToken);
+    }
 }

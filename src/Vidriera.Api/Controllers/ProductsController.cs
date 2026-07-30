@@ -59,6 +59,14 @@ public class ProductsController : ControllerBase
 
         return NoContent();
     }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> DeleteProduct(Guid id, CancellationToken cancellationToken)
+    {
+        var companyId = User.GetCompanyId();
+        await _mediator.Send(new DeleteProductCommand(companyId, id), cancellationToken);
+        return NoContent();
+    }
 }
 
 public record UpdateStockRequest(bool HasStock);
