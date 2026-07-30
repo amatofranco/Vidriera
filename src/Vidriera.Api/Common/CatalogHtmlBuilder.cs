@@ -48,7 +48,6 @@ public static class CatalogHtmlBuilder
             <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.7.76/pdf.min.js"></script>
             <script>
                 const url = "{{fileUrl}}";
-                const pdfjsLib = window["pdfjs-dist/build/pdf"];
                 pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.7.76/pdf.worker.min.js";
 
                 let pdfDoc = null;
