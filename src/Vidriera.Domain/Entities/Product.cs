@@ -10,4 +10,5 @@ public class Product
     public virtual string? SheetPdfOriginalName { get; set; }
     public virtual bool HasStock { get; set; }
     public virtual bool IsActive { get; set; }
+    public virtual int SortOrder { get; set; }
 }

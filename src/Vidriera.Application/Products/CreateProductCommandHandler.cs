@@ -1,5 +1,6 @@
 using MediatR;
 using NHibernate;
+using NHibernate.Linq;
 using Vidriera.Application.Abstractions;
 using Vidriera.Application.Common.Exceptions;
 using Vidriera.Domain.Entities;
@@ -29,12 +30,18 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
             ? Path.GetFileNameWithoutExtension(request.OriginalFileName)
             : request.Name;
 
+        var nextSortOrder = await _session.Query<Product>()
+            .Where(p => p.Company.Id == request.CompanyId)
+            .Select(p => (int?)p.SortOrder)
+            .MaxAsync(cancellationToken) ?? -1;
+
         var product = new Product
         {
             Company = company,
             Name = name,
             HasStock = false,
-            IsActive = true
+            IsActive = true,
+            SortOrder = nextSortOrder + 1
         };
 
         using var transaction = _session.BeginTransaction();

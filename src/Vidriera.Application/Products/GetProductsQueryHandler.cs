@@ -18,7 +18,7 @@ public class GetProductsQueryHandler : IRequestHandler<GetProductsQuery, IReadOn
     {
         var products = await _session.Query<Product>()
             .Where(p => p.Company.Id == request.CompanyId && p.IsActive)
-            .OrderBy(p => p.Name)
+            .OrderBy(p => p.SortOrder)
             .ToListAsync(cancellationToken);
 
         return products

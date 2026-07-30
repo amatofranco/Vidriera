@@ -67,8 +67,18 @@ public class ProductsController : ControllerBase
         await _mediator.Send(new DeleteProductCommand(companyId, id), cancellationToken);
         return NoContent();
     }
+
+    [HttpPut("reorder")]
+    public async Task<IActionResult> Reorder([FromBody] ReorderProductsRequest request, CancellationToken cancellationToken)
+    {
+        var companyId = User.GetCompanyId();
+        await _mediator.Send(new ReorderProductsCommand(companyId, request.ProductIds), cancellationToken);
+        return NoContent();
+    }
 }
 
 public record UpdateStockRequest(bool HasStock);
 
 public record CreateProductRequest(IFormFile File, string? Name);
+
+public record ReorderProductsRequest(IReadOnlyList<Guid> ProductIds);
