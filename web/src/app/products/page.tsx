@@ -165,14 +165,20 @@ export default function ProductsPage() {
           <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
             Ficha PDF (nuevo producto)
           </label>
-          <input
-            ref={newFileInputRef}
-            type="file"
-            accept="application/pdf"
-            required
-            onChange={(e) => setNewFile(e.target.files?.[0] ?? null)}
-            className="text-sm text-zinc-700 dark:text-zinc-300"
-          />
+          <label className="flex cursor-pointer items-center gap-2 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800">
+            <span className="rounded bg-zinc-200 px-2 py-0.5 text-xs font-medium text-zinc-800 dark:bg-zinc-700 dark:text-zinc-100">
+              Elegir archivo
+            </span>
+            <span className="truncate">{newFile ? newFile.name : "Ningún archivo elegido"}</span>
+            <input
+              ref={newFileInputRef}
+              type="file"
+              accept="application/pdf"
+              required
+              onChange={(e) => setNewFile(e.target.files?.[0] ?? null)}
+              className="hidden"
+            />
+          </label>
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
