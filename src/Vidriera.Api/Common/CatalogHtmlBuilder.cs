@@ -45,10 +45,11 @@ public static class CatalogHtmlBuilder
                 </div>
                 <div class="expires">{{expiresText}}</div>
             </main>
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.7.76/pdf.min.js"></script>
-            <script>
+            <script type="module">
+                import * as pdfjsLib from "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.1.200/pdf.min.mjs";
+
                 const url = "{{fileUrl}}";
-                pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.7.76/pdf.worker.min.js";
+                pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.1.200/pdf.worker.min.mjs";
 
                 let pdfDoc = null;
                 let pageNum = 1;
