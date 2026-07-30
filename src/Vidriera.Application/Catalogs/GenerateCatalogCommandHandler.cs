@@ -95,7 +95,6 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         {
             catalog.Products.Add(new GeneratedCatalogProduct
             {
-                Id = Guid.NewGuid(),
                 GeneratedCatalog = catalog,
                 Product = productsById[productId]
             });
