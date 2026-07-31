@@ -26,6 +26,18 @@ public class CompanyMapping : ClassMapping<Company>
         Property(x => x.IsActive, m => m.Column("is_active"));
         Property(x => x.CreatedAt, m => m.Column("created_at"));
 
+        Property(x => x.LogoBlobKey, m =>
+        {
+            m.Column("logo_blob_key");
+            m.Length(500);
+        });
+
+        Property(x => x.LogoContentType, m =>
+        {
+            m.Column("logo_content_type");
+            m.Length(100);
+        });
+
         Bag(x => x.Users, m =>
         {
             m.Key(k => k.Column("company_id"));
