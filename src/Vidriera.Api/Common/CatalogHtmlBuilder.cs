@@ -37,6 +37,18 @@ public static class CatalogHtmlBuilder
                 .toolbar button:disabled { opacity: .4; cursor: default; }
                 .toolbar-divider { height: 1px; background: #48484a; margin: 2px 4px; }
 
+                .side-nav {
+                    position: fixed; top: 50%; transform: translateY(-50%);
+                    width: 52px; height: 52px; border-radius: 50%;
+                    background: rgba(35,35,37,.7); color: white; border: none;
+                    font-size: 20px; line-height: 1; cursor: pointer; z-index: 15;
+                    display: flex; align-items: center; justify-content: center;
+                }
+                .side-nav:hover:not(:disabled) { background: rgba(72,72,74,.85); }
+                .side-nav:disabled { opacity: 0; cursor: default; }
+                #prev { left: 90px; }
+                #next { right: 24px; }
+
                 .stage { min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 16px 0; box-sizing: border-box; }
                 #flipbook { visibility: hidden; filter: drop-shadow(0 18px 30px rgba(0,0,0,.5)); }
                 .page-content { width: 100%; height: 100%; background: white; }
@@ -65,14 +77,13 @@ public static class CatalogHtmlBuilder
         </head>
         <body>
             <div id="toolbar" class="toolbar" style="display: none;">
-                <button id="prev" title="Anterior">&#9664;</button>
-                <button id="next" title="Siguiente">&#9654;</button>
-                <div class="toolbar-divider"></div>
                 <button id="lens-btn" title="Lupa">&#128269;</button>
                 <button id="fullscreen-btn" title="Pantalla completa">&#9974;</button>
                 <button id="print-btn" title="Imprimir">&#128424;</button>
                 <a id="download-btn" href="{{fileUrl}}" download title="Descargar PDF">&#11015;</a>
             </div>
+            <button id="prev" class="side-nav" title="Anterior" style="display: none;">&#9664;</button>
+            <button id="next" class="side-nav" title="Siguiente" style="display: none;">&#9654;</button>
             <div id="loading" class="loading">
                 <div class="spinner"></div>
                 <span id="loading-text">Preparando catálogo...</span>
@@ -270,6 +281,8 @@ public static class CatalogHtmlBuilder
                         img.style.visibility = "visible";
                         loadingEl.style.display = "none";
                         toolbarEl.style.display = "flex";
+                        prevBtn.style.display = "flex";
+                        nextBtn.style.display = "flex";
                         prevBtn.disabled = true;
                         nextBtn.disabled = true;
                         pageInfoEl.textContent = "1 / 1";
@@ -348,6 +361,8 @@ public static class CatalogHtmlBuilder
 
                     loadingEl.style.display = "none";
                     toolbarEl.style.display = "flex";
+                    prevBtn.style.display = "flex";
+                    nextBtn.style.display = "flex";
                     pageInfoEl.style.display = "block";
                     flipbookEl.style.visibility = "visible";
                 });
