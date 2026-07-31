@@ -38,7 +38,7 @@ public static class CatalogHtmlBuilder
                 .toolbar-divider { height: 1px; background: #48484a; margin: 2px 4px; }
 
                 .stage { min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 16px 0; box-sizing: border-box; }
-                #flipbook { visibility: hidden; filter: drop-shadow(0 18px 30px rgba(0,0,0,.5)); }
+                #flipbook { visibility: hidden; filter: drop-shadow(0 18px 30px rgba(0,0,0,.5)); overflow: hidden; }
                 .page-content { width: 100%; height: 100%; background: white; }
                 .page-content img { width: 100%; height: 100%; display: block; user-select: none; }
                 #static-page { visibility: hidden; box-shadow: 0 18px 30px rgba(0,0,0,.5); border-radius: 2px; }
