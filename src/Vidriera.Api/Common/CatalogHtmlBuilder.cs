@@ -38,7 +38,7 @@ public static class CatalogHtmlBuilder
                 .toolbar-divider { height: 1px; background: #48484a; margin: 2px 4px; }
 
                 .stage { min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 16px 0; box-sizing: border-box; }
-                #flipbook { visibility: hidden; filter: drop-shadow(0 18px 30px rgba(0,0,0,.5)); overflow: hidden; }
+                #flipbook { visibility: hidden; filter: drop-shadow(0 18px 30px rgba(0,0,0,.5)); }
                 .page-content { width: 100%; height: 100%; background: white; }
                 .page-content img { width: 100%; height: 100%; display: block; user-select: none; }
                 #static-page { visibility: hidden; box-shadow: 0 18px 30px rgba(0,0,0,.5); border-radius: 2px; }
@@ -314,6 +314,14 @@ public static class CatalogHtmlBuilder
                         });
                         pageFlip.loadFromHTML(pageDivs);
                         pageFlip.on("flip", updateInfo);
+                        // The fold/shadow rendering briefly extends past the book's own box
+                        // mid-flip -- clipping that (e.g. overflow:hidden on #flipbook) cuts off
+                        // part of the visible page, so instead just suspend the body's own
+                        // scrollbar for the moment the flip is actually in motion, then hand
+                        // scrolling back to the browser zoom behavior once it settles on "read".
+                        pageFlip.on("changeState", (e) => {
+                            document.body.style.overflow = e.data === "read" ? "auto" : "hidden";
+                        });
                         if (wasOpenIndex > 0) pageFlip.turnToPage(wasOpenIndex);
                         updateInfo();
                     }
