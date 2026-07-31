@@ -105,7 +105,26 @@ public static class CatalogHtmlBuilder
                     }
                 });
                 printBtn.addEventListener("click", () => {
-                    window.open(url, "_blank");
+                    // A hidden iframe loading the raw PDF, print()'d directly on its contentWindow,
+                    // goes straight to the print dialog -- window.open() just opens a new tab (same
+                    // as the download button) and never triggers printing on its own.
+                    let printFrame = document.getElementById("print-frame");
+                    if (!printFrame) {
+                        printFrame = document.createElement("iframe");
+                        printFrame.id = "print-frame";
+                        printFrame.style.position = "fixed";
+                        printFrame.style.right = "0";
+                        printFrame.style.bottom = "0";
+                        printFrame.style.width = "0";
+                        printFrame.style.height = "0";
+                        printFrame.style.border = "0";
+                        document.body.appendChild(printFrame);
+                    }
+                    printFrame.onload = () => {
+                        printFrame.contentWindow.focus();
+                        printFrame.contentWindow.print();
+                    };
+                    printFrame.src = url;
                 });
 
                 const LENS_SIZE = 220;
