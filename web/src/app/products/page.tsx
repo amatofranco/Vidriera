@@ -172,24 +172,35 @@ export default function ProductsPage() {
     }
   }
 
+  function moveProduct(id: string, toIndex: number) {
+    setProducts((prev) => {
+      const fromIndex = prev.findIndex((p) => p.id === id);
+      if (fromIndex === -1) return prev;
+      const clampedToIndex = Math.min(Math.max(toIndex, 0), prev.length - 1);
+      if (clampedToIndex === fromIndex) return prev;
+
+      const next = [...prev];
+      const [moved] = next.splice(fromIndex, 1);
+      next.splice(clampedToIndex, 0, moved);
+      persistReorder(next);
+      return next;
+    });
+  }
+
   function handleDrop(targetId: string) {
     if (!draggedId || draggedId === targetId) {
       setDraggedId(null);
       return;
     }
-
-    setProducts((prev) => {
-      const fromIndex = prev.findIndex((p) => p.id === draggedId);
-      const toIndex = prev.findIndex((p) => p.id === targetId);
-      if (fromIndex === -1 || toIndex === -1) return prev;
-
-      const next = [...prev];
-      const [moved] = next.splice(fromIndex, 1);
-      next.splice(toIndex, 0, moved);
-      persistReorder(next);
-      return next;
-    });
+    const toIndex = products.findIndex((p) => p.id === targetId);
+    if (toIndex !== -1) moveProduct(draggedId, toIndex);
     setDraggedId(null);
+  }
+
+  function handleMoveToPosition(productId: string, rawValue: string) {
+    const position = parseInt(rawValue, 10);
+    if (Number.isNaN(position)) return;
+    moveProduct(productId, position - 1);
   }
 
   async function handleGenerateCatalog() {
@@ -343,6 +354,19 @@ export default function ProductsPage() {
               >
                 ⠿
               </span>
+              <input
+                key={`${product.id}-${products.findIndex((p) => p.id === product.id)}`}
+                type="number"
+                min={1}
+                max={products.length}
+                defaultValue={products.findIndex((p) => p.id === product.id) + 1}
+                onBlur={(e) => handleMoveToPosition(product.id, e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") e.currentTarget.blur();
+                }}
+                title="Posición en el orden"
+                className="w-12 rounded border border-zinc-300 px-1 py-0.5 text-center text-xs text-zinc-700 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+              />
               <label className="flex flex-1 items-center gap-3">
                 <input
                   type="checkbox"
