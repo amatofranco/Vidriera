@@ -188,8 +188,11 @@ public static class CatalogHtmlBuilder
                     const relY = (e.clientY - rect.top) / rect.height;
                     const srcW = el.naturalWidth || el.width;
                     const srcH = el.naturalHeight || el.height;
-                    const cropW = srcW / LENS_ZOOM;
-                    const cropH = srcH / LENS_ZOOM;
+                    // Magnification has to be relative to the element's current on-screen size
+                    // (which already reflects the book zoom), not its raw source resolution --
+                    // otherwise zooming the book in changes (and can invert) the lens's own zoom.
+                    const cropW = (LENS_SIZE / LENS_ZOOM) * (srcW / rect.width);
+                    const cropH = (LENS_SIZE / LENS_ZOOM) * (srcH / rect.height);
                     const sx = Math.min(Math.max(relX * srcW - cropW / 2, 0), Math.max(srcW - cropW, 0));
                     const sy = Math.min(Math.max(relY * srcH - cropH / 2, 0), Math.max(srcH - cropH, 0));
 
