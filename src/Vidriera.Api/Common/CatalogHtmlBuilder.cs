@@ -52,6 +52,13 @@ public static class CatalogHtmlBuilder
                 .nav button:hover:not(:disabled) { background: #48484a; }
                 .nav button:disabled { opacity: .4; cursor: default; }
                 .expires { font-size: 13px; color: #a1a1a6; }
+
+                #lens-btn.active { background: #0a84ff; }
+                #lens {
+                    position: fixed; width: 220px; height: 220px; border-radius: 50%;
+                    border: 3px solid #f5f5f7; box-shadow: 0 6px 20px rgba(0,0,0,.6);
+                    pointer-events: none; display: none; z-index: 50; background: white;
+                }
             </style>
         </head>
         <body>
@@ -67,6 +74,7 @@ public static class CatalogHtmlBuilder
                         <button id="zoom-in" title="Acercar">+</button>
                     </div>
                     <div class="toolbar-group">
+                        <button id="lens-btn" title="Lupa">&#128269; Lupa</button>
                         <button id="fullscreen-btn" title="Pantalla completa">&#9974; Pantalla completa</button>
                         <button id="print-btn" title="Imprimir">&#128424; Imprimir</button>
                     </div>
@@ -78,6 +86,7 @@ public static class CatalogHtmlBuilder
                 <div class="stage">
                     <div id="flipbook"></div>
                 </div>
+                <canvas id="lens"></canvas>
                 <div id="nav" class="nav" style="display: none;">
                     <button id="prev">&larr; Anterior</button>
                     <span id="page-info"></span>
@@ -104,6 +113,9 @@ public static class CatalogHtmlBuilder
                 const zoomLevelEl = document.getElementById("zoom-level");
                 const fullscreenBtn = document.getElementById("fullscreen-btn");
                 const printBtn = document.getElementById("print-btn");
+                const lensBtn = document.getElementById("lens-btn");
+                const lensCanvas = document.getElementById("lens");
+                const lensCtx = lensCanvas.getContext("2d");
 
                 const MIN_ZOOM = 0.6;
                 const MAX_ZOOM = 1.8;
@@ -113,6 +125,9 @@ public static class CatalogHtmlBuilder
                 function applyZoom() {
                     const target = document.getElementById("static-page") || flipbookEl;
                     target.style.transform = `scale(${zoom})`;
+                    // transform doesn't grow the layout box, so anything below (nav, expires)
+                    // would otherwise sit under the visually-enlarged book past 100%.
+                    target.style.marginBottom = `${Math.max(0, target.offsetHeight * (zoom - 1))}px`;
                     zoomLevelEl.textContent = `${Math.round(zoom * 100)}%`;
                     zoomOutBtn.disabled = zoom <= MIN_ZOOM;
                     zoomInBtn.disabled = zoom >= MAX_ZOOM;
@@ -135,6 +150,61 @@ public static class CatalogHtmlBuilder
                 });
                 printBtn.addEventListener("click", () => {
                     window.open(url, "_blank");
+                });
+
+                const LENS_SIZE = 220;
+                const LENS_ZOOM = 2.5;
+                let lensActive = false;
+
+                lensBtn.addEventListener("click", () => {
+                    lensActive = !lensActive;
+                    lensBtn.classList.toggle("active", lensActive);
+                    document.body.style.cursor = lensActive ? "none" : "";
+                    if (!lensActive) lensCanvas.style.display = "none";
+                });
+
+                function findLensSourceAt(clientX, clientY) {
+                    const staticImg = document.getElementById("static-page");
+                    const candidates = staticImg ? [staticImg] : Array.from(flipbookEl.querySelectorAll("canvas"));
+                    for (const el of candidates) {
+                        const rect = el.getBoundingClientRect();
+                        if (clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom) {
+                            return { el, rect };
+                        }
+                    }
+                    return null;
+                }
+
+                document.addEventListener("mousemove", (e) => {
+                    if (!lensActive) return;
+                    const hit = findLensSourceAt(e.clientX, e.clientY);
+                    if (!hit) {
+                        lensCanvas.style.display = "none";
+                        return;
+                    }
+
+                    const { el, rect } = hit;
+                    const relX = (e.clientX - rect.left) / rect.width;
+                    const relY = (e.clientY - rect.top) / rect.height;
+                    const srcW = el.naturalWidth || el.width;
+                    const srcH = el.naturalHeight || el.height;
+                    const cropW = srcW / LENS_ZOOM;
+                    const cropH = srcH / LENS_ZOOM;
+                    const sx = Math.min(Math.max(relX * srcW - cropW / 2, 0), Math.max(srcW - cropW, 0));
+                    const sy = Math.min(Math.max(relY * srcH - cropH / 2, 0), Math.max(srcH - cropH, 0));
+
+                    lensCanvas.width = LENS_SIZE;
+                    lensCanvas.height = LENS_SIZE;
+                    lensCtx.clearRect(0, 0, LENS_SIZE, LENS_SIZE);
+                    lensCtx.drawImage(el, sx, sy, cropW, cropH, 0, 0, LENS_SIZE, LENS_SIZE);
+
+                    lensCanvas.style.left = `${e.clientX - LENS_SIZE / 2}px`;
+                    lensCanvas.style.top = `${e.clientY - LENS_SIZE / 2}px`;
+                    lensCanvas.style.display = "block";
+                });
+
+                document.addEventListener("mouseleave", () => {
+                    lensCanvas.style.display = "none";
                 });
 
                 async function renderAllPages(doc) {
