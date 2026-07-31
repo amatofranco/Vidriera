@@ -16,6 +16,7 @@ public static class CatalogHtmlBuilder
             <meta charset="utf-8" />
             <title>Catálogo</title>
             <meta name="viewport" content="width=device-width, initial-scale=1" />
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/src/Style/stPageFlip.css" />
             <style>
                 html, body { height: 100%; margin: 0; background: #1c1c1e; color: #f5f5f7; font-family: system-ui, sans-serif; }
                 body { overflow: auto; }
@@ -37,7 +38,10 @@ public static class CatalogHtmlBuilder
                 .toolbar-divider { height: 1px; background: #48484a; margin: 2px 4px; }
 
                 .stage { min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 16px 0; box-sizing: border-box; }
-                #page-canvas { visibility: hidden; box-shadow: 0 18px 30px rgba(0,0,0,.5); border-radius: 2px; }
+                #flipbook { visibility: hidden; filter: drop-shadow(0 18px 30px rgba(0,0,0,.5)); }
+                .page-content { width: 100%; height: 100%; background: white; }
+                .page-content img { width: 100%; height: 100%; display: block; user-select: none; }
+                #static-page { visibility: hidden; box-shadow: 0 18px 30px rgba(0,0,0,.5); border-radius: 2px; }
 
                 .loading {
                     position: fixed; inset: 0; display: flex; flex-direction: column;
@@ -71,21 +75,22 @@ public static class CatalogHtmlBuilder
             </div>
             <div id="loading" class="loading">
                 <div class="spinner"></div>
-                <span>Preparando catálogo...</span>
+                <span id="loading-text">Preparando catálogo...</span>
             </div>
             <div class="stage">
-                <canvas id="page-canvas"></canvas>
+                <div id="flipbook"></div>
             </div>
             <canvas id="lens"></canvas>
             <div id="page-info" class="page-info"></div>
+            <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
             <script type="module">
                 import * as pdfjsLib from "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.1.200/pdf.min.mjs";
                 pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.1.200/pdf.worker.min.mjs";
 
                 const url = "{{fileUrl}}";
                 const loadingEl = document.getElementById("loading");
-                const pageCanvas = document.getElementById("page-canvas");
-                const pageCtx = pageCanvas.getContext("2d");
+                const loadingTextEl = document.getElementById("loading-text");
+                const flipbookEl = document.getElementById("flipbook");
                 const pageInfoEl = document.getElementById("page-info");
                 const prevBtn = document.getElementById("prev");
                 const nextBtn = document.getElementById("next");
@@ -138,18 +143,31 @@ public static class CatalogHtmlBuilder
                     if (!lensActive) lensCanvas.style.display = "none";
                 });
 
+                function findLensSourceAt(clientX, clientY) {
+                    const staticImg = document.getElementById("static-page");
+                    const candidates = staticImg ? [staticImg] : Array.from(flipbookEl.querySelectorAll("img"));
+                    for (const el of candidates) {
+                        const rect = el.getBoundingClientRect();
+                        if (clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom) {
+                            return { el, rect };
+                        }
+                    }
+                    return null;
+                }
+
                 document.addEventListener("mousemove", (e) => {
                     if (!lensActive) return;
-                    const rect = pageCanvas.getBoundingClientRect();
-                    if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) {
+                    const hit = findLensSourceAt(e.clientX, e.clientY);
+                    if (!hit) {
                         lensCanvas.style.display = "none";
                         return;
                     }
 
+                    const { el, rect } = hit;
                     const relX = (e.clientX - rect.left) / rect.width;
                     const relY = (e.clientY - rect.top) / rect.height;
-                    const srcW = pageCanvas.width;
-                    const srcH = pageCanvas.height;
+                    const srcW = el.naturalWidth || el.width;
+                    const srcH = el.naturalHeight || el.height;
                     const cropW = (LENS_SIZE / LENS_ZOOM) * (srcW / rect.width);
                     const cropH = (LENS_SIZE / LENS_ZOOM) * (srcH / rect.height);
                     const sx = Math.min(Math.max(relX * srcW - cropW / 2, 0), Math.max(srcW - cropW, 0));
@@ -158,7 +176,7 @@ public static class CatalogHtmlBuilder
                     lensCanvas.width = LENS_SIZE;
                     lensCanvas.height = LENS_SIZE;
                     lensCtx.clearRect(0, 0, LENS_SIZE, LENS_SIZE);
-                    lensCtx.drawImage(pageCanvas, sx, sy, cropW, cropH, 0, 0, LENS_SIZE, LENS_SIZE);
+                    lensCtx.drawImage(el, sx, sy, cropW, cropH, 0, 0, LENS_SIZE, LENS_SIZE);
 
                     lensCanvas.style.left = `${e.clientX - LENS_SIZE / 2}px`;
                     lensCanvas.style.top = `${e.clientY - LENS_SIZE / 2}px`;
@@ -188,90 +206,142 @@ public static class CatalogHtmlBuilder
                     return { width: Math.round(w), height: Math.round(h) };
                 }
 
-                let doc = null;
-                let pageAspect = 1;
-                let currentIndex = 0;
-                let renderToken = 0;
-                let lastCssSize = null;
-                let lastDpr = window.devicePixelRatio || 1;
-
-                function updateInfo() {
-                    pageInfoEl.textContent = `${currentIndex + 1} / ${doc.numPages}`;
-                    prevBtn.disabled = currentIndex <= 0;
-                    nextBtn.disabled = currentIndex >= doc.numPages - 1;
-                }
-
-                async function renderCurrentPage(recomputeFit) {
-                    // No animation library in the way anymore: this canvas IS the on-screen
-                    // element, rendered fresh at whatever resolution is actually needed, so it
-                    // can never go soft/blurry the way a pre-baked bitmap fed into a third-party
-                    // viewer could.
-                    //
-                    // recomputeFit distinguishes a real window resize (re-fit to the new
-                    // viewport, default 100% state always fills the screen with no scrollbar)
-                    // from a browser zoom change (Ctrl+/Ctrl-, which also fires "resize" and
-                    // changes devicePixelRatio): zoom should behave like normal page content --
-                    // genuinely bigger, scrolling if it no longer fits -- so it keeps the last
-                    // fitted CSS size and only re-renders at the sharper resolution zoom implies.
-                    const token = ++renderToken;
-                    const page = await doc.getPage(currentIndex + 1);
-                    const naturalViewport = page.getViewport({ scale: 1 });
-                    pageAspect = naturalViewport.width / naturalViewport.height;
-
-                    if (recomputeFit || !lastCssSize) {
-                        lastCssSize = computeFitSize(pageAspect);
-                    }
-                    const { width: cssWidth, height: cssHeight } = lastCssSize;
-
+                async function renderAllPages(doc, targetCssWidth) {
+                    // HTML mode (loadFromHTML below) draws real <img> elements, not page-flip's own
+                    // internal canvas -- that canvas never accounted for devicePixelRatio at all
+                    // (verified directly in its bundle), which is why the earlier canvas-mode
+                    // version looked soft no matter how sharp the source image was. Real <img>
+                    // elements scale the way the browser natively scales any image, which does
+                    // respect devicePixelRatio.
                     const dpr = window.devicePixelRatio || 1;
                     const LENS_HEADROOM = 1.6;
-                    const targetPixelWidth = Math.min(cssWidth * dpr * LENS_HEADROOM, 3400);
-                    const scale = targetPixelWidth / naturalViewport.width;
-                    const viewport = page.getViewport({ scale });
-
-                    pageCanvas.width = viewport.width;
-                    pageCanvas.height = viewport.height;
-                    pageCtx.fillStyle = "#ffffff";
-                    pageCtx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
-                    await page.render({ canvasContext: pageCtx, viewport }).promise;
-                    if (token !== renderToken) return; // a newer render (resize/navigate) superseded this one
-
-                    pageCanvas.style.width = `${cssWidth}px`;
-                    pageCanvas.style.height = `${cssHeight}px`;
-                    pageCanvas.style.visibility = "visible";
-                    updateInfo();
+                    const targetPixelWidth = Math.min(targetCssWidth * dpr * LENS_HEADROOM, 3400);
+                    const images = [];
+                    for (let i = 1; i <= doc.numPages; i++) {
+                        const page = await doc.getPage(i);
+                        const naturalViewport = page.getViewport({ scale: 1 });
+                        const scale = targetPixelWidth / naturalViewport.width;
+                        const viewport = page.getViewport({ scale });
+                        const canvas = document.createElement("canvas");
+                        canvas.width = viewport.width;
+                        canvas.height = viewport.height;
+                        const ctx = canvas.getContext("2d");
+                        ctx.fillStyle = "#ffffff";
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        await page.render({ canvasContext: ctx, viewport }).promise;
+                        images.push(canvas.toDataURL("image/png"));
+                        loadingTextEl.textContent = `Preparando catálogo... (${i}/${doc.numPages})`;
+                    }
+                    return images;
                 }
 
-                prevBtn.addEventListener("click", () => {
-                    if (currentIndex > 0) {
-                        currentIndex--;
-                        renderCurrentPage(false);
-                    }
-                });
-                nextBtn.addEventListener("click", () => {
-                    if (currentIndex < doc.numPages - 1) {
-                        currentIndex++;
-                        renderCurrentPage(false);
-                    }
-                });
+                pdfjsLib.getDocument({ url }).promise.then(async (doc) => {
+                    const firstPage = await doc.getPage(1);
+                    const baseViewport = firstPage.getViewport({ scale: 1 });
+                    const pageAspect = baseViewport.width / baseViewport.height;
+                    const fitSize = computeFitSize(pageAspect);
+                    const images = await renderAllPages(doc, fitSize.width);
+                    let lastDpr = window.devicePixelRatio || 1;
 
-                let resizeTimer = null;
-                window.addEventListener("resize", () => {
-                    clearTimeout(resizeTimer);
-                    resizeTimer = setTimeout(() => {
-                        const dpr = window.devicePixelRatio || 1;
-                        const isZoomChange = Math.abs(dpr - lastDpr) > 0.01;
-                        lastDpr = dpr;
-                        renderCurrentPage(!isZoomChange);
-                    }, 200);
-                });
+                    if (images.length <= 1) {
+                        const img = document.createElement("img");
+                        img.id = "static-page";
+                        img.src = images[0];
+                        flipbookEl.replaceWith(img);
 
-                pdfjsLib.getDocument({ url }).promise.then(async (d) => {
-                    doc = d;
-                    await renderCurrentPage(true);
+                        function fitStatic() {
+                            const { width, height } = computeFitSize(pageAspect);
+                            img.style.width = `${width}px`;
+                            img.style.height = `${height}px`;
+                        }
+                        fitStatic();
+
+                        let resizeTimer = null;
+                        window.addEventListener("resize", () => {
+                            clearTimeout(resizeTimer);
+                            resizeTimer = setTimeout(() => {
+                                const dpr = window.devicePixelRatio || 1;
+                                const isZoomChange = Math.abs(dpr - lastDpr) > 0.01;
+                                lastDpr = dpr;
+                                if (!isZoomChange) fitStatic();
+                            }, 200);
+                        });
+
+                        img.style.visibility = "visible";
+                        loadingEl.style.display = "none";
+                        toolbarEl.style.display = "flex";
+                        prevBtn.disabled = true;
+                        nextBtn.disabled = true;
+                        pageInfoEl.textContent = "1 / 1";
+                        pageInfoEl.style.display = "block";
+                        return;
+                    }
+
+                    let pageFlip = null;
+
+                    function updateInfo() {
+                        const current = pageFlip.getCurrentPageIndex() + 1;
+                        pageInfoEl.textContent = `${current} / ${images.length}`;
+                        prevBtn.disabled = current <= 1;
+                        nextBtn.disabled = current >= images.length;
+                    }
+
+                    function buildPageFlip() {
+                        const { width, height } = computeFitSize(pageAspect);
+                        const wasOpenIndex = pageFlip ? pageFlip.getCurrentPageIndex() : 0;
+                        if (pageFlip) {
+                            pageFlip.destroy();
+                            flipbookEl.innerHTML = "";
+                        }
+
+                        pageFlip = new St.PageFlip(flipbookEl, {
+                            width,
+                            height,
+                            size: "fixed",
+                            showCover: true,
+                            maxShadowOpacity: 0.6,
+                            mobileScrollSupport: false,
+                        });
+
+                        const pageDivs = images.map((src) => {
+                            const div = document.createElement("div");
+                            div.className = "page-content";
+                            const img = document.createElement("img");
+                            img.src = src;
+                            div.appendChild(img);
+                            flipbookEl.appendChild(div);
+                            return div;
+                        });
+                        pageFlip.loadFromHTML(pageDivs);
+                        pageFlip.on("flip", updateInfo);
+                        if (wasOpenIndex > 0) pageFlip.turnToPage(wasOpenIndex);
+                        updateInfo();
+                    }
+
+                    buildPageFlip();
+
+                    // Only a genuine window resize rebuilds the book at a new fit size. A browser
+                    // zoom change (Ctrl+/Ctrl-, which also fires "resize" and changes
+                    // devicePixelRatio) is left alone so the native zoom just scales the existing
+                    // CSS pixels up for real -- consistent with the single-page viewer's behavior.
+                    let resizeTimer = null;
+                    window.addEventListener("resize", () => {
+                        clearTimeout(resizeTimer);
+                        resizeTimer = setTimeout(() => {
+                            const dpr = window.devicePixelRatio || 1;
+                            const isZoomChange = Math.abs(dpr - lastDpr) > 0.01;
+                            lastDpr = dpr;
+                            if (!isZoomChange) buildPageFlip();
+                        }, 200);
+                    });
+
+                    prevBtn.addEventListener("click", () => pageFlip.flipPrev());
+                    nextBtn.addEventListener("click", () => pageFlip.flipNext());
+
                     loadingEl.style.display = "none";
                     toolbarEl.style.display = "flex";
                     pageInfoEl.style.display = "block";
+                    flipbookEl.style.visibility = "visible";
                 });
             </script>
         </body>
