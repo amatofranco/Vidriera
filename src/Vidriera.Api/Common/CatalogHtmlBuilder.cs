@@ -116,6 +116,7 @@ public static class CatalogHtmlBuilder
                 const lensBtn = document.getElementById("lens-btn");
                 const lensCanvas = document.getElementById("lens");
                 const lensCtx = lensCanvas.getContext("2d");
+                lensCtx.imageSmoothingQuality = "high";
 
                 const MIN_ZOOM = 0.6;
                 const MAX_ZOOM = 1.8;
@@ -214,7 +215,12 @@ public static class CatalogHtmlBuilder
                     // High scale + lossless PNG: this is the one unavoidable raster step (the
                     // page-curl effect distorts a bitmap, it can't animate live vector PDF content),
                     // so keep it as close to the original as possible rather than compressing it away.
-                    const scale = 3;
+                    // Also account for devicePixelRatio -- on a HiDPI/scaled display (Retina, Windows
+                    // 125-150% scaling), a fixed "scale 3" render is comparatively lower-res than what
+                    // the screen can actually show, which reads as bland/soft next to a real PDF
+                    // (whose vector content always renders crisp at the display's native density).
+                    const dpr = window.devicePixelRatio || 1;
+                    const scale = Math.min(3 * dpr, 6);
                     const images = [];
                     for (let i = 1; i <= doc.numPages; i++) {
                         const page = await doc.getPage(i);
