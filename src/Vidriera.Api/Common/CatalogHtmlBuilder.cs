@@ -17,7 +17,8 @@ public static class CatalogHtmlBuilder
             <title>Catálogo</title>
             <meta name="viewport" content="width=device-width, initial-scale=1" />
             <style>
-                html, body { height: 100%; margin: 0; overflow: hidden; background: #1c1c1e; color: #f5f5f7; font-family: system-ui, sans-serif; }
+                html, body { height: 100%; margin: 0; background: #1c1c1e; color: #f5f5f7; font-family: system-ui, sans-serif; }
+                body { overflow: auto; }
 
                 .toolbar {
                     position: fixed; left: 14px; top: 50%; transform: translateY(-50%);
@@ -35,10 +36,13 @@ public static class CatalogHtmlBuilder
                 .toolbar button:disabled { opacity: .4; cursor: default; }
                 .toolbar-divider { height: 1px; background: #48484a; margin: 2px 4px; }
 
-                .stage { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+                .stage { min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 16px 0; box-sizing: border-box; }
                 #page-canvas { visibility: hidden; box-shadow: 0 18px 30px rgba(0,0,0,.5); border-radius: 2px; }
 
-                .loading { display: flex; flex-direction: column; align-items: center; gap: 12px; color: #a1a1a6; font-size: 14px; }
+                .loading {
+                    position: fixed; inset: 0; display: flex; flex-direction: column;
+                    align-items: center; justify-content: center; gap: 12px; color: #a1a1a6; font-size: 14px;
+                }
                 .spinner { width: 28px; height: 28px; border-radius: 50%; border: 3px solid #3a3a3c; border-top-color: #0a84ff; animation: spin 0.8s linear infinite; }
                 @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -169,6 +173,8 @@ public static class CatalogHtmlBuilder
                 let pageAspect = 1;
                 let currentIndex = 0;
                 let renderToken = 0;
+                let lastCssSize = null;
+                let lastDpr = window.devicePixelRatio || 1;
 
                 function updateInfo() {
                     pageInfoEl.textContent = `${currentIndex + 1} / ${doc.numPages}`;
@@ -176,17 +182,28 @@ public static class CatalogHtmlBuilder
                     nextBtn.disabled = currentIndex >= doc.numPages - 1;
                 }
 
-                async function renderCurrentPage() {
+                async function renderCurrentPage(recomputeFit) {
                     // No animation library in the way anymore: this canvas IS the on-screen
-                    // element, rendered fresh at whatever resolution the current window size +
-                    // browser zoom actually needs, so it can never go soft/blurry the way a
-                    // pre-baked bitmap fed into a third-party viewer could.
+                    // element, rendered fresh at whatever resolution is actually needed, so it
+                    // can never go soft/blurry the way a pre-baked bitmap fed into a third-party
+                    // viewer could.
+                    //
+                    // recomputeFit distinguishes a real window resize (re-fit to the new
+                    // viewport, default 100% state always fills the screen with no scrollbar)
+                    // from a browser zoom change (Ctrl+/Ctrl-, which also fires "resize" and
+                    // changes devicePixelRatio): zoom should behave like normal page content --
+                    // genuinely bigger, scrolling if it no longer fits -- so it keeps the last
+                    // fitted CSS size and only re-renders at the sharper resolution zoom implies.
                     const token = ++renderToken;
                     const page = await doc.getPage(currentIndex + 1);
                     const naturalViewport = page.getViewport({ scale: 1 });
                     pageAspect = naturalViewport.width / naturalViewport.height;
 
-                    const { width: cssWidth, height: cssHeight } = computeFitSize(pageAspect);
+                    if (recomputeFit || !lastCssSize) {
+                        lastCssSize = computeFitSize(pageAspect);
+                    }
+                    const { width: cssWidth, height: cssHeight } = lastCssSize;
+
                     const dpr = window.devicePixelRatio || 1;
                     const LENS_HEADROOM = 1.6;
                     const targetPixelWidth = Math.min(cssWidth * dpr * LENS_HEADROOM, 3400);
@@ -209,25 +226,30 @@ public static class CatalogHtmlBuilder
                 prevBtn.addEventListener("click", () => {
                     if (currentIndex > 0) {
                         currentIndex--;
-                        renderCurrentPage();
+                        renderCurrentPage(false);
                     }
                 });
                 nextBtn.addEventListener("click", () => {
                     if (currentIndex < doc.numPages - 1) {
                         currentIndex++;
-                        renderCurrentPage();
+                        renderCurrentPage(false);
                     }
                 });
 
                 let resizeTimer = null;
                 window.addEventListener("resize", () => {
                     clearTimeout(resizeTimer);
-                    resizeTimer = setTimeout(renderCurrentPage, 200);
+                    resizeTimer = setTimeout(() => {
+                        const dpr = window.devicePixelRatio || 1;
+                        const isZoomChange = Math.abs(dpr - lastDpr) > 0.01;
+                        lastDpr = dpr;
+                        renderCurrentPage(!isZoomChange);
+                    }, 200);
                 });
 
                 pdfjsLib.getDocument({ url }).promise.then(async (d) => {
                     doc = d;
-                    await renderCurrentPage();
+                    await renderCurrentPage(true);
                     loadingEl.style.display = "none";
                     toolbarEl.style.display = "flex";
                     pageInfoEl.style.display = "block";
