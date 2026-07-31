@@ -162,29 +162,6 @@ public static class CatalogHtmlBuilder
                     lensCanvas.style.display = "none";
                 });
 
-                async function renderAllPages(doc) {
-                    // High scale + lossless PNG: this is the one unavoidable raster step (the
-                    // page-curl effect distorts a bitmap, it can't animate live vector PDF content),
-                    // so keep it as close to the original as possible rather than compressing it away.
-                    const dpr = window.devicePixelRatio || 1;
-                    const scale = Math.min(3 * dpr, 6);
-                    const images = [];
-                    for (let i = 1; i <= doc.numPages; i++) {
-                        const page = await doc.getPage(i);
-                        const viewport = page.getViewport({ scale });
-                        const canvas = document.createElement("canvas");
-                        canvas.width = viewport.width;
-                        canvas.height = viewport.height;
-                        const ctx = canvas.getContext("2d");
-                        ctx.fillStyle = "#ffffff";
-                        ctx.fillRect(0, 0, canvas.width, canvas.height);
-                        await page.render({ canvasContext: ctx, viewport }).promise;
-                        images.push(canvas.toDataURL("image/png"));
-                        loadingTextEl.textContent = `Preparando catálogo... (${i}/${doc.numPages})`;
-                    }
-                    return images;
-                }
-
                 // Fit-to-screen, no scrollbars: compute the exact page/spread size that fits
                 // within the viewport (minus the toolbar rail) without overflowing either axis.
                 function computeFitSize(pageAspect, pageCount) {
@@ -203,11 +180,43 @@ public static class CatalogHtmlBuilder
                     return { width: Math.round(pageW), height: Math.round(pageH) };
                 }
 
+                async function renderAllPages(doc, targetCssWidth) {
+                    // High-res + lossless PNG: this is the one unavoidable raster step (the
+                    // page-curl effect distorts a bitmap, it can't animate live vector PDF content),
+                    // so keep it as close to the original as possible rather than compressing it away.
+                    // Render resolution is derived from the ACTUAL size the page will display at
+                    // (computeFitSize, known up front now that the viewer is fit-to-screen) times
+                    // devicePixelRatio, plus headroom so the magnifier lens (2.5x on top) stays sharp
+                    // too -- rather than a blind fixed scale that may end up smaller than the page
+                    // now renders at, which reads as a soft/bad copy of the original.
+                    const dpr = window.devicePixelRatio || 1;
+                    const LENS_HEADROOM = 1.6;
+                    const targetPixelWidth = Math.min(targetCssWidth * dpr * LENS_HEADROOM, 3400);
+                    const images = [];
+                    for (let i = 1; i <= doc.numPages; i++) {
+                        const page = await doc.getPage(i);
+                        const naturalViewport = page.getViewport({ scale: 1 });
+                        const scale = targetPixelWidth / naturalViewport.width;
+                        const viewport = page.getViewport({ scale });
+                        const canvas = document.createElement("canvas");
+                        canvas.width = viewport.width;
+                        canvas.height = viewport.height;
+                        const ctx = canvas.getContext("2d");
+                        ctx.fillStyle = "#ffffff";
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        await page.render({ canvasContext: ctx, viewport }).promise;
+                        images.push(canvas.toDataURL("image/png"));
+                        loadingTextEl.textContent = `Preparando catálogo... (${i}/${doc.numPages})`;
+                    }
+                    return images;
+                }
+
                 pdfjsLib.getDocument({ url }).promise.then(async (doc) => {
                     const firstPage = await doc.getPage(1);
                     const baseViewport = firstPage.getViewport({ scale: 1 });
                     const pageAspect = baseViewport.width / baseViewport.height;
-                    const images = await renderAllPages(doc);
+                    const fitSize = computeFitSize(pageAspect, doc.numPages);
+                    const images = await renderAllPages(doc, fitSize.width);
 
                     if (images.length <= 1) {
                         const img = document.createElement("img");
