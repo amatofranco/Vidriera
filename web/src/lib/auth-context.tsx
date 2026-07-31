@@ -13,6 +13,7 @@ interface AuthState {
   token: string;
   userId: string;
   companyId: string;
+  companyName: string;
   name: string;
   email: string;
 }
@@ -47,6 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       token: result.token,
       userId: result.userId,
       companyId: result.companyId,
+      companyName: result.companyName,
       name: result.name,
       email: result.email,
     };

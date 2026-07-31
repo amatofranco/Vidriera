@@ -42,6 +42,7 @@ export interface LoginResult {
   token: string;
   userId: string;
   companyId: string;
+  companyName: string;
   name: string;
   email: string;
 }
@@ -112,6 +113,30 @@ export function uploadSheet(token: string, productId: string, file: File) {
     token,
     body: formData,
   });
+}
+
+export function uploadCompanyLogo(token: string, file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  return request<void>("/api/company/logo", {
+    method: "POST",
+    token,
+    body: formData,
+  });
+}
+
+export async function fetchCompanyLogoUrl(token: string): Promise<string | null> {
+  const response = await fetch(`${API_URL}/api/company/logo`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const blob = await response.blob();
+  return URL.createObjectURL(blob);
 }
 
 export interface GenerateCatalogResult {

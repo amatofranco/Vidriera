@@ -7,10 +7,12 @@ import {
   ApiError,
   createProduct,
   deleteProduct,
+  fetchCompanyLogoUrl,
   generateCatalog,
   getProducts,
   reorderProducts,
   updateStock,
+  uploadCompanyLogo,
   uploadSheet,
   type GenerateCatalogResult,
   type Product,
@@ -38,6 +40,9 @@ export default function ProductsPage() {
   const [search, setSearch] = useState("");
   const [draggedId, setDraggedId] = useState<string | null>(null);
 
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+
   useEffect(() => {
     if (!authLoading && !auth) {
       router.replace("/login");
@@ -63,6 +68,38 @@ export default function ProductsPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadProducts(auth.token);
   }, [auth]);
+
+  useEffect(() => {
+    if (!auth) return;
+    let cancelled = false;
+    let objectUrl: string | null = null;
+
+    fetchCompanyLogoUrl(auth.token).then((url) => {
+      if (cancelled) return;
+      objectUrl = url;
+      setLogoUrl(url);
+    });
+
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [auth]);
+
+  async function handleLogoChange(file: File) {
+    if (!auth) return;
+    setIsUploadingLogo(true);
+    setError(null);
+    try {
+      await uploadCompanyLogo(auth.token, file);
+      const url = await fetchCompanyLogoUrl(auth.token);
+      setLogoUrl(url);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "No se pudo subir el banner.");
+    } finally {
+      setIsUploadingLogo(false);
+    }
+  }
 
   async function handleToggleStock(product: Product) {
     if (!auth) return;
@@ -184,13 +221,39 @@ export default function ProductsPage() {
 
   return (
     <div className="mx-auto w-full max-w-3xl flex-1 px-4 py-8">
-      <header className="mb-8 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Vidriera</h1>
-        <div className="flex items-center gap-4 text-sm text-zinc-600 dark:text-zinc-400">
-          <span>{auth.name}</span>
-          <button onClick={logout} className="underline hover:text-zinc-900 dark:hover:text-zinc-50">
-            Salir
-          </button>
+      <header className="mb-8">
+        {logoUrl && (
+          // eslint-disable-next-line @next/next/no-img-element -- imagen autenticada vía blob URL, no un asset estático de Next
+          <img
+            src={logoUrl}
+            alt={`Banner de ${auth.companyName}`}
+            className="mb-4 h-32 w-full rounded-lg object-cover"
+          />
+        )}
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Vidriera</h1>
+          <div className="flex flex-col items-end gap-1">
+            <div className="flex items-center gap-4 text-sm text-zinc-600 dark:text-zinc-400">
+              <span>{auth.name}</span>
+              <button onClick={logout} className="underline hover:text-zinc-900 dark:hover:text-zinc-50">
+                Salir
+              </button>
+            </div>
+            <span className="text-xs text-zinc-500 dark:text-zinc-500">{auth.companyName}</span>
+            <label className="cursor-pointer text-xs text-blue-600 underline dark:text-blue-400">
+              {isUploadingLogo ? "Subiendo..." : logoUrl ? "Cambiar banner" : "Subir banner de empresa"}
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                disabled={isUploadingLogo}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleLogoChange(file);
+                }}
+              />
+            </label>
+          </div>
         </div>
       </header>
 
