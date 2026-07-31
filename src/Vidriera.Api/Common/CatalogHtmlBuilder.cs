@@ -8,9 +8,6 @@ public static class CatalogHtmlBuilder
     public static string BuildViewerPage(GeneratedCatalogViewDto dto)
     {
         var fileUrl = WebUtility.HtmlEncode(dto.FileUrl);
-        var expiresText = dto.ExpiresAt.HasValue
-            ? $"Disponible hasta el {dto.ExpiresAt.Value:dd/MM/yyyy}."
-            : string.Empty;
 
         return $$"""
         <!doctype html>
@@ -21,39 +18,38 @@ public static class CatalogHtmlBuilder
             <meta name="viewport" content="width=device-width, initial-scale=1" />
             <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/src/Style/stPageFlip.css" />
             <style>
-                body { font-family: system-ui, sans-serif; margin: 0; background: #1c1c1e; color: #f5f5f7; }
-                header { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: #2c2c2e; }
-                header a.download { background: #0a84ff; color: white; text-decoration: none; padding: 10px 18px; border-radius: 8px; font-weight: 600; }
-                main { display: flex; flex-direction: column; align-items: center; padding: 24px 12px 32px; gap: 16px; }
+                html, body { height: 100%; margin: 0; overflow: hidden; background: #1c1c1e; color: #f5f5f7; font-family: system-ui, sans-serif; }
 
-                .toolbar { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; padding: 8px 12px; background: #232325; border-radius: 8px; }
-                .toolbar-group { display: flex; align-items: center; gap: 8px; }
-                .toolbar button { background: #3a3a3c; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; }
-                .toolbar button:hover:not(:disabled) { background: #48484a; }
-                .toolbar button:disabled { opacity: .4; cursor: default; }
-                #zoom-level { font-size: 13px; color: #a1a1a6; width: 42px; text-align: center; }
-
-                .stage { position: relative; width: 100%; max-width: 1240px; display: flex; justify-content: center; overflow: visible; padding-top: 20px; }
-                .stage::after {
-                    content: ""; position: absolute; left: 8%; right: 8%; bottom: -14px; height: 28px;
-                    background: radial-gradient(ellipse at center, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 72%);
-                    filter: blur(2px); z-index: 0;
+                .toolbar {
+                    position: fixed; left: 14px; top: 50%; transform: translateY(-50%);
+                    display: flex; flex-direction: column; gap: 8px;
+                    background: #232325; padding: 10px 8px; border-radius: 12px;
+                    z-index: 20; box-shadow: 0 8px 24px rgba(0,0,0,.4);
                 }
-                #flipbook { position: relative; z-index: 1; filter: drop-shadow(0 18px 30px rgba(0,0,0,.5)); visibility: hidden; transform-origin: top center; transition: transform .2s ease; }
-                #flipbook img { width: 100%; height: 100%; user-select: none; }
-                #static-page { max-width: 100%; max-height: 78vh; box-shadow: 0 18px 30px rgba(0,0,0,.5); border-radius: 2px; transform-origin: top center; transition: transform .2s ease; }
+                .toolbar button, .toolbar a {
+                    width: 42px; height: 42px; display: flex; align-items: center; justify-content: center;
+                    background: #3a3a3c; color: white; border: none; border-radius: 8px; cursor: pointer;
+                    text-decoration: none; font-size: 18px; line-height: 1;
+                }
+                .toolbar button:hover, .toolbar a:hover { background: #48484a; }
+                .toolbar button.active { background: #0a84ff; }
+                .toolbar-divider { height: 1px; background: #48484a; margin: 2px 4px; }
 
-                .loading { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 60px 0; color: #a1a1a6; font-size: 14px; }
+                .stage { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+                #flipbook { position: relative; visibility: hidden; filter: drop-shadow(0 18px 30px rgba(0,0,0,.5)); }
+                #flipbook img { width: 100%; height: 100%; user-select: none; }
+                #static-page { visibility: hidden; box-shadow: 0 18px 30px rgba(0,0,0,.5); border-radius: 2px; }
+
+                .loading { display: flex; flex-direction: column; align-items: center; gap: 12px; color: #a1a1a6; font-size: 14px; }
                 .spinner { width: 28px; height: 28px; border-radius: 50%; border: 3px solid #3a3a3c; border-top-color: #0a84ff; animation: spin 0.8s linear infinite; }
                 @keyframes spin { to { transform: rotate(360deg); } }
 
-                .nav { display: flex; gap: 16px; align-items: center; }
-                .nav button { background: #3a3a3c; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; }
-                .nav button:hover:not(:disabled) { background: #48484a; }
-                .nav button:disabled { opacity: .4; cursor: default; }
-                .expires { font-size: 13px; color: #a1a1a6; }
+                .page-info {
+                    position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
+                    font-size: 12px; color: #a1a1a6; background: rgba(0,0,0,.4);
+                    padding: 3px 12px; border-radius: 10px; z-index: 20; display: none;
+                }
 
-                #lens-btn.active { background: #0a84ff; }
                 #lens {
                     position: fixed; width: 220px; height: 220px; border-radius: 50%;
                     border: 3px solid #f5f5f7; box-shadow: 0 6px 20px rgba(0,0,0,.6);
@@ -62,38 +58,24 @@ public static class CatalogHtmlBuilder
             </style>
         </head>
         <body>
-            <header>
-                <span>Catálogo</span>
-                <a class="download" href="{{fileUrl}}" download>Descargar PDF</a>
-            </header>
-            <main>
-                <div id="toolbar" class="toolbar" style="display: none;">
-                    <div class="toolbar-group">
-                        <button id="zoom-out" title="Alejar">&minus;</button>
-                        <span id="zoom-level">100%</span>
-                        <button id="zoom-in" title="Acercar">+</button>
-                    </div>
-                    <div class="toolbar-group">
-                        <button id="lens-btn" title="Lupa">&#128269; Lupa</button>
-                        <button id="fullscreen-btn" title="Pantalla completa">&#9974; Pantalla completa</button>
-                        <button id="print-btn" title="Imprimir">&#128424; Imprimir</button>
-                    </div>
-                </div>
-                <div id="loading" class="loading">
-                    <div class="spinner"></div>
-                    <span id="loading-text">Preparando catálogo...</span>
-                </div>
-                <div class="stage">
-                    <div id="flipbook"></div>
-                </div>
-                <canvas id="lens"></canvas>
-                <div id="nav" class="nav" style="display: none;">
-                    <button id="prev">&larr; Anterior</button>
-                    <span id="page-info"></span>
-                    <button id="next">Siguiente &rarr;</button>
-                </div>
-                <div class="expires">{{expiresText}}</div>
-            </main>
+            <div id="toolbar" class="toolbar" style="display: none;">
+                <button id="prev" title="Anterior">&#9664;</button>
+                <button id="next" title="Siguiente">&#9654;</button>
+                <div class="toolbar-divider"></div>
+                <button id="lens-btn" title="Lupa">&#128269;</button>
+                <button id="fullscreen-btn" title="Pantalla completa">&#9974;</button>
+                <button id="print-btn" title="Imprimir">&#128424;</button>
+                <a id="download-btn" href="{{fileUrl}}" download title="Descargar PDF">&#11015;</a>
+            </div>
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <span id="loading-text">Preparando catálogo...</span>
+            </div>
+            <div class="stage">
+                <div id="flipbook"></div>
+            </div>
+            <canvas id="lens"></canvas>
+            <div id="page-info" class="page-info"></div>
             <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
             <script type="module">
                 import * as pdfjsLib from "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.1.200/pdf.min.mjs";
@@ -103,14 +85,10 @@ public static class CatalogHtmlBuilder
                 const loadingEl = document.getElementById("loading");
                 const loadingTextEl = document.getElementById("loading-text");
                 const flipbookEl = document.getElementById("flipbook");
-                const navEl = document.getElementById("nav");
                 const pageInfoEl = document.getElementById("page-info");
                 const prevBtn = document.getElementById("prev");
                 const nextBtn = document.getElementById("next");
                 const toolbarEl = document.getElementById("toolbar");
-                const zoomOutBtn = document.getElementById("zoom-out");
-                const zoomInBtn = document.getElementById("zoom-in");
-                const zoomLevelEl = document.getElementById("zoom-level");
                 const fullscreenBtn = document.getElementById("fullscreen-btn");
                 const printBtn = document.getElementById("print-btn");
                 const lensBtn = document.getElementById("lens-btn");
@@ -118,30 +96,6 @@ public static class CatalogHtmlBuilder
                 const lensCtx = lensCanvas.getContext("2d");
                 lensCtx.imageSmoothingQuality = "high";
 
-                const MIN_ZOOM = 0.6;
-                const MAX_ZOOM = 1.8;
-                const ZOOM_STEP = 0.15;
-                let zoom = 1;
-
-                function applyZoom() {
-                    const target = document.getElementById("static-page") || flipbookEl;
-                    target.style.transform = `scale(${zoom})`;
-                    // transform doesn't grow the layout box, so anything below (nav, expires)
-                    // would otherwise sit under the visually-enlarged book past 100%.
-                    target.style.marginBottom = `${Math.max(0, target.offsetHeight * (zoom - 1))}px`;
-                    zoomLevelEl.textContent = `${Math.round(zoom * 100)}%`;
-                    zoomOutBtn.disabled = zoom <= MIN_ZOOM;
-                    zoomInBtn.disabled = zoom >= MAX_ZOOM;
-                }
-
-                zoomOutBtn.addEventListener("click", () => {
-                    zoom = Math.max(MIN_ZOOM, +(zoom - ZOOM_STEP).toFixed(2));
-                    applyZoom();
-                });
-                zoomInBtn.addEventListener("click", () => {
-                    zoom = Math.min(MAX_ZOOM, +(zoom + ZOOM_STEP).toFixed(2));
-                    applyZoom();
-                });
                 fullscreenBtn.addEventListener("click", () => {
                     if (document.fullscreenElement) {
                         document.exitFullscreen();
@@ -189,9 +143,6 @@ public static class CatalogHtmlBuilder
                     const relY = (e.clientY - rect.top) / rect.height;
                     const srcW = el.naturalWidth || el.width;
                     const srcH = el.naturalHeight || el.height;
-                    // Magnification has to be relative to the element's current on-screen size
-                    // (which already reflects the book zoom), not its raw source resolution --
-                    // otherwise zooming the book in changes (and can invert) the lens's own zoom.
                     const cropW = (LENS_SIZE / LENS_ZOOM) * (srcW / rect.width);
                     const cropH = (LENS_SIZE / LENS_ZOOM) * (srcH / rect.height);
                     const sx = Math.min(Math.max(relX * srcW - cropW / 2, 0), Math.max(srcW - cropW, 0));
@@ -215,10 +166,6 @@ public static class CatalogHtmlBuilder
                     // High scale + lossless PNG: this is the one unavoidable raster step (the
                     // page-curl effect distorts a bitmap, it can't animate live vector PDF content),
                     // so keep it as close to the original as possible rather than compressing it away.
-                    // Also account for devicePixelRatio -- on a HiDPI/scaled display (Retina, Windows
-                    // 125-150% scaling), a fixed "scale 3" render is comparatively lower-res than what
-                    // the screen can actually show, which reads as bland/soft next to a real PDF
-                    // (whose vector content always renders crisp at the display's native density).
                     const dpr = window.devicePixelRatio || 1;
                     const scale = Math.min(3 * dpr, 6);
                     const images = [];
@@ -238,9 +185,28 @@ public static class CatalogHtmlBuilder
                     return images;
                 }
 
+                // Fit-to-screen, no scrollbars: compute the exact page/spread size that fits
+                // within the viewport (minus the toolbar rail) without overflowing either axis.
+                function computeFitSize(pageAspect, pageCount) {
+                    const margin = 32;
+                    const toolbarSpace = 90;
+                    const availW = window.innerWidth - toolbarSpace - margin * 2;
+                    const availH = window.innerHeight - margin * 2;
+                    const spreadFactor = pageCount > 1 ? 2 : 1;
+
+                    let pageW = availW / spreadFactor;
+                    let pageH = pageW / pageAspect;
+                    if (pageH > availH) {
+                        pageH = availH;
+                        pageW = pageH * pageAspect;
+                    }
+                    return { width: Math.round(pageW), height: Math.round(pageH) };
+                }
+
                 pdfjsLib.getDocument({ url }).promise.then(async (doc) => {
                     const firstPage = await doc.getPage(1);
                     const baseViewport = firstPage.getViewport({ scale: 1 });
+                    const pageAspect = baseViewport.width / baseViewport.height;
                     const images = await renderAllPages(doc);
 
                     if (images.length <= 1) {
@@ -248,43 +214,66 @@ public static class CatalogHtmlBuilder
                         img.id = "static-page";
                         img.src = images[0];
                         flipbookEl.replaceWith(img);
+
+                        function fitStatic() {
+                            const { width, height } = computeFitSize(pageAspect, 1);
+                            img.style.width = `${width}px`;
+                            img.style.height = `${height}px`;
+                        }
+                        fitStatic();
+                        window.addEventListener("resize", fitStatic);
+
                         img.style.visibility = "visible";
                         loadingEl.style.display = "none";
                         toolbarEl.style.display = "flex";
                         return;
                     }
 
-                    const pageFlip = new St.PageFlip(flipbookEl, {
-                        width: Math.round(baseViewport.width),
-                        height: Math.round(baseViewport.height),
-                        size: "stretch",
-                        minWidth: 320,
-                        maxWidth: 1150,
-                        minHeight: 420,
-                        maxHeight: 1550,
-                        showCover: true,
-                        maxShadowOpacity: 0.6,
-                        mobileScrollSupport: false,
-                    });
+                    let pageFlip = null;
 
-                    pageFlip.loadFromImages(images);
+                    function buildPageFlip() {
+                        const { width, height } = computeFitSize(pageAspect, images.length);
+                        const wasOpenIndex = pageFlip ? pageFlip.getCurrentPageIndex() : 0;
+                        if (pageFlip) {
+                            pageFlip.destroy();
+                            flipbookEl.innerHTML = "";
+                        }
+
+                        pageFlip = new St.PageFlip(flipbookEl, {
+                            width,
+                            height,
+                            size: "fixed",
+                            showCover: true,
+                            maxShadowOpacity: 0.6,
+                            mobileScrollSupport: false,
+                        });
+                        pageFlip.loadFromImages(images);
+                        pageFlip.on("flip", updateInfo);
+                        if (wasOpenIndex > 0) pageFlip.turnToPage(wasOpenIndex);
+                        updateInfo();
+                    }
 
                     function updateInfo() {
                         const current = pageFlip.getCurrentPageIndex() + 1;
-                        pageInfoEl.textContent = `Página ${current} de ${images.length}`;
+                        pageInfoEl.textContent = `${current} / ${images.length}`;
                         prevBtn.disabled = current <= 1;
                         nextBtn.disabled = current >= images.length;
                     }
 
-                    pageFlip.on("flip", updateInfo);
-                    updateInfo();
+                    buildPageFlip();
+
+                    let resizeTimer = null;
+                    window.addEventListener("resize", () => {
+                        clearTimeout(resizeTimer);
+                        resizeTimer = setTimeout(buildPageFlip, 200);
+                    });
 
                     prevBtn.addEventListener("click", () => pageFlip.flipPrev());
                     nextBtn.addEventListener("click", () => pageFlip.flipNext());
 
                     loadingEl.style.display = "none";
-                    navEl.style.display = "flex";
                     toolbarEl.style.display = "flex";
+                    pageInfoEl.style.display = "block";
                     flipbookEl.style.visibility = "visible";
                 });
             </script>
