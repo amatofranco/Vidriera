@@ -16,7 +16,6 @@ public static class CatalogHtmlBuilder
             <meta charset="utf-8" />
             <title>Catálogo</title>
             <meta name="viewport" content="width=device-width, initial-scale=1" />
-            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/src/Style/stPageFlip.css" />
             <style>
                 html, body { height: 100%; margin: 0; overflow: hidden; background: #1c1c1e; color: #f5f5f7; font-family: system-ui, sans-serif; }
 
@@ -31,14 +30,13 @@ public static class CatalogHtmlBuilder
                     background: #3a3a3c; color: white; border: none; border-radius: 8px; cursor: pointer;
                     text-decoration: none; font-size: 18px; line-height: 1;
                 }
-                .toolbar button:hover, .toolbar a:hover { background: #48484a; }
+                .toolbar button:hover:not(:disabled), .toolbar a:hover { background: #48484a; }
                 .toolbar button.active { background: #0a84ff; }
+                .toolbar button:disabled { opacity: .4; cursor: default; }
                 .toolbar-divider { height: 1px; background: #48484a; margin: 2px 4px; }
 
                 .stage { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
-                #flipbook { position: relative; visibility: hidden; filter: drop-shadow(0 18px 30px rgba(0,0,0,.5)); }
-                #flipbook img { width: 100%; height: 100%; user-select: none; }
-                #static-page { visibility: hidden; box-shadow: 0 18px 30px rgba(0,0,0,.5); border-radius: 2px; }
+                #page-canvas { visibility: hidden; box-shadow: 0 18px 30px rgba(0,0,0,.5); border-radius: 2px; }
 
                 .loading { display: flex; flex-direction: column; align-items: center; gap: 12px; color: #a1a1a6; font-size: 14px; }
                 .spinner { width: 28px; height: 28px; border-radius: 50%; border: 3px solid #3a3a3c; border-top-color: #0a84ff; animation: spin 0.8s linear infinite; }
@@ -69,22 +67,21 @@ public static class CatalogHtmlBuilder
             </div>
             <div id="loading" class="loading">
                 <div class="spinner"></div>
-                <span id="loading-text">Preparando catálogo...</span>
+                <span>Preparando catálogo...</span>
             </div>
             <div class="stage">
-                <div id="flipbook"></div>
+                <canvas id="page-canvas"></canvas>
             </div>
             <canvas id="lens"></canvas>
             <div id="page-info" class="page-info"></div>
-            <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
             <script type="module">
                 import * as pdfjsLib from "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.1.200/pdf.min.mjs";
                 pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.1.200/pdf.worker.min.mjs";
 
                 const url = "{{fileUrl}}";
                 const loadingEl = document.getElementById("loading");
-                const loadingTextEl = document.getElementById("loading-text");
-                const flipbookEl = document.getElementById("flipbook");
+                const pageCanvas = document.getElementById("page-canvas");
+                const pageCtx = pageCanvas.getContext("2d");
                 const pageInfoEl = document.getElementById("page-info");
                 const prevBtn = document.getElementById("prev");
                 const nextBtn = document.getElementById("next");
@@ -118,31 +115,18 @@ public static class CatalogHtmlBuilder
                     if (!lensActive) lensCanvas.style.display = "none";
                 });
 
-                function findLensSourceAt(clientX, clientY) {
-                    const staticImg = document.getElementById("static-page");
-                    const candidates = staticImg ? [staticImg] : Array.from(flipbookEl.querySelectorAll("canvas"));
-                    for (const el of candidates) {
-                        const rect = el.getBoundingClientRect();
-                        if (clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom) {
-                            return { el, rect };
-                        }
-                    }
-                    return null;
-                }
-
                 document.addEventListener("mousemove", (e) => {
                     if (!lensActive) return;
-                    const hit = findLensSourceAt(e.clientX, e.clientY);
-                    if (!hit) {
+                    const rect = pageCanvas.getBoundingClientRect();
+                    if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) {
                         lensCanvas.style.display = "none";
                         return;
                     }
 
-                    const { el, rect } = hit;
                     const relX = (e.clientX - rect.left) / rect.width;
                     const relY = (e.clientY - rect.top) / rect.height;
-                    const srcW = el.naturalWidth || el.width;
-                    const srcH = el.naturalHeight || el.height;
+                    const srcW = pageCanvas.width;
+                    const srcH = pageCanvas.height;
                     const cropW = (LENS_SIZE / LENS_ZOOM) * (srcW / rect.width);
                     const cropH = (LENS_SIZE / LENS_ZOOM) * (srcH / rect.height);
                     const sx = Math.min(Math.max(relX * srcW - cropW / 2, 0), Math.max(srcW - cropW, 0));
@@ -151,7 +135,7 @@ public static class CatalogHtmlBuilder
                     lensCanvas.width = LENS_SIZE;
                     lensCanvas.height = LENS_SIZE;
                     lensCtx.clearRect(0, 0, LENS_SIZE, LENS_SIZE);
-                    lensCtx.drawImage(el, sx, sy, cropW, cropH, 0, 0, LENS_SIZE, LENS_SIZE);
+                    lensCtx.drawImage(pageCanvas, sx, sy, cropW, cropH, 0, 0, LENS_SIZE, LENS_SIZE);
 
                     lensCanvas.style.left = `${e.clientX - LENS_SIZE / 2}px`;
                     lensCanvas.style.top = `${e.clientY - LENS_SIZE / 2}px`;
@@ -162,128 +146,91 @@ public static class CatalogHtmlBuilder
                     lensCanvas.style.display = "none";
                 });
 
-                // Fit-to-screen, no scrollbars: compute the exact page/spread size that fits
-                // within the viewport (minus the toolbar rail) without overflowing either axis.
-                function computeFitSize(pageAspect, pageCount) {
+                // Fit-to-screen, no scrollbars: compute the exact size the page fits at within
+                // the viewport (minus the toolbar rail) without overflowing either axis. Clamped
+                // to a sane minimum so extreme browser zoom (Chrome's Ctrl+/Ctrl- affects
+                // window.innerWidth/Height and devicePixelRatio) can't collapse it to 0.
+                function computeFitSize(pageAspect) {
                     const margin = 32;
                     const toolbarSpace = 90;
-                    const availW = window.innerWidth - toolbarSpace - margin * 2;
-                    const availH = window.innerHeight - margin * 2;
-                    const spreadFactor = pageCount > 1 ? 2 : 1;
+                    const availW = Math.max(window.innerWidth - toolbarSpace - margin * 2, 100);
+                    const availH = Math.max(window.innerHeight - margin * 2, 100);
 
-                    let pageW = availW / spreadFactor;
-                    let pageH = pageW / pageAspect;
-                    if (pageH > availH) {
-                        pageH = availH;
-                        pageW = pageH * pageAspect;
+                    let w = availW;
+                    let h = w / pageAspect;
+                    if (h > availH) {
+                        h = availH;
+                        w = h * pageAspect;
                     }
-                    return { width: Math.round(pageW), height: Math.round(pageH) };
+                    return { width: Math.round(w), height: Math.round(h) };
                 }
 
-                async function renderAllPages(doc, targetCssWidth) {
-                    // High-res + lossless PNG: this is the one unavoidable raster step (the
-                    // page-curl effect distorts a bitmap, it can't animate live vector PDF content),
-                    // so keep it as close to the original as possible rather than compressing it away.
-                    // Render resolution is derived from the ACTUAL size the page will display at
-                    // (computeFitSize, known up front now that the viewer is fit-to-screen) times
-                    // devicePixelRatio, plus headroom so the magnifier lens (2.5x on top) stays sharp
-                    // too -- rather than a blind fixed scale that may end up smaller than the page
-                    // now renders at, which reads as a soft/bad copy of the original.
+                let doc = null;
+                let pageAspect = 1;
+                let currentIndex = 0;
+                let renderToken = 0;
+
+                function updateInfo() {
+                    pageInfoEl.textContent = `${currentIndex + 1} / ${doc.numPages}`;
+                    prevBtn.disabled = currentIndex <= 0;
+                    nextBtn.disabled = currentIndex >= doc.numPages - 1;
+                }
+
+                async function renderCurrentPage() {
+                    // No animation library in the way anymore: this canvas IS the on-screen
+                    // element, rendered fresh at whatever resolution the current window size +
+                    // browser zoom actually needs, so it can never go soft/blurry the way a
+                    // pre-baked bitmap fed into a third-party viewer could.
+                    const token = ++renderToken;
+                    const page = await doc.getPage(currentIndex + 1);
+                    const naturalViewport = page.getViewport({ scale: 1 });
+                    pageAspect = naturalViewport.width / naturalViewport.height;
+
+                    const { width: cssWidth, height: cssHeight } = computeFitSize(pageAspect);
                     const dpr = window.devicePixelRatio || 1;
                     const LENS_HEADROOM = 1.6;
-                    const targetPixelWidth = Math.min(targetCssWidth * dpr * LENS_HEADROOM, 3400);
-                    const images = [];
-                    for (let i = 1; i <= doc.numPages; i++) {
-                        const page = await doc.getPage(i);
-                        const naturalViewport = page.getViewport({ scale: 1 });
-                        const scale = targetPixelWidth / naturalViewport.width;
-                        const viewport = page.getViewport({ scale });
-                        const canvas = document.createElement("canvas");
-                        canvas.width = viewport.width;
-                        canvas.height = viewport.height;
-                        const ctx = canvas.getContext("2d");
-                        ctx.fillStyle = "#ffffff";
-                        ctx.fillRect(0, 0, canvas.width, canvas.height);
-                        await page.render({ canvasContext: ctx, viewport }).promise;
-                        images.push(canvas.toDataURL("image/png"));
-                        loadingTextEl.textContent = `Preparando catálogo... (${i}/${doc.numPages})`;
-                    }
-                    return images;
+                    const targetPixelWidth = Math.min(cssWidth * dpr * LENS_HEADROOM, 3400);
+                    const scale = targetPixelWidth / naturalViewport.width;
+                    const viewport = page.getViewport({ scale });
+
+                    pageCanvas.width = viewport.width;
+                    pageCanvas.height = viewport.height;
+                    pageCtx.fillStyle = "#ffffff";
+                    pageCtx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+                    await page.render({ canvasContext: pageCtx, viewport }).promise;
+                    if (token !== renderToken) return; // a newer render (resize/navigate) superseded this one
+
+                    pageCanvas.style.width = `${cssWidth}px`;
+                    pageCanvas.style.height = `${cssHeight}px`;
+                    pageCanvas.style.visibility = "visible";
+                    updateInfo();
                 }
 
-                pdfjsLib.getDocument({ url }).promise.then(async (doc) => {
-                    const firstPage = await doc.getPage(1);
-                    const baseViewport = firstPage.getViewport({ scale: 1 });
-                    const pageAspect = baseViewport.width / baseViewport.height;
-                    const fitSize = computeFitSize(pageAspect, doc.numPages);
-                    const images = await renderAllPages(doc, fitSize.width);
-
-                    if (images.length <= 1) {
-                        const img = document.createElement("img");
-                        img.id = "static-page";
-                        img.src = images[0];
-                        flipbookEl.replaceWith(img);
-
-                        function fitStatic() {
-                            const { width, height } = computeFitSize(pageAspect, 1);
-                            img.style.width = `${width}px`;
-                            img.style.height = `${height}px`;
-                        }
-                        fitStatic();
-                        window.addEventListener("resize", fitStatic);
-
-                        img.style.visibility = "visible";
-                        loadingEl.style.display = "none";
-                        toolbarEl.style.display = "flex";
-                        return;
+                prevBtn.addEventListener("click", () => {
+                    if (currentIndex > 0) {
+                        currentIndex--;
+                        renderCurrentPage();
                     }
-
-                    let pageFlip = null;
-
-                    function buildPageFlip() {
-                        const { width, height } = computeFitSize(pageAspect, images.length);
-                        const wasOpenIndex = pageFlip ? pageFlip.getCurrentPageIndex() : 0;
-                        if (pageFlip) {
-                            pageFlip.destroy();
-                            flipbookEl.innerHTML = "";
-                        }
-
-                        pageFlip = new St.PageFlip(flipbookEl, {
-                            width,
-                            height,
-                            size: "fixed",
-                            showCover: true,
-                            maxShadowOpacity: 0.6,
-                            mobileScrollSupport: false,
-                        });
-                        pageFlip.loadFromImages(images);
-                        pageFlip.on("flip", updateInfo);
-                        if (wasOpenIndex > 0) pageFlip.turnToPage(wasOpenIndex);
-                        updateInfo();
+                });
+                nextBtn.addEventListener("click", () => {
+                    if (currentIndex < doc.numPages - 1) {
+                        currentIndex++;
+                        renderCurrentPage();
                     }
+                });
 
-                    function updateInfo() {
-                        const current = pageFlip.getCurrentPageIndex() + 1;
-                        pageInfoEl.textContent = `${current} / ${images.length}`;
-                        prevBtn.disabled = current <= 1;
-                        nextBtn.disabled = current >= images.length;
-                    }
+                let resizeTimer = null;
+                window.addEventListener("resize", () => {
+                    clearTimeout(resizeTimer);
+                    resizeTimer = setTimeout(renderCurrentPage, 200);
+                });
 
-                    buildPageFlip();
-
-                    let resizeTimer = null;
-                    window.addEventListener("resize", () => {
-                        clearTimeout(resizeTimer);
-                        resizeTimer = setTimeout(buildPageFlip, 200);
-                    });
-
-                    prevBtn.addEventListener("click", () => pageFlip.flipPrev());
-                    nextBtn.addEventListener("click", () => pageFlip.flipNext());
-
+                pdfjsLib.getDocument({ url }).promise.then(async (d) => {
+                    doc = d;
+                    await renderCurrentPage();
                     loadingEl.style.display = "none";
                     toolbarEl.style.display = "flex";
                     pageInfoEl.style.display = "block";
-                    flipbookEl.style.visibility = "visible";
                 });
             </script>
         </body>
