@@ -39,15 +39,15 @@ public static class CatalogHtmlBuilder
 
                 .side-nav {
                     position: fixed; top: 50%; transform: translateY(-50%);
-                    width: 52px; height: 52px; border-radius: 50%;
-                    background: rgba(35,35,37,.7); color: white; border: none;
-                    font-size: 20px; line-height: 1; cursor: pointer; z-index: 15;
+                    width: 40px; height: 40px; border-radius: 50%;
+                    background: rgba(255,255,255,.08); color: white; border: none;
+                    font-size: 17px; line-height: 1; cursor: pointer; z-index: 15;
                     display: flex; align-items: center; justify-content: center;
+                    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+                    transition: background .15s ease, opacity .15s ease;
                 }
-                .side-nav:hover:not(:disabled) { background: rgba(72,72,74,.85); }
+                .side-nav:hover:not(:disabled) { background: rgba(255,255,255,.2); }
                 .side-nav:disabled { opacity: 0; cursor: default; }
-                #prev { left: 90px; }
-                #next { right: 24px; }
 
                 .stage { min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 16px 0; box-sizing: border-box; }
                 #flipbook { visibility: hidden; filter: drop-shadow(0 18px 30px rgba(0,0,0,.5)); }
@@ -82,8 +82,8 @@ public static class CatalogHtmlBuilder
                 <button id="print-btn" title="Imprimir">&#128424;</button>
                 <a id="download-btn" href="{{fileUrl}}" download title="Descargar PDF">&#11015;</a>
             </div>
-            <button id="prev" class="side-nav" title="Anterior" style="display: none;">&#9664;</button>
-            <button id="next" class="side-nav" title="Siguiente" style="display: none;">&#9654;</button>
+            <button id="prev" class="side-nav" title="Anterior" style="display: none;">&#8249;</button>
+            <button id="next" class="side-nav" title="Siguiente" style="display: none;">&#8250;</button>
             <div id="loading" class="loading">
                 <div class="spinner"></div>
                 <span id="loading-text">Preparando catálogo...</span>
@@ -198,6 +198,18 @@ public static class CatalogHtmlBuilder
                     lensCanvas.style.display = "none";
                 });
 
+                // Hugs the arrows to the actual rendered book/page edges (measured live, rather
+                // than guessed from the fit-size math) so they sit close to the PDF regardless of
+                // how much empty space is left around it at the current window size.
+                function positionSideNav(referenceEl) {
+                    const rect = referenceEl.getBoundingClientRect();
+                    const gap = 14;
+                    const btnSize = 40;
+                    const minLeft = 78; // stay clear of the toolbar rail
+                    prevBtn.style.left = `${Math.max(rect.left - gap - btnSize, minLeft)}px`;
+                    nextBtn.style.right = `${Math.max(window.innerWidth - rect.right - gap - btnSize, 8)}px`;
+                }
+
                 // Fit-to-screen, no scrollbars: compute the exact size the page fits at within
                 // the viewport (minus the toolbar rail) without overflowing either axis. Clamped
                 // to a sane minimum so extreme browser zoom (Chrome's Ctrl+/Ctrl- affects
@@ -264,6 +276,7 @@ public static class CatalogHtmlBuilder
                             const { width, height } = computeFitSize(pageAspect);
                             img.style.width = `${width}px`;
                             img.style.height = `${height}px`;
+                            positionSideNav(img);
                         }
                         fitStatic();
 
@@ -337,6 +350,7 @@ public static class CatalogHtmlBuilder
                         });
                         if (wasOpenIndex > 0) pageFlip.turnToPage(wasOpenIndex);
                         updateInfo();
+                        requestAnimationFrame(() => positionSideNav(flipbookEl));
                     }
 
                     buildPageFlip();
