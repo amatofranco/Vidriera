@@ -26,15 +26,22 @@ public static class CatalogHtmlBuilder
                 header a.download { background: #0a84ff; color: white; text-decoration: none; padding: 10px 18px; border-radius: 8px; font-weight: 600; }
                 main { display: flex; flex-direction: column; align-items: center; padding: 24px 12px 32px; gap: 16px; }
 
-                .stage { position: relative; width: 100%; max-width: 920px; display: flex; justify-content: center; }
+                .toolbar { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; padding: 8px 12px; background: #232325; border-radius: 8px; }
+                .toolbar-group { display: flex; align-items: center; gap: 8px; }
+                .toolbar button { background: #3a3a3c; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+                .toolbar button:hover:not(:disabled) { background: #48484a; }
+                .toolbar button:disabled { opacity: .4; cursor: default; }
+                #zoom-level { font-size: 13px; color: #a1a1a6; width: 42px; text-align: center; }
+
+                .stage { position: relative; width: 100%; max-width: 920px; display: flex; justify-content: center; overflow: visible; padding-top: 20px; }
                 .stage::after {
                     content: ""; position: absolute; left: 8%; right: 8%; bottom: -14px; height: 28px;
                     background: radial-gradient(ellipse at center, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 72%);
                     filter: blur(2px); z-index: 0;
                 }
-                #flipbook { position: relative; z-index: 1; filter: drop-shadow(0 18px 30px rgba(0,0,0,.5)); visibility: hidden; }
+                #flipbook { position: relative; z-index: 1; filter: drop-shadow(0 18px 30px rgba(0,0,0,.5)); visibility: hidden; transform-origin: top center; transition: transform .2s ease; }
                 #flipbook img { width: 100%; height: 100%; user-select: none; }
-                #static-page { max-width: 100%; max-height: 78vh; box-shadow: 0 18px 30px rgba(0,0,0,.5); border-radius: 2px; }
+                #static-page { max-width: 100%; max-height: 78vh; box-shadow: 0 18px 30px rgba(0,0,0,.5); border-radius: 2px; transform-origin: top center; transition: transform .2s ease; }
 
                 .loading { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 60px 0; color: #a1a1a6; font-size: 14px; }
                 .spinner { width: 28px; height: 28px; border-radius: 50%; border: 3px solid #3a3a3c; border-top-color: #0a84ff; animation: spin 0.8s linear infinite; }
@@ -53,6 +60,17 @@ public static class CatalogHtmlBuilder
                 <a class="download" href="{{fileUrl}}" download>Descargar PDF</a>
             </header>
             <main>
+                <div id="toolbar" class="toolbar" style="display: none;">
+                    <div class="toolbar-group">
+                        <button id="zoom-out" title="Alejar">&minus;</button>
+                        <span id="zoom-level">100%</span>
+                        <button id="zoom-in" title="Acercar">+</button>
+                    </div>
+                    <div class="toolbar-group">
+                        <button id="fullscreen-btn" title="Pantalla completa">&#9974; Pantalla completa</button>
+                        <button id="print-btn" title="Imprimir">&#128424; Imprimir</button>
+                    </div>
+                </div>
                 <div id="loading" class="loading">
                     <div class="spinner"></div>
                     <span id="loading-text">Preparando catálogo...</span>
@@ -80,6 +98,44 @@ public static class CatalogHtmlBuilder
                 const pageInfoEl = document.getElementById("page-info");
                 const prevBtn = document.getElementById("prev");
                 const nextBtn = document.getElementById("next");
+                const toolbarEl = document.getElementById("toolbar");
+                const zoomOutBtn = document.getElementById("zoom-out");
+                const zoomInBtn = document.getElementById("zoom-in");
+                const zoomLevelEl = document.getElementById("zoom-level");
+                const fullscreenBtn = document.getElementById("fullscreen-btn");
+                const printBtn = document.getElementById("print-btn");
+
+                const MIN_ZOOM = 0.6;
+                const MAX_ZOOM = 1.8;
+                const ZOOM_STEP = 0.15;
+                let zoom = 1;
+
+                function applyZoom() {
+                    const target = document.getElementById("static-page") || flipbookEl;
+                    target.style.transform = `scale(${zoom})`;
+                    zoomLevelEl.textContent = `${Math.round(zoom * 100)}%`;
+                    zoomOutBtn.disabled = zoom <= MIN_ZOOM;
+                    zoomInBtn.disabled = zoom >= MAX_ZOOM;
+                }
+
+                zoomOutBtn.addEventListener("click", () => {
+                    zoom = Math.max(MIN_ZOOM, +(zoom - ZOOM_STEP).toFixed(2));
+                    applyZoom();
+                });
+                zoomInBtn.addEventListener("click", () => {
+                    zoom = Math.min(MAX_ZOOM, +(zoom + ZOOM_STEP).toFixed(2));
+                    applyZoom();
+                });
+                fullscreenBtn.addEventListener("click", () => {
+                    if (document.fullscreenElement) {
+                        document.exitFullscreen();
+                    } else {
+                        document.documentElement.requestFullscreen().catch(() => {});
+                    }
+                });
+                printBtn.addEventListener("click", () => {
+                    window.open(url, "_blank");
+                });
 
                 async function renderAllPages(doc) {
                     const scale = 2;
@@ -112,6 +168,7 @@ public static class CatalogHtmlBuilder
                         flipbookEl.replaceWith(img);
                         img.style.visibility = "visible";
                         loadingEl.style.display = "none";
+                        toolbarEl.style.display = "flex";
                         return;
                     }
 
@@ -145,6 +202,7 @@ public static class CatalogHtmlBuilder
 
                     loadingEl.style.display = "none";
                     navEl.style.display = "flex";
+                    toolbarEl.style.display = "flex";
                     flipbookEl.style.visibility = "visible";
                 });
             </script>
