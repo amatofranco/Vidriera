@@ -33,7 +33,7 @@ public static class CatalogHtmlBuilder
                 .toolbar button:disabled { opacity: .4; cursor: default; }
                 #zoom-level { font-size: 13px; color: #a1a1a6; width: 42px; text-align: center; }
 
-                .stage { position: relative; width: 100%; max-width: 920px; display: flex; justify-content: center; overflow: visible; padding-top: 20px; }
+                .stage { position: relative; width: 100%; max-width: 1240px; display: flex; justify-content: center; overflow: visible; padding-top: 20px; }
                 .stage::after {
                     content: ""; position: absolute; left: 8%; right: 8%; bottom: -14px; height: 28px;
                     background: radial-gradient(ellipse at center, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 72%);
@@ -211,7 +211,10 @@ public static class CatalogHtmlBuilder
                 });
 
                 async function renderAllPages(doc) {
-                    const scale = 2;
+                    // High scale + lossless PNG: this is the one unavoidable raster step (the
+                    // page-curl effect distorts a bitmap, it can't animate live vector PDF content),
+                    // so keep it as close to the original as possible rather than compressing it away.
+                    const scale = 3;
                     const images = [];
                     for (let i = 1; i <= doc.numPages; i++) {
                         const page = await doc.getPage(i);
@@ -223,7 +226,7 @@ public static class CatalogHtmlBuilder
                         ctx.fillStyle = "#ffffff";
                         ctx.fillRect(0, 0, canvas.width, canvas.height);
                         await page.render({ canvasContext: ctx, viewport }).promise;
-                        images.push(canvas.toDataURL("image/jpeg", 0.9));
+                        images.push(canvas.toDataURL("image/png"));
                         loadingTextEl.textContent = `Preparando catálogo... (${i}/${doc.numPages})`;
                     }
                     return images;
@@ -249,10 +252,10 @@ public static class CatalogHtmlBuilder
                         width: Math.round(baseViewport.width),
                         height: Math.round(baseViewport.height),
                         size: "stretch",
-                        minWidth: 280,
-                        maxWidth: 900,
-                        minHeight: 360,
-                        maxHeight: 1200,
+                        minWidth: 320,
+                        maxWidth: 1150,
+                        minHeight: 420,
+                        maxHeight: 1550,
                         showCover: true,
                         maxShadowOpacity: 0.6,
                         mobileScrollSupport: false,
