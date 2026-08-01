@@ -169,6 +169,13 @@ public static class CatalogHtmlBuilder
                     printFrame.src = url;
                 });
 
+                // .click() on a <button disabled> is a no-op, so this naturally respects
+                // whichever end of the book we're already at without extra bounds checking.
+                document.addEventListener("keydown", (e) => {
+                    if (e.key === "ArrowLeft") prevBtn.click();
+                    else if (e.key === "ArrowRight") nextBtn.click();
+                });
+
                 const LENS_SIZE = 220;
                 const LENS_ZOOM = 2.5;
                 let lensActive = false;
