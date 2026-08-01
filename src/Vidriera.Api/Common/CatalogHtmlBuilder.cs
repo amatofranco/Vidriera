@@ -213,6 +213,15 @@ public static class CatalogHtmlBuilder
                     if (!zoomArmed && isZoomed) setZoomed(false);
                 });
 
+                // page-flip's own page-turn gesture starts on "mousedown" (drag-to-flip), not
+                // "click" -- stopping only the click wouldn't have stopped the turn, since by then
+                // page-flip's mousedown handler already ran. Stopping mousedown in the capture
+                // phase, ahead of page-flip's own listener on the book, is what actually keeps a
+                // zoom click from also flipping the page underneath it.
+                stageEl.addEventListener("mousedown", (e) => {
+                    if (zoomArmed && e.target !== prevBtn && e.target !== nextBtn) e.stopPropagation();
+                }, true);
+
                 stageEl.addEventListener("click", (e) => {
                     if (!zoomArmed || e.target === prevBtn || e.target === nextBtn) return;
                     setZoomed(!isZoomed, e);
