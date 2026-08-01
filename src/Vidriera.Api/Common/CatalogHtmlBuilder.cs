@@ -326,9 +326,6 @@ public static class CatalogHtmlBuilder
                             positionSideNav(img);
                         }
                         fitStatic();
-                        document.addEventListener("fullscreenchange", () => {
-                            requestAnimationFrame(() => requestAnimationFrame(fitStatic));
-                        });
 
                         let resizeTimer = null;
                         window.addEventListener("resize", () => {
@@ -411,13 +408,6 @@ public static class CatalogHtmlBuilder
                     }
 
                     buildPageFlip();
-                    // Double rAF: give the browser a couple of frames to finish the fullscreen
-                    // layout transition before reading window.innerWidth/Height and rebuilding --
-                    // reading them synchronously inside "fullscreenchange" can catch mid-transition
-                    // values on some browsers.
-                    document.addEventListener("fullscreenchange", () => {
-                        requestAnimationFrame(() => requestAnimationFrame(buildPageFlip));
-                    });
 
                     // Only a genuine window resize rebuilds the book at a new fit size. A browser
                     // zoom change (Ctrl+/Ctrl-, which also fires "resize" and changes
