@@ -69,10 +69,16 @@ public static class CatalogHtmlBuilder
                     filter: none;
                     box-shadow: none;
                 }
-                #flipbook { visibility: hidden; filter: drop-shadow(0 18px 30px rgba(0,0,0,.5)); }
+                #flipbook {
+                    visibility: hidden; filter: drop-shadow(0 18px 30px rgba(0,0,0,.5));
+                    transition: transform .2s ease-out;
+                }
                 .page-content { width: 100%; height: 100%; background: white; }
                 .page-content img { width: 100%; height: 100%; display: block; user-select: none; }
-                #static-page { visibility: hidden; box-shadow: 0 18px 30px rgba(0,0,0,.5); border-radius: 2px; }
+                #static-page {
+                    visibility: hidden; box-shadow: 0 18px 30px rgba(0,0,0,.5); border-radius: 2px;
+                    transition: transform .2s ease-out;
+                }
 
                 .loading {
                     position: fixed; inset: 0; display: flex; flex-direction: column;
@@ -87,17 +93,17 @@ public static class CatalogHtmlBuilder
                     padding: 3px 12px; border-radius: 10px; z-index: 20; display: none;
                 }
 
-                #lens {
-                    position: fixed; width: 220px; height: 220px; border-radius: 50%;
-                    border: 3px solid #f5f5f7; box-shadow: 0 6px 20px rgba(0,0,0,.6);
-                    pointer-events: none; display: none; z-index: 50; background: white;
+                #zoom-frame { overflow: hidden; cursor: zoom-in; }
+                #zoom-frame.zoomed #flipbook,
+                #zoom-frame.zoomed #static-page {
+                    transform: scale(2);
                 }
             </style>
         </head>
         <body>
             <div class="scene-bg"></div>
             <div id="toolbar" class="toolbar" style="display: none;">
-                <button id="lens-btn" title="Lupa">&#128269;</button>
+                <button id="lens-btn" title="Zoom">&#128269;</button>
                 <button id="fullscreen-btn" title="Pantalla completa">&#9974;</button>
                 <button id="print-btn" title="Imprimir">&#128424;</button>
                 <a id="download-btn" href="{{fileUrl}}" download title="Descargar PDF">&#11015;</a>
@@ -109,9 +115,10 @@ public static class CatalogHtmlBuilder
             <div class="stage">
                 <button id="prev" class="side-nav" title="Anterior" style="display: none;">&#8249;</button>
                 <button id="next" class="side-nav" title="Siguiente" style="display: none;">&#8250;</button>
-                <div id="flipbook"></div>
+                <div id="zoom-frame">
+                    <div id="flipbook"></div>
+                </div>
             </div>
-            <canvas id="lens"></canvas>
             <div id="page-info" class="page-info"></div>
             <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
             <script type="module">
@@ -126,6 +133,7 @@ public static class CatalogHtmlBuilder
                 // rebuild after the first needs a brand new element in its place.
                 let flipbookEl = document.getElementById("flipbook");
                 const stageEl = document.querySelector(".stage");
+                const zoomFrameEl = document.getElementById("zoom-frame");
                 const pageInfoEl = document.getElementById("page-info");
                 const prevBtn = document.getElementById("prev");
                 const nextBtn = document.getElementById("next");
@@ -133,9 +141,6 @@ public static class CatalogHtmlBuilder
                 const fullscreenBtn = document.getElementById("fullscreen-btn");
                 const printBtn = document.getElementById("print-btn");
                 const lensBtn = document.getElementById("lens-btn");
-                const lensCanvas = document.getElementById("lens");
-                const lensCtx = lensCanvas.getContext("2d");
-                lensCtx.imageSmoothingQuality = "high";
 
                 // Fullscreen only the book's own stage, not the whole page -- so the scene
                 // background and toolbar disappear entirely instead of coming along for the ride.
@@ -176,59 +181,30 @@ public static class CatalogHtmlBuilder
                     else if (e.key === "ArrowRight") nextBtn.click();
                 });
 
-                const LENS_SIZE = 220;
-                const LENS_ZOOM = 2.5;
-                let lensActive = false;
+                const ZOOM_LEVEL = 2;
+                let isZoomed = false;
 
                 lensBtn.addEventListener("click", () => {
-                    lensActive = !lensActive;
-                    lensBtn.classList.toggle("active", lensActive);
-                    document.body.style.cursor = lensActive ? "none" : "";
-                    if (!lensActive) lensCanvas.style.display = "none";
+                    isZoomed = !isZoomed;
+                    lensBtn.classList.toggle("active", isZoomed);
+                    zoomFrameEl.classList.toggle("zoomed", isZoomed);
+                    zoomFrameEl.style.cursor = isZoomed ? "zoom-out" : "zoom-in";
+                    if (!isZoomed) {
+                        const target = document.getElementById("flipbook") || document.getElementById("static-page");
+                        if (target) target.style.transformOrigin = "";
+                    }
                 });
 
-                function findLensSourceAt(clientX, clientY) {
-                    const staticImg = document.getElementById("static-page");
-                    const candidates = staticImg ? [staticImg] : Array.from(flipbookEl.querySelectorAll("img"));
-                    for (const el of candidates) {
-                        const rect = el.getBoundingClientRect();
-                        if (clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom) {
-                            return { el, rect };
-                        }
-                    }
-                    return null;
-                }
-
-                document.addEventListener("mousemove", (e) => {
-                    if (!lensActive) return;
-                    const hit = findLensSourceAt(e.clientX, e.clientY);
-                    if (!hit) {
-                        lensCanvas.style.display = "none";
-                        return;
-                    }
-
-                    const { el, rect } = hit;
-                    const relX = (e.clientX - rect.left) / rect.width;
-                    const relY = (e.clientY - rect.top) / rect.height;
-                    const srcW = el.naturalWidth || el.width;
-                    const srcH = el.naturalHeight || el.height;
-                    const cropW = (LENS_SIZE / LENS_ZOOM) * (srcW / rect.width);
-                    const cropH = (LENS_SIZE / LENS_ZOOM) * (srcH / rect.height);
-                    const sx = Math.min(Math.max(relX * srcW - cropW / 2, 0), Math.max(srcW - cropW, 0));
-                    const sy = Math.min(Math.max(relY * srcH - cropH / 2, 0), Math.max(srcH - cropH, 0));
-
-                    lensCanvas.width = LENS_SIZE;
-                    lensCanvas.height = LENS_SIZE;
-                    lensCtx.clearRect(0, 0, LENS_SIZE, LENS_SIZE);
-                    lensCtx.drawImage(el, sx, sy, cropW, cropH, 0, 0, LENS_SIZE, LENS_SIZE);
-
-                    lensCanvas.style.left = `${e.clientX - LENS_SIZE / 2}px`;
-                    lensCanvas.style.top = `${e.clientY - LENS_SIZE / 2}px`;
-                    lensCanvas.style.display = "block";
-                });
-
-                document.addEventListener("mouseleave", () => {
-                    lensCanvas.style.display = "none";
+                // The zoomed element gets recreated on every rebuild (see the fresh #flipbook
+                // swap above), so it's queried fresh on every move rather than captured once.
+                zoomFrameEl.addEventListener("mousemove", (e) => {
+                    if (!isZoomed) return;
+                    const target = document.getElementById("flipbook") || document.getElementById("static-page");
+                    if (!target) return;
+                    const rect = zoomFrameEl.getBoundingClientRect();
+                    const relX = Math.min(Math.max(((e.clientX - rect.left) / rect.width) * 100, 0), 100);
+                    const relY = Math.min(Math.max(((e.clientY - rect.top) / rect.height) * 100, 0), 100);
+                    target.style.transformOrigin = `${relX}% ${relY}%`;
                 });
 
                 // Hugs the arrows to the actual rendered book/page edges (measured live, rather
@@ -333,6 +309,8 @@ public static class CatalogHtmlBuilder
                             const { width, height } = computeFitSize(pageAspect);
                             img.style.width = `${width}px`;
                             img.style.height = `${height}px`;
+                            zoomFrameEl.style.width = `${width}px`;
+                            zoomFrameEl.style.height = `${height}px`;
                             positionSideNav(img);
                         }
                         fitStatic();
@@ -371,6 +349,8 @@ public static class CatalogHtmlBuilder
 
                     function buildPageFlip() {
                         const { width, height } = computeFitSize(pageAspect);
+                        zoomFrameEl.style.width = `${width}px`;
+                        zoomFrameEl.style.height = `${height}px`;
                         const wasOpenIndex = pageFlip ? pageFlip.getCurrentPageIndex() : 0;
                         if (pageFlip) {
                             // Guard the teardown: if destroy() ever throws (seen around the
@@ -387,7 +367,7 @@ public static class CatalogHtmlBuilder
                             const fresh = document.createElement("div");
                             fresh.id = "flipbook";
                             fresh.style.visibility = "visible";
-                            stageEl.appendChild(fresh);
+                            zoomFrameEl.appendChild(fresh);
                             flipbookEl = fresh;
                         }
 
