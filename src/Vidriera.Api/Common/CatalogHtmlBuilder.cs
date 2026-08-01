@@ -99,7 +99,7 @@ public static class CatalogHtmlBuilder
                    its left half -- toggled from JS as the current page changes. */
                 #cover-info {
                     position: fixed; top: 50%; transform: translateY(-50%);
-                    text-align: right; max-width: 320px; z-index: 10; display: none;
+                    text-align: left; z-index: 10; display: none;
                     pointer-events: none;
                 }
                 #cover-info .cover-info-company {
@@ -283,13 +283,16 @@ public static class CatalogHtmlBuilder
                 }
 
                 // Sits in the empty space to the left of the cover (page 1 alone, with
-                // showCover, only occupies the right half of the spread) -- capped so it never
-                // creeps far enough left to sit under the toolbar rail.
+                // showCover, only occupies the right half of the spread) -- anchored to the
+                // wooden niche's own left edge (not the book's), so it reads as sitting inside
+                // the niche rather than out on the blurred bookshelves.
                 function positionCoverInfo(referenceEl) {
                     const rect = referenceEl.getBoundingClientRect();
-                    const gap = 10;
-                    const desiredRight = window.innerWidth - rect.left + gap;
-                    coverInfoEl.style.right = `${Math.min(desiredRight, window.innerWidth - 400)}px`;
+                    const niche = getNicheRect();
+                    const padding = 32;
+                    const left = Math.max(niche.left + padding, 90); // stay clear of the toolbar rail
+                    coverInfoEl.style.left = `${left}px`;
+                    coverInfoEl.style.maxWidth = `${Math.min(Math.max(rect.left - left - 20, 120), 320)}px`;
                 }
 
                 // Pixel bounds of the wooden niche opening inside catalog-bg.jpg (2400x1570),
@@ -305,6 +308,18 @@ public static class CatalogHtmlBuilder
                     const scale = Math.max(window.innerWidth / BG_IMG_W, window.innerHeight / BG_IMG_H);
                     const renderedW = BG_IMG_W * scale;
                     return (NICHE_RIGHT_FRAC - NICHE_LEFT_FRAC) * renderedW;
+                }
+
+                // Same cover-fit math as getNicheMaxWidth, but returning the niche's actual
+                // left/right edges in viewport pixels (not just its width).
+                function getNicheRect() {
+                    const scale = Math.max(window.innerWidth / BG_IMG_W, window.innerHeight / BG_IMG_H);
+                    const renderedW = BG_IMG_W * scale;
+                    const offsetX = (window.innerWidth - renderedW) / 2;
+                    return {
+                        left: offsetX + NICHE_LEFT_FRAC * renderedW,
+                        right: offsetX + NICHE_RIGHT_FRAC * renderedW,
+                    };
                 }
 
                 // Fit-to-screen, no scrollbars: compute the exact size the page fits at within
