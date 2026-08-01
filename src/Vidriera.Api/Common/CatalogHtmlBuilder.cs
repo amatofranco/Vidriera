@@ -103,17 +103,17 @@ public static class CatalogHtmlBuilder
         </head>
         <body>
             <div class="scene-bg"></div>
-            <div id="toolbar" class="toolbar" style="display: none;">
-                <button id="lens-btn" title="Zoom">&#128269;</button>
-                <button id="fullscreen-btn" title="Pantalla completa">&#9974;</button>
-                <button id="print-btn" title="Imprimir">&#128424;</button>
-                <a id="download-btn" href="{{fileUrl}}" download title="Descargar PDF">&#11015;</a>
-            </div>
             <div id="loading" class="loading">
                 <div class="spinner"></div>
                 <span id="loading-text">Preparando catálogo...</span>
             </div>
             <div class="stage">
+                <div id="toolbar" class="toolbar" style="display: none;">
+                    <button id="lens-btn" title="Zoom">&#128269;</button>
+                    <button id="fullscreen-btn" title="Pantalla completa">&#9974;</button>
+                    <button id="print-btn" title="Imprimir">&#128424;</button>
+                    <a id="download-btn" href="{{fileUrl}}" download title="Descargar PDF">&#11015;</a>
+                </div>
                 <button id="prev" class="side-nav" title="Anterior" style="display: none;">&#8249;</button>
                 <button id="next" class="side-nav" title="Siguiente" style="display: none;">&#8250;</button>
                 <div id="flipbook"></div>
@@ -213,17 +213,24 @@ public static class CatalogHtmlBuilder
                     if (!zoomArmed && isZoomed) setZoomed(false);
                 });
 
+                // Toolbar and side-nav now live inside .stage too (so they still show up in
+                // fullscreen), so their own clicks need to keep working as buttons instead of
+                // being swallowed by the zoom-toggle logic below.
+                function isChrome(target) {
+                    return target === prevBtn || target === nextBtn || toolbarEl.contains(target);
+                }
+
                 // page-flip's own page-turn gesture starts on "mousedown" (drag-to-flip), not
                 // "click" -- stopping only the click wouldn't have stopped the turn, since by then
                 // page-flip's mousedown handler already ran. Stopping mousedown in the capture
                 // phase, ahead of page-flip's own listener on the book, is what actually keeps a
                 // zoom click from also flipping the page underneath it.
                 stageEl.addEventListener("mousedown", (e) => {
-                    if (zoomArmed && e.target !== prevBtn && e.target !== nextBtn) e.stopPropagation();
+                    if (zoomArmed && !isChrome(e.target)) e.stopPropagation();
                 }, true);
 
                 stageEl.addEventListener("click", (e) => {
-                    if (!zoomArmed || e.target === prevBtn || e.target === nextBtn) return;
+                    if (!zoomArmed || isChrome(e.target)) return;
                     setZoomed(!isZoomed, e);
                 });
 
