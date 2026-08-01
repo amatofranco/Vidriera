@@ -226,6 +226,21 @@ public static class CatalogHtmlBuilder
                     nextBtn.style.right = `${Math.max(window.innerWidth - rect.right - gap - btnSize, 8)}px`;
                 }
 
+                // Pixel bounds of the wooden niche opening inside catalog-bg.jpg (2400x1570),
+                // measured directly off that image so the book never spills onto the blurred
+                // bookshelves at the sides. Since the scene renders as `background-size: cover`,
+                // its on-screen scale/offset is reproduced here with the same cover math.
+                const BG_IMG_W = 2400;
+                const BG_IMG_H = 1570;
+                const NICHE_LEFT_FRAC = 0.273;
+                const NICHE_RIGHT_FRAC = 0.739;
+
+                function getNicheMaxWidth() {
+                    const scale = Math.max(window.innerWidth / BG_IMG_W, window.innerHeight / BG_IMG_H);
+                    const renderedW = BG_IMG_W * scale;
+                    return (NICHE_RIGHT_FRAC - NICHE_LEFT_FRAC) * renderedW;
+                }
+
                 // Fit-to-screen, no scrollbars: compute the exact size the page fits at within
                 // the viewport (minus the toolbar rail) without overflowing either axis. Clamped
                 // to a sane minimum so extreme browser zoom (Chrome's Ctrl+/Ctrl- affects
@@ -233,7 +248,8 @@ public static class CatalogHtmlBuilder
                 function computeFitSize(pageAspect) {
                     const margin = 32;
                     const toolbarSpace = 90;
-                    const availW = Math.max(window.innerWidth - toolbarSpace - margin * 2, 100);
+                    const nicheW = getNicheMaxWidth() * 0.94;
+                    const availW = Math.max(Math.min(window.innerWidth - toolbarSpace - margin * 2, nicheW), 100);
                     const availH = Math.max(window.innerHeight - margin * 2, 100);
 
                     let w = availW;
