@@ -93,9 +93,10 @@ public static class CatalogHtmlBuilder
                     padding: 3px 12px; border-radius: 10px; z-index: 20; display: none;
                 }
 
-                #zoom-frame { overflow: hidden; cursor: zoom-in; }
-                #zoom-frame.zoomed #flipbook,
-                #zoom-frame.zoomed #static-page {
+                .stage.zoom-armed { cursor: zoom-in; }
+                .stage.zoomed { cursor: zoom-out; }
+                .stage.zoomed #flipbook,
+                .stage.zoomed #static-page {
                     transform: scale(2);
                 }
             </style>
@@ -115,9 +116,7 @@ public static class CatalogHtmlBuilder
             <div class="stage">
                 <button id="prev" class="side-nav" title="Anterior" style="display: none;">&#8249;</button>
                 <button id="next" class="side-nav" title="Siguiente" style="display: none;">&#8250;</button>
-                <div id="zoom-frame">
-                    <div id="flipbook"></div>
-                </div>
+                <div id="flipbook"></div>
             </div>
             <div id="page-info" class="page-info"></div>
             <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
@@ -133,7 +132,6 @@ public static class CatalogHtmlBuilder
                 // rebuild after the first needs a brand new element in its place.
                 let flipbookEl = document.getElementById("flipbook");
                 const stageEl = document.querySelector(".stage");
-                const zoomFrameEl = document.getElementById("zoom-frame");
                 const pageInfoEl = document.getElementById("page-info");
                 const prevBtn = document.getElementById("prev");
                 const nextBtn = document.getElementById("next");
@@ -195,12 +193,11 @@ public static class CatalogHtmlBuilder
 
                 function setZoomed(zoomed, clickEvent) {
                     isZoomed = zoomed;
-                    zoomFrameEl.classList.toggle("zoomed", isZoomed);
-                    zoomFrameEl.style.cursor = isZoomed ? "zoom-out" : (zoomArmed ? "zoom-in" : "");
+                    stageEl.classList.toggle("zoomed", isZoomed);
                     const target = currentZoomTarget();
                     if (!target) return;
                     if (isZoomed && clickEvent) {
-                        const rect = zoomFrameEl.getBoundingClientRect();
+                        const rect = target.getBoundingClientRect();
                         const relX = Math.min(Math.max(((clickEvent.clientX - rect.left) / rect.width) * 100, 0), 100);
                         const relY = Math.min(Math.max(((clickEvent.clientY - rect.top) / rect.height) * 100, 0), 100);
                         target.style.transformOrigin = `${relX}% ${relY}%`;
@@ -212,20 +209,20 @@ public static class CatalogHtmlBuilder
                 lensBtn.addEventListener("click", () => {
                     zoomArmed = !zoomArmed;
                     lensBtn.classList.toggle("active", zoomArmed);
-                    zoomFrameEl.style.cursor = zoomArmed ? "zoom-in" : "";
+                    stageEl.classList.toggle("zoom-armed", zoomArmed);
                     if (!zoomArmed && isZoomed) setZoomed(false);
                 });
 
-                zoomFrameEl.addEventListener("click", (e) => {
-                    if (!zoomArmed) return;
+                stageEl.addEventListener("click", (e) => {
+                    if (!zoomArmed || e.target === prevBtn || e.target === nextBtn) return;
                     setZoomed(!isZoomed, e);
                 });
 
-                zoomFrameEl.addEventListener("mousemove", (e) => {
+                stageEl.addEventListener("mousemove", (e) => {
                     if (!isZoomed) return;
                     const target = currentZoomTarget();
                     if (!target) return;
-                    const rect = zoomFrameEl.getBoundingClientRect();
+                    const rect = target.getBoundingClientRect();
                     const relX = Math.min(Math.max(((e.clientX - rect.left) / rect.width) * 100, 0), 100);
                     const relY = Math.min(Math.max(((e.clientY - rect.top) / rect.height) * 100, 0), 100);
                     target.style.transformOrigin = `${relX}% ${relY}%`;
@@ -333,8 +330,6 @@ public static class CatalogHtmlBuilder
                             const { width, height } = computeFitSize(pageAspect);
                             img.style.width = `${width}px`;
                             img.style.height = `${height}px`;
-                            zoomFrameEl.style.width = `${width}px`;
-                            zoomFrameEl.style.height = `${height}px`;
                             positionSideNav(img);
                         }
                         fitStatic();
@@ -389,7 +384,7 @@ public static class CatalogHtmlBuilder
                             const fresh = document.createElement("div");
                             fresh.id = "flipbook";
                             fresh.style.visibility = "visible";
-                            zoomFrameEl.appendChild(fresh);
+                            stageEl.appendChild(fresh);
                             flipbookEl = fresh;
                         }
 
@@ -423,15 +418,7 @@ public static class CatalogHtmlBuilder
                         });
                         if (wasOpenIndex > 0) pageFlip.turnToPage(wasOpenIndex);
                         updateInfo();
-                        requestAnimationFrame(() => {
-                            // Measured, not computed: in a two-page spread the book itself renders
-                            // roughly twice as wide as the single-page "width" fed into PageFlip's
-                            // config above, and that's decided internally by the library -- sizing
-                            // the zoom frame off the config value clipped the second page clean off.
-                            zoomFrameEl.style.width = `${flipbookEl.offsetWidth}px`;
-                            zoomFrameEl.style.height = `${flipbookEl.offsetHeight}px`;
-                            positionSideNav(flipbookEl);
-                        });
+                        requestAnimationFrame(() => positionSideNav(flipbookEl));
                     }
 
                     buildPageFlip();
