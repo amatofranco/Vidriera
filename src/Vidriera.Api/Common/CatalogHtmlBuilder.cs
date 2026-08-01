@@ -318,7 +318,9 @@ public static class CatalogHtmlBuilder
                             positionSideNav(img);
                         }
                         fitStatic();
-                        document.addEventListener("fullscreenchange", fitStatic);
+                        document.addEventListener("fullscreenchange", () => {
+                            requestAnimationFrame(() => requestAnimationFrame(fitStatic));
+                        });
 
                         let resizeTimer = null;
                         window.addEventListener("resize", () => {
@@ -356,7 +358,14 @@ public static class CatalogHtmlBuilder
                         const { width, height } = computeFitSize(pageAspect);
                         const wasOpenIndex = pageFlip ? pageFlip.getCurrentPageIndex() : 0;
                         if (pageFlip) {
-                            pageFlip.destroy();
+                            // Guard the teardown: if destroy() ever throws (seen around the
+                            // fullscreen transition, where layout is momentarily in flux), we still
+                            // want to fall through and rebuild rather than leave an empty container.
+                            try {
+                                pageFlip.destroy();
+                            } catch (e) {
+                                console.error("pageFlip.destroy() failed, rebuilding anyway", e);
+                            }
                             flipbookEl.innerHTML = "";
                         }
 
@@ -394,7 +403,13 @@ public static class CatalogHtmlBuilder
                     }
 
                     buildPageFlip();
-                    document.addEventListener("fullscreenchange", buildPageFlip);
+                    // Double rAF: give the browser a couple of frames to finish the fullscreen
+                    // layout transition before reading window.innerWidth/Height and rebuilding --
+                    // reading them synchronously inside "fullscreenchange" can catch mid-transition
+                    // values on some browsers.
+                    document.addEventListener("fullscreenchange", () => {
+                        requestAnimationFrame(() => requestAnimationFrame(buildPageFlip));
+                    });
 
                     // Only a genuine window resize rebuilds the book at a new fit size. A browser
                     // zoom change (Ctrl+/Ctrl-, which also fires "resize" and changes
