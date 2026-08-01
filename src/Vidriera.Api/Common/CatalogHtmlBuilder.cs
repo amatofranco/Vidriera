@@ -8,6 +8,8 @@ public static class CatalogHtmlBuilder
     public static string BuildViewerPage(GeneratedCatalogViewDto dto)
     {
         var fileUrl = WebUtility.HtmlEncode(dto.FileUrl);
+        var companyName = WebUtility.HtmlEncode(dto.CompanyName);
+        var generatedAt = WebUtility.HtmlEncode(dto.GeneratedAt.ToString("dd/MM/yyyy"));
 
         return $$"""
         <!doctype html>
@@ -93,6 +95,24 @@ public static class CatalogHtmlBuilder
                     padding: 3px 12px; border-radius: 10px; z-index: 20; display: none;
                 }
 
+                /* Only ever shown next to the cover (page 1), where the spread has nothing on
+                   its left half -- toggled from JS as the current page changes. */
+                #cover-info {
+                    position: fixed; top: 50%; transform: translateY(-50%);
+                    text-align: right; max-width: 260px; z-index: 10; display: none;
+                    pointer-events: none;
+                }
+                #cover-info .cover-info-company {
+                    font-size: 20px; font-weight: 600; color: #f5f5f7; margin-bottom: 10px;
+                }
+                #cover-info .cover-info-label {
+                    font-size: 13px; letter-spacing: .12em; text-transform: uppercase;
+                    color: #c9a86a; margin-bottom: 6px;
+                }
+                #cover-info .cover-info-date {
+                    font-size: 12px; color: #a1a1a6;
+                }
+
                 .stage.zoom-armed { cursor: zoom-in; }
                 .stage.zoomed { cursor: zoom-out; }
                 .stage.zoomed #flipbook,
@@ -116,6 +136,11 @@ public static class CatalogHtmlBuilder
                 </div>
                 <button id="prev" class="side-nav" title="Anterior" style="display: none;">&#8249;</button>
                 <button id="next" class="side-nav" title="Siguiente" style="display: none;">&#8250;</button>
+                <div id="cover-info">
+                    <div class="cover-info-company">{{companyName}}</div>
+                    <div class="cover-info-label">Catálogo</div>
+                    <div class="cover-info-date">{{generatedAt}}</div>
+                </div>
                 <div id="flipbook"></div>
             </div>
             <div id="page-info" class="page-info"></div>
@@ -133,6 +158,7 @@ public static class CatalogHtmlBuilder
                 let flipbookEl = document.getElementById("flipbook");
                 const stageEl = document.querySelector(".stage");
                 const pageInfoEl = document.getElementById("page-info");
+                const coverInfoEl = document.getElementById("cover-info");
                 const prevBtn = document.getElementById("prev");
                 const nextBtn = document.getElementById("next");
                 const toolbarEl = document.getElementById("toolbar");
@@ -254,6 +280,16 @@ public static class CatalogHtmlBuilder
                     const minLeft = 78; // stay clear of the toolbar rail
                     prevBtn.style.left = `${Math.max(rect.left - gap - btnSize, minLeft)}px`;
                     nextBtn.style.right = `${Math.max(window.innerWidth - rect.right - gap - btnSize, 8)}px`;
+                }
+
+                // Sits in the empty space to the left of the cover (page 1 alone, with
+                // showCover, only occupies the right half of the spread) -- capped so it never
+                // creeps far enough left to sit under the toolbar rail.
+                function positionCoverInfo(referenceEl) {
+                    const rect = referenceEl.getBoundingClientRect();
+                    const gap = 28;
+                    const desiredRight = window.innerWidth - rect.left + gap;
+                    coverInfoEl.style.right = `${Math.min(desiredRight, window.innerWidth - 350)}px`;
                 }
 
                 // Pixel bounds of the wooden niche opening inside catalog-bg.jpg (2400x1570),
@@ -380,6 +416,7 @@ public static class CatalogHtmlBuilder
                         pageInfoEl.textContent = `${current} / ${images.length}`;
                         prevBtn.disabled = current <= 1;
                         nextBtn.disabled = current >= images.length;
+                        coverInfoEl.style.display = current === 1 ? "block" : "none";
                     }
 
                     function buildPageFlip() {
@@ -434,7 +471,10 @@ public static class CatalogHtmlBuilder
                         });
                         if (wasOpenIndex > 0) pageFlip.turnToPage(wasOpenIndex);
                         updateInfo();
-                        requestAnimationFrame(() => positionSideNav(flipbookEl));
+                        requestAnimationFrame(() => {
+                            positionSideNav(flipbookEl);
+                            positionCoverInfo(flipbookEl);
+                        });
                     }
 
                     buildPageFlip();

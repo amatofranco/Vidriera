@@ -39,6 +39,6 @@ public class GetGeneratedCatalogQueryHandler : IRequestHandler<GetGeneratedCatal
         }
 
         var fileUrl = $"{_options.PublicBaseUrl.TrimEnd('/')}/api/catalogs/{catalog.Id}/file";
-        return new GeneratedCatalogViewDto(catalog.Id, catalog.GeneratedAt, catalog.ExpiresAt, fileUrl);
+        return new GeneratedCatalogViewDto(catalog.Id, catalog.GeneratedAt, catalog.ExpiresAt, fileUrl, catalog.Company.Name);
     }
 }
