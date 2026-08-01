@@ -102,13 +102,13 @@ public static class CatalogHtmlBuilder
                 <button id="print-btn" title="Imprimir">&#128424;</button>
                 <a id="download-btn" href="{{fileUrl}}" download title="Descargar PDF">&#11015;</a>
             </div>
-            <button id="prev" class="side-nav" title="Anterior" style="display: none;">&#8249;</button>
-            <button id="next" class="side-nav" title="Siguiente" style="display: none;">&#8250;</button>
             <div id="loading" class="loading">
                 <div class="spinner"></div>
                 <span id="loading-text">Preparando catálogo...</span>
             </div>
             <div class="stage">
+                <button id="prev" class="side-nav" title="Anterior" style="display: none;">&#8249;</button>
+                <button id="next" class="side-nav" title="Siguiente" style="display: none;">&#8250;</button>
                 <div id="flipbook"></div>
             </div>
             <canvas id="lens"></canvas>
