@@ -61,6 +61,14 @@ public static class CatalogHtmlBuilder
 
                 .stage { min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 16px 0; box-sizing: border-box; }
                 .stage:fullscreen { background: #000; padding: 0; }
+                /* A large filtered/shadowed layer stretched to a full-screen size can render
+                   blank on some GPU/driver combos -- drop the effect while fullscreen since it's
+                   a purely cosmetic touch anyway. */
+                .stage:fullscreen #flipbook,
+                .stage:fullscreen #static-page {
+                    filter: none;
+                    box-shadow: none;
+                }
                 #flipbook { visibility: hidden; filter: drop-shadow(0 18px 30px rgba(0,0,0,.5)); }
                 .page-content { width: 100%; height: 100%; background: white; }
                 .page-content img { width: 100%; height: 100%; display: block; user-select: none; }
@@ -132,7 +140,7 @@ public static class CatalogHtmlBuilder
                     if (document.fullscreenElement) {
                         document.exitFullscreen();
                     } else {
-                        stageEl.requestFullscreen().catch(() => {});
+                        stageEl.requestFullscreen().catch((e) => console.error("Fullscreen request failed:", e));
                     }
                 });
                 printBtn.addEventListener("click", () => {
