@@ -25,11 +25,6 @@ public static class CatalogHtmlBuilder
                     position: fixed; inset: 0; z-index: -1;
                     background: #1c1c1e url('/images/catalog-bg.jpg') center / cover no-repeat;
                 }
-                .scene-bg::before {
-                    /* Warm spotlight focused on where the catalog sits. */
-                    content: ""; position: absolute; inset: 0;
-                    background: radial-gradient(ellipse 55% 60% at center, transparent 0%, rgba(10,8,4,.4) 55%, rgba(4,3,2,.82) 100%);
-                }
                 .scene-bg::after {
                     /* Faint diagonal glass reflection, reinforcing the "vidriera" concept. */
                     content: ""; position: absolute; inset: 0;
