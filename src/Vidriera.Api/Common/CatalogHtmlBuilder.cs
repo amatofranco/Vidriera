@@ -460,6 +460,9 @@ public static class CatalogHtmlBuilder
                     nextBtn.style.display = "flex";
                     pageInfoEl.style.display = "block";
                     flipbookEl.style.visibility = "visible";
+                }).catch((e) => {
+                    console.error("Catalog viewer failed:", e);
+                    loadingTextEl.textContent = "Error: " + (e && e.message ? e.message : e);
                 });
             </script>
         </body>
