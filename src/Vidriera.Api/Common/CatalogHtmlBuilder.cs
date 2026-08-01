@@ -18,12 +18,12 @@ public static class CatalogHtmlBuilder
             <meta name="viewport" content="width=device-width, initial-scale=1" />
             <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/src/Style/stPageFlip.css" />
             <style>
-                html, body { height: 100%; margin: 0; background: #1c1c1e; color: #f5f5f7; font-family: system-ui, sans-serif; }
+                html, body { height: 100%; margin: 0; color: #f5f5f7; font-family: system-ui, sans-serif; }
                 body { overflow: auto; }
 
                 .scene-bg {
                     position: fixed; inset: 0; z-index: -1;
-                    background: url('/images/catalog-bg.jpg') center / cover no-repeat;
+                    background: #1c1c1e url('/images/catalog-bg.jpg') center / cover no-repeat;
                 }
                 .scene-bg::before {
                     /* Warm spotlight focused on where the catalog sits. */
