@@ -99,18 +99,18 @@ public static class CatalogHtmlBuilder
                    its left half -- toggled from JS as the current page changes. */
                 #cover-info {
                     position: fixed; top: 50%; transform: translateY(-50%);
-                    text-align: right; max-width: 260px; z-index: 10; display: none;
+                    text-align: right; max-width: 320px; z-index: 10; display: none;
                     pointer-events: none;
                 }
                 #cover-info .cover-info-company {
-                    font-size: 20px; font-weight: 600; color: #f5f5f7; margin-bottom: 10px;
+                    font-size: 27px; font-weight: 600; color: #f5f5f7; margin-bottom: 12px;
                 }
                 #cover-info .cover-info-label {
-                    font-size: 13px; letter-spacing: .12em; text-transform: uppercase;
-                    color: #c9a86a; margin-bottom: 6px;
+                    font-size: 16px; letter-spacing: .12em; text-transform: uppercase;
+                    color: #c9a86a; margin-bottom: 8px;
                 }
                 #cover-info .cover-info-date {
-                    font-size: 12px; color: #a1a1a6;
+                    font-size: 14px; color: #a1a1a6;
                 }
 
                 .stage.zoom-armed { cursor: zoom-in; }
@@ -287,9 +287,9 @@ public static class CatalogHtmlBuilder
                 // creeps far enough left to sit under the toolbar rail.
                 function positionCoverInfo(referenceEl) {
                     const rect = referenceEl.getBoundingClientRect();
-                    const gap = 28;
+                    const gap = 10;
                     const desiredRight = window.innerWidth - rect.left + gap;
-                    coverInfoEl.style.right = `${Math.min(desiredRight, window.innerWidth - 350)}px`;
+                    coverInfoEl.style.right = `${Math.min(desiredRight, window.innerWidth - 400)}px`;
                 }
 
                 // Pixel bounds of the wooden niche opening inside catalog-bg.jpg (2400x1570),
