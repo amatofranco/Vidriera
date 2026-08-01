@@ -93,6 +93,8 @@ if (app.Environment.IsProduction())
     app.UseHttpsRedirection();
 }
 
+app.UseStaticFiles();
+
 app.UseCors();
 
 app.UseAuthentication();

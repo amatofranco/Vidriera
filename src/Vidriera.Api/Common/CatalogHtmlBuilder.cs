@@ -21,6 +21,21 @@ public static class CatalogHtmlBuilder
                 html, body { height: 100%; margin: 0; background: #1c1c1e; color: #f5f5f7; font-family: system-ui, sans-serif; }
                 body { overflow: auto; }
 
+                .scene-bg {
+                    position: fixed; inset: 0; z-index: -1;
+                    background: url('/images/catalog-bg.jpg') center / cover no-repeat;
+                }
+                .scene-bg::before {
+                    /* Warm spotlight focused on where the catalog sits. */
+                    content: ""; position: absolute; inset: 0;
+                    background: radial-gradient(ellipse 55% 60% at center, transparent 0%, rgba(10,8,4,.4) 55%, rgba(4,3,2,.82) 100%);
+                }
+                .scene-bg::after {
+                    /* Faint diagonal glass reflection, reinforcing the "vidriera" concept. */
+                    content: ""; position: absolute; inset: 0;
+                    background: linear-gradient(115deg, transparent 38%, rgba(255,255,255,.05) 49%, rgba(255,255,255,.1) 52%, transparent 63%);
+                }
+
                 .toolbar {
                     position: fixed; left: 14px; top: 50%; transform: translateY(-50%);
                     display: flex; flex-direction: column; gap: 8px;
@@ -76,6 +91,7 @@ public static class CatalogHtmlBuilder
             </style>
         </head>
         <body>
+            <div class="scene-bg"></div>
             <div id="toolbar" class="toolbar" style="display: none;">
                 <button id="lens-btn" title="Lupa">&#128269;</button>
                 <button id="fullscreen-btn" title="Pantalla completa">&#9974;</button>
