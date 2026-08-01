@@ -60,6 +60,7 @@ public static class CatalogHtmlBuilder
                 .side-nav:disabled { opacity: 0; cursor: default; }
 
                 .stage { min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 16px 0; box-sizing: border-box; }
+                .stage:fullscreen { background: #000; padding: 0; }
                 #flipbook { visibility: hidden; filter: drop-shadow(0 18px 30px rgba(0,0,0,.5)); }
                 .page-content { width: 100%; height: 100%; background: white; }
                 .page-content img { width: 100%; height: 100%; display: block; user-select: none; }
@@ -113,6 +114,7 @@ public static class CatalogHtmlBuilder
                 const loadingEl = document.getElementById("loading");
                 const loadingTextEl = document.getElementById("loading-text");
                 const flipbookEl = document.getElementById("flipbook");
+                const stageEl = document.querySelector(".stage");
                 const pageInfoEl = document.getElementById("page-info");
                 const prevBtn = document.getElementById("prev");
                 const nextBtn = document.getElementById("next");
@@ -124,11 +126,13 @@ public static class CatalogHtmlBuilder
                 const lensCtx = lensCanvas.getContext("2d");
                 lensCtx.imageSmoothingQuality = "high";
 
+                // Fullscreen only the book's own stage, not the whole page -- so the scene
+                // background and toolbar disappear entirely instead of coming along for the ride.
                 fullscreenBtn.addEventListener("click", () => {
                     if (document.fullscreenElement) {
                         document.exitFullscreen();
                     } else {
-                        document.documentElement.requestFullscreen().catch(() => {});
+                        stageEl.requestFullscreen().catch(() => {});
                     }
                 });
                 printBtn.addEventListener("click", () => {
@@ -241,10 +245,18 @@ public static class CatalogHtmlBuilder
                 // to a sane minimum so extreme browser zoom (Chrome's Ctrl+/Ctrl- affects
                 // window.innerWidth/Height and devicePixelRatio) can't collapse it to 0.
                 function computeFitSize(pageAspect) {
-                    const margin = 32;
-                    const toolbarSpace = 90;
-                    const nicheW = getNicheMaxWidth() * 0.94;
-                    const availW = Math.max(Math.min(window.innerWidth - toolbarSpace - margin * 2, nicheW), 100);
+                    // Fullscreen shows only the book's own stage (no scene, no toolbar), so there's
+                    // no niche to clamp to and no toolbar rail to dodge -- use the whole screen.
+                    const inFullscreen = !!document.fullscreenElement;
+                    const margin = inFullscreen ? 0 : 32;
+                    let availW;
+                    if (inFullscreen) {
+                        availW = Math.max(window.innerWidth - margin * 2, 100);
+                    } else {
+                        const toolbarSpace = 90;
+                        const nicheW = getNicheMaxWidth() * 0.94;
+                        availW = Math.max(Math.min(window.innerWidth - toolbarSpace - margin * 2, nicheW), 100);
+                    }
                     const availH = Math.max(window.innerHeight - margin * 2, 100);
 
                     let w = availW;
@@ -306,6 +318,7 @@ public static class CatalogHtmlBuilder
                             positionSideNav(img);
                         }
                         fitStatic();
+                        document.addEventListener("fullscreenchange", fitStatic);
 
                         let resizeTimer = null;
                         window.addEventListener("resize", () => {
@@ -381,6 +394,7 @@ public static class CatalogHtmlBuilder
                     }
 
                     buildPageFlip();
+                    document.addEventListener("fullscreenchange", buildPageFlip);
 
                     // Only a genuine window resize rebuilds the book at a new fit size. A browser
                     // zoom change (Ctrl+/Ctrl-, which also fires "resize" and changes
