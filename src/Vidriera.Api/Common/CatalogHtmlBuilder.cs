@@ -182,24 +182,48 @@ public static class CatalogHtmlBuilder
                 });
 
                 const ZOOM_LEVEL = 2;
+                // "Armed" = the zoom tool is selected (lupa cursor showing over the book), a
+                // click on the book itself is what actually triggers the fixed zoom-in/out.
+                let zoomArmed = false;
                 let isZoomed = false;
 
-                lensBtn.addEventListener("click", () => {
-                    isZoomed = !isZoomed;
-                    lensBtn.classList.toggle("active", isZoomed);
+                // The zoomed element gets recreated on every rebuild (see the fresh #flipbook
+                // swap above), so it's queried fresh rather than captured once.
+                function currentZoomTarget() {
+                    return document.getElementById("flipbook") || document.getElementById("static-page");
+                }
+
+                function setZoomed(zoomed, clickEvent) {
+                    isZoomed = zoomed;
                     zoomFrameEl.classList.toggle("zoomed", isZoomed);
-                    zoomFrameEl.style.cursor = isZoomed ? "zoom-out" : "zoom-in";
-                    if (!isZoomed) {
-                        const target = document.getElementById("flipbook") || document.getElementById("static-page");
-                        if (target) target.style.transformOrigin = "";
+                    zoomFrameEl.style.cursor = isZoomed ? "zoom-out" : (zoomArmed ? "zoom-in" : "");
+                    const target = currentZoomTarget();
+                    if (!target) return;
+                    if (isZoomed && clickEvent) {
+                        const rect = zoomFrameEl.getBoundingClientRect();
+                        const relX = Math.min(Math.max(((clickEvent.clientX - rect.left) / rect.width) * 100, 0), 100);
+                        const relY = Math.min(Math.max(((clickEvent.clientY - rect.top) / rect.height) * 100, 0), 100);
+                        target.style.transformOrigin = `${relX}% ${relY}%`;
+                    } else if (!isZoomed) {
+                        target.style.transformOrigin = "";
                     }
+                }
+
+                lensBtn.addEventListener("click", () => {
+                    zoomArmed = !zoomArmed;
+                    lensBtn.classList.toggle("active", zoomArmed);
+                    zoomFrameEl.style.cursor = zoomArmed ? "zoom-in" : "";
+                    if (!zoomArmed && isZoomed) setZoomed(false);
                 });
 
-                // The zoomed element gets recreated on every rebuild (see the fresh #flipbook
-                // swap above), so it's queried fresh on every move rather than captured once.
+                zoomFrameEl.addEventListener("click", (e) => {
+                    if (!zoomArmed) return;
+                    setZoomed(!isZoomed, e);
+                });
+
                 zoomFrameEl.addEventListener("mousemove", (e) => {
                     if (!isZoomed) return;
-                    const target = document.getElementById("flipbook") || document.getElementById("static-page");
+                    const target = currentZoomTarget();
                     if (!target) return;
                     const rect = zoomFrameEl.getBoundingClientRect();
                     const relX = Math.min(Math.max(((e.clientX - rect.left) / rect.width) * 100, 0), 100);
@@ -349,8 +373,6 @@ public static class CatalogHtmlBuilder
 
                     function buildPageFlip() {
                         const { width, height } = computeFitSize(pageAspect);
-                        zoomFrameEl.style.width = `${width}px`;
-                        zoomFrameEl.style.height = `${height}px`;
                         const wasOpenIndex = pageFlip ? pageFlip.getCurrentPageIndex() : 0;
                         if (pageFlip) {
                             // Guard the teardown: if destroy() ever throws (seen around the
@@ -401,7 +423,15 @@ public static class CatalogHtmlBuilder
                         });
                         if (wasOpenIndex > 0) pageFlip.turnToPage(wasOpenIndex);
                         updateInfo();
-                        requestAnimationFrame(() => positionSideNav(flipbookEl));
+                        requestAnimationFrame(() => {
+                            // Measured, not computed: in a two-page spread the book itself renders
+                            // roughly twice as wide as the single-page "width" fed into PageFlip's
+                            // config above, and that's decided internally by the library -- sizing
+                            // the zoom frame off the config value clipped the second page clean off.
+                            zoomFrameEl.style.width = `${flipbookEl.offsetWidth}px`;
+                            zoomFrameEl.style.height = `${flipbookEl.offsetHeight}px`;
+                            positionSideNav(flipbookEl);
+                        });
                     }
 
                     buildPageFlip();
