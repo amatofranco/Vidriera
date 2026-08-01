@@ -56,6 +56,11 @@ export default function ProductsPage() {
       const result = await getProducts(token);
       setProducts(result);
     } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        logout();
+        router.replace("/login");
+        return;
+      }
       setError(err instanceof ApiError ? err.message : "No se pudieron cargar los productos.");
     } finally {
       setIsLoading(false);
