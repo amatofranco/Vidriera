@@ -121,7 +121,10 @@ public static class CatalogHtmlBuilder
                 const url = "{{fileUrl}}";
                 const loadingEl = document.getElementById("loading");
                 const loadingTextEl = document.getElementById("loading-text");
-                const flipbookEl = document.getElementById("flipbook");
+                // Not const: pageFlip.destroy() below removes this element from the DOM entirely
+                // (it calls block.remove() internally, not just clearing its children), so every
+                // rebuild after the first needs a brand new element in its place.
+                let flipbookEl = document.getElementById("flipbook");
                 const stageEl = document.querySelector(".stage");
                 const pageInfoEl = document.getElementById("page-info");
                 const prevBtn = document.getElementById("prev");
@@ -371,7 +374,14 @@ public static class CatalogHtmlBuilder
                             } catch (e) {
                                 console.error("pageFlip.destroy() failed, rebuilding anyway", e);
                             }
-                            flipbookEl.innerHTML = "";
+                            // destroy() removes flipbookEl itself from the DOM (block.remove()),
+                            // not just its children -- swap in a fresh element so the next
+                            // instance actually attaches to something still in the document.
+                            const fresh = document.createElement("div");
+                            fresh.id = "flipbook";
+                            fresh.style.visibility = "visible";
+                            stageEl.appendChild(fresh);
+                            flipbookEl = fresh;
                         }
 
                         pageFlip = new St.PageFlip(flipbookEl, {
