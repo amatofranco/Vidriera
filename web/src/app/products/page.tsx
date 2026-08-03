@@ -558,12 +558,21 @@ export default function ProductsPage() {
         <button
           onClick={handleGenerateCatalog}
           disabled={selectableCount === 0 || isGenerating}
-          className="rounded-md bg-[#c9a86a] px-4 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-[#d4b57a] disabled:opacity-50"
+          className="flex items-center gap-2 rounded-md bg-[#c9a86a] px-4 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-[#d4b57a] disabled:opacity-50"
         >
+          {isGenerating && (
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-900/25 border-t-zinc-900" />
+          )}
           {isGenerating
-            ? "Generando..."
+            ? "Generando catálogo..."
             : `Generar catálogo (${selectableCount} con stock y ficha)`}
         </button>
+
+        {isGenerating && (
+          <p className="mt-2 text-xs text-zinc-600 dark:text-zinc-400">
+            Puede tardar un momento si el catálogo tiene muchos productos.
+          </p>
+        )}
 
         {catalogResult && (
           <div className="mt-4 text-sm text-zinc-700 dark:text-zinc-300">
