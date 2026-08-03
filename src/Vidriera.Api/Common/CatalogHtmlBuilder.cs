@@ -148,15 +148,18 @@ public static class CatalogHtmlBuilder
                 }
 
                 /* Docked right after the toolbar rail, at the same fixed offset -- reads as an
-                   extension of it rather than a separate floating popover. Open by default. */
+                   extension of it rather than a separate floating popover. Hidden until the
+                   catalog finishes loading (same moment the toolbar itself appears), then open
+                   by default from there. */
                 .index-panel {
                     position: fixed; left: 84px; top: 50%; transform: translateY(-50%);
                     max-height: 70vh; overflow-y: auto; min-width: 180px; max-width: 280px;
                     background: #232325; border-radius: 12px; padding: 12px;
                     box-shadow: 0 8px 24px rgba(0,0,0,.4);
-                    z-index: 20; display: flex; flex-direction: column; gap: 2px;
+                    z-index: 20; display: none; flex-direction: column; gap: 2px;
                 }
-                .index-panel.closed { display: none; }
+                .index-panel.visible { display: flex; }
+                .index-panel.visible.closed { display: none; }
                 #index-list { display: flex; flex-direction: column; gap: 2px; }
                 .index-panel h3 {
                     margin: 0 0 8px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
@@ -532,6 +535,7 @@ public static class CatalogHtmlBuilder
                         nextBtn.disabled = true;
                         pageInfoEl.textContent = "1 / 1";
                         pageInfoEl.style.display = "block";
+                        if (indexPanel) indexPanel.classList.add("visible");
                         positionIndexPanel();
                         return;
                     }
@@ -644,6 +648,7 @@ public static class CatalogHtmlBuilder
                     nextBtn.style.display = "flex";
                     pageInfoEl.style.display = "block";
                     flipbookEl.style.visibility = "visible";
+                    if (indexPanel) indexPanel.classList.add("visible");
                     positionIndexPanel();
                 }).catch((e) => {
                     console.error("Catalog viewer failed:", e);
