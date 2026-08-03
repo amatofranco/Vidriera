@@ -460,7 +460,7 @@ export default function ProductsPage() {
       ) : filteredProducts.length === 0 ? (
         <p className="mb-8 text-zinc-200">Ningún producto coincide con la búsqueda.</p>
       ) : (
-        <ul className="mb-6 divide-y divide-zinc-200 rounded-xl border border-black/10 bg-[#ecdcc0] shadow-lg dark:divide-zinc-800 dark:border-white/10 dark:bg-zinc-900">
+        <ul className="mb-6 max-h-[520px] divide-y divide-zinc-200 overflow-y-auto rounded-xl border border-black/10 bg-[#ecdcc0] shadow-lg dark:divide-zinc-800 dark:border-white/10 dark:bg-zinc-900">
           {filteredProducts.map((product) => (
             <li
               key={product.id}
