@@ -264,16 +264,18 @@ export default function ProductsPage() {
           />
         )}
         <div className="flex items-center justify-between rounded-xl border border-white/10 bg-black/25 px-5 py-4 backdrop-blur-sm">
-          <div className="flex items-center gap-4 text-sm text-zinc-100">
-            <span className="font-medium">{auth.name}</span>
-            <button onClick={logout} className="underline hover:text-white">
-              Salir
-            </button>
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#c9a86a] text-sm font-semibold text-zinc-900">
+              {auth.name.charAt(0).toUpperCase()}
+            </div>
+            <div className="flex flex-col leading-tight">
+              <span className="text-sm font-semibold text-zinc-50">{auth.name}</span>
+              <span className="text-xs text-zinc-300">{auth.companyName}</span>
+            </div>
           </div>
-          <div className="flex flex-col items-end gap-1">
-            <span className="text-xs text-zinc-300">{auth.companyName}</span>
-            <label className="cursor-pointer text-xs text-[#e4c98a] underline hover:text-[#f0d9a8]">
-              {isUploadingLogo ? "Subiendo..." : logoUrl ? "Cambiar banner" : "Subir banner de empresa"}
+          <div className="flex items-center gap-2">
+            <label className="cursor-pointer rounded-md border border-white/15 px-3 py-1.5 text-xs font-medium text-[#e4c98a] transition-colors hover:bg-white/10">
+              {isUploadingLogo ? "Subiendo..." : logoUrl ? "Cambiar banner" : "Subir banner"}
               <input
                 type="file"
                 accept="image/*"
@@ -285,6 +287,12 @@ export default function ProductsPage() {
                 }}
               />
             </label>
+            <button
+              onClick={logout}
+              className="rounded-md border border-white/15 px-3 py-1.5 text-xs font-medium text-zinc-100 transition-colors hover:border-red-400/40 hover:bg-red-500/10 hover:text-red-300"
+            >
+              Salir
+            </button>
           </div>
         </div>
       </header>
