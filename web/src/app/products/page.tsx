@@ -25,6 +25,16 @@ import {
   type Section,
 } from "@/lib/api";
 
+// Mismo límite que el backend ([RequestSizeLimit] en ProductsController/SectionsController) --
+// validar acá evita que un archivo de más subiendo por una conexión lenta se quede
+// "colgado" varios minutos antes de fallar con un error de red genérico.
+const MAX_FILE_SIZE_BYTES = 20_000_000;
+const MAX_FILE_SIZE_LABEL = "20MB";
+
+function formatFileSize(bytes: number) {
+  return `${(bytes / 1_000_000).toFixed(1)}MB`;
+}
+
 export default function ProductsPage() {
   const router = useRouter();
   const { auth, isLoading: authLoading, logout } = useAuth();
@@ -185,15 +195,23 @@ export default function ProductsPage() {
     if (!auth || newFiles.length === 0) return;
     setIsCreating(true);
     setError(null);
-    setUploadProgress({ done: 0, total: newFiles.length });
 
     // The name override only makes sense for a single file; for a bulk pick every
     // product falls back to its own filename (the backend's existing default).
     const nameOverride = newFiles.length === 1 ? newName.trim() || undefined : undefined;
     const failed: { name: string; message: string }[] = [];
-    const files = newFiles;
+    const oversized = newFiles.filter((f) => f.size > MAX_FILE_SIZE_BYTES);
+    const files = newFiles.filter((f) => f.size <= MAX_FILE_SIZE_BYTES);
+    setUploadProgress({ done: 0, total: files.length });
     const CONCURRENCY = 4;
     let cursor = 0;
+
+    for (const file of oversized) {
+      failed.push({
+        name: file.name,
+        message: `Pesa ${formatFileSize(file.size)}, supera el máximo de ${MAX_FILE_SIZE_LABEL}.`,
+      });
+    }
 
     async function worker() {
       while (cursor < files.length) {
@@ -221,8 +239,8 @@ export default function ProductsPage() {
 
     if (failed.length > 0) {
       setError(
-        `${failed.length} de ${files.length} archivo(s) no se pudieron subir: ${failed
-          .map((f) => f.name)
+        `${failed.length} de ${newFiles.length} archivo(s) no se pudieron subir: ${failed
+          .map((f) => `${f.name} (${f.message})`)
           .join(", ")}`
       );
     }
@@ -230,6 +248,12 @@ export default function ProductsPage() {
 
   async function handleUploadSheet(product: Product, file: File) {
     if (!auth) return;
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      setError(
+        `"${file.name}" pesa ${formatFileSize(file.size)}, supera el máximo de ${MAX_FILE_SIZE_LABEL}.`
+      );
+      return;
+    }
     try {
       await uploadSheet(auth.token, product.id, file);
       setProducts((prev) =>
@@ -430,6 +454,12 @@ export default function ProductsPage() {
   async function handleCreateSection(e: React.FormEvent) {
     e.preventDefault();
     if (!auth || !newSectionFile) return;
+    if (newSectionFile.size > MAX_FILE_SIZE_BYTES) {
+      setError(
+        `"${newSectionFile.name}" pesa ${formatFileSize(newSectionFile.size)}, supera el máximo de ${MAX_FILE_SIZE_LABEL}.`
+      );
+      return;
+    }
     setIsCreatingSection(true);
     setError(null);
     try {
@@ -701,7 +731,7 @@ export default function ProductsPage() {
         <div className="flex flex-wrap items-end gap-4">
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-              Fichas PDF (nuevo/s producto/s)
+              Fichas PDF (nuevo/s producto/s) <span className="font-normal text-zinc-500 dark:text-zinc-500">(máx. {MAX_FILE_SIZE_LABEL} c/u)</span>
             </label>
             <label className="flex cursor-pointer items-center gap-2 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800">
               <span className="rounded bg-[#c9a86a] px-2 py-0.5 text-xs font-medium text-zinc-900">
@@ -769,7 +799,7 @@ export default function ProductsPage() {
       >
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            PDF de carátula (nueva sección)
+            PDF de carátula (nueva sección) <span className="font-normal text-zinc-500 dark:text-zinc-500">(máx. {MAX_FILE_SIZE_LABEL})</span>
           </label>
           <label className="flex cursor-pointer items-center gap-2 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800">
             <span className="rounded bg-[#c9a86a] px-2 py-0.5 text-xs font-medium text-zinc-900">
