@@ -41,7 +41,6 @@ export default function ProductsPage() {
   const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [pendingBulkDelete, setPendingBulkDelete] = useState<{
     label: string;
     targets: Product[];
@@ -230,17 +229,10 @@ export default function ProductsPage() {
     }
   }
 
-  function toggleSelectedForDeletion(id: string) {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }
-
   function requestBulkDeleteSelected() {
-    const targets = products.filter((p) => selectedIds.has(p.id));
+    // Same checkbox as "tiene stock" -- checking it means "selected", whether that
+    // selection ends up in a generated catalog or gets bulk-deleted.
+    const targets = products.filter((p) => p.hasStock);
     if (targets.length === 0) return;
     setPendingBulkDelete({
       label: `${targets.length} producto${targets.length === 1 ? "" : "s"} seleccionado${targets.length === 1 ? "" : "s"}`,
@@ -273,12 +265,6 @@ export default function ProductsPage() {
         try {
           await deleteProduct(auth!.token, product.id);
           setProducts((prev) => prev.filter((p) => p.id !== product.id));
-          setSelectedIds((prev) => {
-            if (!prev.has(product.id)) return prev;
-            const next = new Set(prev);
-            next.delete(product.id);
-            return next;
-          });
         } catch {
           failed.push(product.name);
         }
@@ -358,6 +344,7 @@ export default function ProductsPage() {
   }
 
   const selectableCount = products.filter((p) => p.hasStock && p.hasSheet).length;
+  const checkedCount = products.filter((p) => p.hasStock).length;
   const filteredProducts = products.filter((p) =>
     p.name.toLowerCase().includes(search.trim().toLowerCase())
   );
@@ -524,10 +511,10 @@ export default function ProductsPage() {
           <button
             type="button"
             onClick={requestBulkDeleteSelected}
-            disabled={selectedIds.size === 0}
+            disabled={checkedCount === 0}
             className="rounded-md border border-red-400/30 px-3 py-2 text-xs font-medium whitespace-nowrap text-red-300 transition-colors hover:bg-red-500/10 disabled:opacity-40"
           >
-            Borrar seleccionados ({selectedIds.size})
+            Borrar seleccionados ({checkedCount})
           </button>
           <button
             type="button"
@@ -587,14 +574,6 @@ export default function ProductsPage() {
               >
                 ⠿
               </span>
-              <input
-                type="checkbox"
-                checked={selectedIds.has(product.id)}
-                onChange={() => toggleSelectedForDeletion(product.id)}
-                title="Seleccionar para borrar"
-                className="h-4 w-4"
-                style={{ accentColor: "#dc2626" }}
-              />
               <input
                 key={`${product.id}-${products.findIndex((p) => p.id === product.id)}`}
                 type="number"
