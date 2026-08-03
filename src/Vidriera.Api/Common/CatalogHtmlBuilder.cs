@@ -1,15 +1,31 @@
 using System.Net;
+using System.Text.Json;
 using Vidriera.Application.Catalogs;
 
 namespace Vidriera.Api.Common;
 
 public static class CatalogHtmlBuilder
 {
+    private static readonly JsonSerializerOptions SectionsJsonOptions = new(JsonSerializerDefaults.Web);
+
     public static string BuildViewerPage(GeneratedCatalogViewDto dto)
     {
         var fileUrl = WebUtility.HtmlEncode(dto.FileUrl);
         var companyName = WebUtility.HtmlEncode(dto.CompanyName);
         var generatedAt = WebUtility.HtmlEncode(dto.GeneratedAt.ToString("dd/MM/yyyy"));
+
+        // Only present at all when the catalog actually has carátulas -- an empty toolbar
+        // button/panel with nothing to show would just be dead UI on every other catalog.
+        var hasSections = dto.Sections.Count > 0;
+        var sectionsJsonEncoded = hasSections
+            ? WebUtility.HtmlEncode(JsonSerializer.Serialize(dto.Sections, SectionsJsonOptions))
+            : "";
+        var sectionsDataHtml = hasSections
+            ? $"<div id=\"sections-data\" data-sections=\"{sectionsJsonEncoded}\" style=\"display: none;\"></div>"
+            : "";
+        var indexButtonHtml = hasSections
+            ? "<button id=\"index-btn\" title=\"Índice\">&#128209;</button>"
+            : "";
 
         return $$"""
         <!doctype html>
@@ -124,6 +140,25 @@ public static class CatalogHtmlBuilder
                 .stage.zoomed #static-page {
                     transform: scale(2);
                 }
+
+                .index-panel {
+                    position: fixed; right: 14px; top: 50%; transform: translateY(-50%);
+                    max-height: 70vh; overflow-y: auto; min-width: 180px; max-width: 280px;
+                    background: #232325; border-radius: 12px; padding: 12px;
+                    box-shadow: 0 8px 24px rgba(0,0,0,.4);
+                    z-index: 20; display: none; flex-direction: column; gap: 2px;
+                }
+                .index-panel.open { display: flex; }
+                .index-panel h3 {
+                    margin: 0 0 8px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+                    color: #a1a1a6;
+                }
+                .index-item {
+                    background: transparent; border: none; color: #f5f5f7; text-align: left;
+                    padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 13px;
+                    font-family: inherit;
+                }
+                .index-item:hover { background: #3a3a3c; }
             </style>
         </head>
         <body>
@@ -138,10 +173,16 @@ public static class CatalogHtmlBuilder
                     <button id="lens-btn" title="Zoom">&#128269;</button>
                     <button id="fullscreen-btn" title="Pantalla completa">&#9974;</button>
                     <button id="print-btn" title="Imprimir">&#128424;</button>
+                    {{indexButtonHtml}}
                     <a id="download-btn" href="{{fileUrl}}" download title="Descargar PDF">&#11015;</a>
                 </div>
                 <button id="prev" class="side-nav" title="Anterior" style="display: none;">&#8249;</button>
                 <button id="next" class="side-nav" title="Siguiente" style="display: none;">&#8250;</button>
+                <div id="index-panel" class="index-panel">
+                    <h3>Índice</h3>
+                    <div id="index-list"></div>
+                </div>
+                {{sectionsDataHtml}}
                 <div id="cover-info">
                     <div class="cover-info-company">{{companyName}}</div>
                     <div class="cover-info-label">Catálogo</div>
@@ -171,6 +212,19 @@ public static class CatalogHtmlBuilder
                 const fullscreenBtn = document.getElementById("fullscreen-btn");
                 const printBtn = document.getElementById("print-btn");
                 const lensBtn = document.getElementById("lens-btn");
+                const indexBtn = document.getElementById("index-btn");
+                const indexPanel = document.getElementById("index-panel");
+                const indexList = document.getElementById("index-list");
+                const sectionsDataEl = document.getElementById("sections-data");
+                const sectionsData = sectionsDataEl
+                    ? JSON.parse(sectionsDataEl.dataset.sections || "[]")
+                    : [];
+
+                if (indexBtn) {
+                    indexBtn.addEventListener("click", () => {
+                        indexPanel.classList.toggle("open");
+                    });
+                }
 
                 // Fullscreen only the book's own stage, not the whole page -- so the scene
                 // background and toolbar disappear entirely instead of coming along for the ride.
@@ -413,6 +467,10 @@ public static class CatalogHtmlBuilder
                     let lastDpr = window.devicePixelRatio || 1;
 
                     if (images.length <= 1) {
+                        // Nothing to jump to with a single page -- hide the index button rather
+                        // than leave it wired to a pageFlip instance that doesn't exist here.
+                        if (indexBtn) indexBtn.style.display = "none";
+
                         const img = document.createElement("img");
                         img.id = "static-page";
                         img.src = images[0];
@@ -518,6 +576,19 @@ public static class CatalogHtmlBuilder
                     }
 
                     buildPageFlip();
+
+                    if (indexList && sectionsData.length > 0) {
+                        sectionsData.forEach((entry) => {
+                            const item = document.createElement("button");
+                            item.className = "index-item";
+                            item.textContent = entry.name;
+                            item.addEventListener("click", () => {
+                                pageFlip.turnToPage(entry.startPage - 1);
+                                indexPanel.classList.remove("open");
+                            });
+                            indexList.appendChild(item);
+                        });
+                    }
 
                     // Only a genuine window resize rebuilds the book at a new fit size. A browser
                     // zoom change (Ctrl+/Ctrl-, which also fires "resize" and changes

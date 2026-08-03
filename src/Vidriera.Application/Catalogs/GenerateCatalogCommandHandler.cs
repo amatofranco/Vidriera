@@ -73,6 +73,10 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             });
 
         var pdfBytesInOrder = new List<byte[]>();
+        // Parallel to pdfBytesInOrder -- non-null at the index where a section's own cover
+        // page was added, so the page offsets returned by the merge can be matched back to
+        // "which section starts here" without re-walking topLevel a second time.
+        var coverMarkers = new List<Section?>();
         var includedProducts = new List<Product>();
 
         foreach (var item in topLevel)
@@ -90,24 +94,38 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
                 }
 
                 pdfBytesInOrder.Add(await DownloadBytesAsync(section.CoverPdfBlobKey!, cancellationToken));
+                coverMarkers.Add(section);
                 foreach (var member in members)
                 {
                     pdfBytesInOrder.Add(await DownloadBytesAsync(member.SheetPdfBlobKey!, cancellationToken));
+                    coverMarkers.Add(null);
                     includedProducts.Add(member);
                 }
             }
             else if (item is Product product && selectedIds.Contains(product.Id))
             {
                 pdfBytesInOrder.Add(await DownloadBytesAsync(product.SheetPdfBlobKey!, cancellationToken));
+                coverMarkers.Add(null);
                 includedProducts.Add(product);
             }
         }
 
-        var mergedPdf = await _pdfMergeService.MergeAsync(pdfBytesInOrder, cancellationToken);
+        var mergeResult = await _pdfMergeService.MergeAsync(pdfBytesInOrder, cancellationToken);
+
+        var sectionsSnapshot = new List<CatalogSectionSnapshot>();
+        var pageCursor = 0;
+        for (var i = 0; i < mergeResult.PageCounts.Count; i++)
+        {
+            if (coverMarkers[i] is { } coverSection)
+            {
+                sectionsSnapshot.Add(new CatalogSectionSnapshot(coverSection.Name, pageCursor + 1));
+            }
+            pageCursor += mergeResult.PageCounts[i];
+        }
 
         var generatedBlobKey = $"companies/{request.CompanyId}/catalogs/{Guid.NewGuid()}.pdf";
 
-        using (var mergedStream = new MemoryStream(mergedPdf))
+        using (var mergedStream = new MemoryStream(mergeResult.Bytes))
         {
             await _blobStorageService.UploadAsync(generatedBlobKey, mergedStream, "application/pdf", cancellationToken);
         }
@@ -122,6 +140,8 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             .Select(p => new CatalogProductSnapshot(p.Id, p.Name, p.Code))
             .ToList();
 
+        var snapshot = new CatalogSnapshot(productsSnapshot, sectionsSnapshot);
+
         var catalog = new GeneratedCatalog
         {
             Company = company,
@@ -130,7 +150,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             GeneratedPdfBlobKey = generatedBlobKey,
             ExpiresAt = expiresAt,
             Status = CatalogStatus.Active,
-            ProductsSnapshotJson = JsonSerializer.Serialize(productsSnapshot)
+            ProductsSnapshotJson = JsonSerializer.Serialize(snapshot)
         };
 
         using var transaction = _session.BeginTransaction();

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using MediatR;
 using Microsoft.Extensions.Options;
 using NHibernate;
@@ -39,6 +40,27 @@ public class GetGeneratedCatalogQueryHandler : IRequestHandler<GetGeneratedCatal
         }
 
         var fileUrl = $"{_options.PublicBaseUrl.TrimEnd('/')}/api/catalogs/{catalog.Id}/file";
-        return new GeneratedCatalogViewDto(catalog.Id, catalog.GeneratedAt, catalog.ExpiresAt, fileUrl, catalog.Company.Name);
+
+        // Catalogs generated before the sections-index feature existed have ProductsSnapshotJson
+        // as a bare array (the old shape), which fails to deserialize as CatalogSnapshot -- treat
+        // that the same as "no sections", rather than a 500 on an old, otherwise-valid catalog.
+        CatalogSnapshot snapshot;
+        try
+        {
+            snapshot = JsonSerializer.Deserialize<CatalogSnapshot>(catalog.ProductsSnapshotJson)
+                ?? new CatalogSnapshot([], []);
+        }
+        catch (JsonException)
+        {
+            snapshot = new CatalogSnapshot([], []);
+        }
+
+        return new GeneratedCatalogViewDto(
+            catalog.Id,
+            catalog.GeneratedAt,
+            catalog.ExpiresAt,
+            fileUrl,
+            catalog.Company.Name,
+            snapshot.Sections);
     }
 }

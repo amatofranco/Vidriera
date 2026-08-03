@@ -1,6 +1,8 @@
 namespace Vidriera.Application.Abstractions;
 
+public record PdfMergeResult(byte[] Bytes, IReadOnlyList<int> PageCounts);
+
 public interface IPdfMergeService
 {
-    Task<byte[]> MergeAsync(IReadOnlyList<byte[]> pdfsInOrder, CancellationToken cancellationToken);
+    Task<PdfMergeResult> MergeAsync(IReadOnlyList<byte[]> pdfsInOrder, CancellationToken cancellationToken);
 }
