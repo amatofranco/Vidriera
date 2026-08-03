@@ -618,16 +618,6 @@ export default function ProductsPage() {
         }
         className={`flex items-center justify-between gap-3 px-4 py-3 ${isDragged ? "opacity-40" : ""}`}
       >
-        {isBulkAssigningSection && (
-          <input
-            type="checkbox"
-            checked={bulkAssignSelectedIds.has(product.id)}
-            onChange={() => toggleBulkAssignSelected(product.id)}
-            title="Seleccionar para asociar a carátula"
-            className="h-4 w-4"
-            style={{ accentColor: "#e4c98a" }}
-          />
-        )}
         <span
           draggable
           onDragStart={() =>
@@ -659,10 +649,13 @@ export default function ProductsPage() {
         <label className="flex flex-1 items-center gap-3">
           <input
             type="checkbox"
-            checked={product.hasStock}
-            onChange={() => handleToggleStock(product)}
+            checked={isBulkAssigningSection ? bulkAssignSelectedIds.has(product.id) : product.hasStock}
+            onChange={() =>
+              isBulkAssigningSection ? toggleBulkAssignSelected(product.id) : handleToggleStock(product)
+            }
+            title={isBulkAssigningSection ? "Seleccionar para asociar a carátula" : "Tiene stock"}
             className="h-4 w-4"
-            style={{ accentColor: "#c9a86a" }}
+            style={{ accentColor: isBulkAssigningSection ? "#e4c98a" : "#c9a86a" }}
           />
           <span className="text-zinc-900 dark:text-zinc-50">{product.name}</span>
         </label>
@@ -921,33 +914,53 @@ export default function ProductsPage() {
           />
           <button
             type="button"
-            onClick={() => handleBulkStockToggle(true)}
+            onClick={() =>
+              isBulkAssigningSection
+                ? setBulkAssignSelectedIds((prev) => {
+                    const next = new Set(prev);
+                    filteredProducts.forEach((p) => next.add(p.id));
+                    return next;
+                  })
+                : handleBulkStockToggle(true)
+            }
             className="rounded-md border border-white/20 px-3 py-2 text-xs font-medium whitespace-nowrap text-zinc-100 transition-colors hover:bg-white/10"
           >
             Marcar {search.trim() ? "filtrados" : "todos"}
           </button>
           <button
             type="button"
-            onClick={() => handleBulkStockToggle(false)}
+            onClick={() =>
+              isBulkAssigningSection
+                ? setBulkAssignSelectedIds((prev) => {
+                    const next = new Set(prev);
+                    filteredProducts.forEach((p) => next.delete(p.id));
+                    return next;
+                  })
+                : handleBulkStockToggle(false)
+            }
             className="rounded-md border border-white/20 px-3 py-2 text-xs font-medium whitespace-nowrap text-zinc-100 transition-colors hover:bg-white/10"
           >
             Desmarcar {search.trim() ? "filtrados" : "todos"}
           </button>
-          <button
-            type="button"
-            onClick={requestBulkDeleteSelected}
-            disabled={checkedCount === 0}
-            className="rounded-md border border-red-400/30 px-3 py-2 text-xs font-medium whitespace-nowrap text-red-300 transition-colors hover:bg-red-500/10 disabled:opacity-40"
-          >
-            Borrar seleccionados ({checkedCount})
-          </button>
-          <button
-            type="button"
-            onClick={requestBulkDeleteAll}
-            className="rounded-md border border-red-400/30 px-3 py-2 text-xs font-medium whitespace-nowrap text-red-300 transition-colors hover:bg-red-500/10"
-          >
-            Borrar {search.trim() ? "filtrados" : "todos"}
-          </button>
+          {!isBulkAssigningSection && (
+            <button
+              type="button"
+              onClick={requestBulkDeleteSelected}
+              disabled={checkedCount === 0}
+              className="rounded-md border border-red-400/30 px-3 py-2 text-xs font-medium whitespace-nowrap text-red-300 transition-colors hover:bg-red-500/10 disabled:opacity-40"
+            >
+              Borrar seleccionados ({checkedCount})
+            </button>
+          )}
+          {!isBulkAssigningSection && (
+            <button
+              type="button"
+              onClick={requestBulkDeleteAll}
+              className="rounded-md border border-red-400/30 px-3 py-2 text-xs font-medium whitespace-nowrap text-red-300 transition-colors hover:bg-red-500/10"
+            >
+              Borrar {search.trim() ? "filtrados" : "todos"}
+            </button>
+          )}
           {sections.length > 0 && (
             <button
               type="button"
