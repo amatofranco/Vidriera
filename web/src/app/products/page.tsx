@@ -411,6 +411,43 @@ export default function ProductsPage() {
     return products.filter((p) => p.sectionId === sectionId).sort((a, b) => a.sortOrder - b.sortOrder);
   }
 
+  // Same dual meaning as the per-product checkbox: toggles "tiene stock" for every
+  // member normally, or toggles their bulk-assign selection while that mode is active.
+  function sectionCheckboxChecked(sectionId: string) {
+    const members = sectionMembers(sectionId);
+    if (members.length === 0) return false;
+    return isBulkAssigningSection
+      ? members.every((p) => bulkAssignSelectedIds.has(p.id))
+      : members.every((p) => p.hasStock);
+  }
+
+  async function handleToggleSectionCheckbox(section: Section) {
+    const members = sectionMembers(section.id);
+    if (members.length === 0) return;
+    const nextValue = !sectionCheckboxChecked(section.id);
+
+    if (isBulkAssigningSection) {
+      setBulkAssignSelectedIds((prev) => {
+        const next = new Set(prev);
+        members.forEach((p) => (nextValue ? next.add(p.id) : next.delete(p.id)));
+        return next;
+      });
+      return;
+    }
+
+    if (!auth) return;
+    const targets = members.filter((p) => p.hasStock !== nextValue);
+    if (targets.length === 0) return;
+    const targetIds = new Set(targets.map((p) => p.id));
+    setProducts((prev) => prev.map((p) => (targetIds.has(p.id) ? { ...p, hasStock: nextValue } : p)));
+    try {
+      await Promise.all(targets.map((p) => updateStock(auth.token, p.id, nextValue)));
+    } catch {
+      setError(`No se pudo actualizar el stock de todos los productos de "${section.name}".`);
+      loadProducts(auth.token, { silent: true });
+    }
+  }
+
   async function persistSectionReorder(sectionId: string, members: Product[]) {
     if (!auth) return;
     try {
@@ -1077,6 +1114,19 @@ export default function ProductsPage() {
                     }}
                     title="Posición en el orden"
                     className="w-12 rounded border border-zinc-300 px-1 py-0.5 text-center text-xs text-zinc-700 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                  />
+                  <input
+                    type="checkbox"
+                    checked={sectionCheckboxChecked(row.section.id)}
+                    onChange={() => handleToggleSectionCheckbox(row.section)}
+                    disabled={sectionMembers(row.section.id).length === 0}
+                    title={
+                      isBulkAssigningSection
+                        ? "Seleccionar todos los productos de esta carátula"
+                        : "Marcar/desmarcar stock de todos los productos de esta carátula"
+                    }
+                    className="h-4 w-4 disabled:opacity-30"
+                    style={{ accentColor: isBulkAssigningSection ? "#e4c98a" : "#c9a86a" }}
                   />
                   <span className="flex-1 font-semibold text-zinc-900 dark:text-zinc-50">
                     📑 {row.section.name}
