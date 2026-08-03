@@ -41,6 +41,13 @@ export default function ProductsPage() {
   const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [pendingBulkDelete, setPendingBulkDelete] = useState<{
+    label: string;
+    targets: Product[];
+  } | null>(null);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
   const [search, setSearch] = useState("");
   const [draggedId, setDraggedId] = useState<string | null>(null);
 
@@ -220,6 +227,70 @@ export default function ProductsPage() {
     } finally {
       setIsDeleting(false);
       setConfirmingDeleteId(null);
+    }
+  }
+
+  function toggleSelectedForDeletion(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function requestBulkDeleteSelected() {
+    const targets = products.filter((p) => selectedIds.has(p.id));
+    if (targets.length === 0) return;
+    setPendingBulkDelete({
+      label: `${targets.length} producto${targets.length === 1 ? "" : "s"} seleccionado${targets.length === 1 ? "" : "s"}`,
+      targets,
+    });
+  }
+
+  function requestBulkDeleteAll() {
+    if (filteredProducts.length === 0) return;
+    setPendingBulkDelete({
+      label: search.trim()
+        ? `${filteredProducts.length} producto${filteredProducts.length === 1 ? "" : "s"} filtrado${filteredProducts.length === 1 ? "" : "s"}`
+        : `TODOS los productos (${filteredProducts.length})`,
+      targets: filteredProducts,
+    });
+  }
+
+  async function handleConfirmBulkDelete() {
+    if (!auth || !pendingBulkDelete) return;
+    setIsBulkDeleting(true);
+    setError(null);
+    const targets = pendingBulkDelete.targets;
+    const failed: string[] = [];
+    const CONCURRENCY = 4;
+    let cursor = 0;
+
+    async function worker() {
+      while (cursor < targets.length) {
+        const product = targets[cursor++];
+        try {
+          await deleteProduct(auth!.token, product.id);
+          setProducts((prev) => prev.filter((p) => p.id !== product.id));
+          setSelectedIds((prev) => {
+            if (!prev.has(product.id)) return prev;
+            const next = new Set(prev);
+            next.delete(product.id);
+            return next;
+          });
+        } catch {
+          failed.push(product.name);
+        }
+      }
+    }
+
+    await Promise.all(Array.from({ length: Math.min(CONCURRENCY, targets.length) }, worker));
+
+    setIsBulkDeleting(false);
+    setPendingBulkDelete(null);
+    if (failed.length > 0) {
+      setError(`No se pudieron borrar: ${failed.join(", ")}`);
     }
   }
 
@@ -450,6 +521,43 @@ export default function ProductsPage() {
           >
             Desmarcar {search.trim() ? "filtrados" : "todos"}
           </button>
+          <button
+            type="button"
+            onClick={requestBulkDeleteSelected}
+            disabled={selectedIds.size === 0}
+            className="rounded-md border border-red-400/30 px-3 py-2 text-xs font-medium whitespace-nowrap text-red-300 transition-colors hover:bg-red-500/10 disabled:opacity-40"
+          >
+            Borrar seleccionados ({selectedIds.size})
+          </button>
+          <button
+            type="button"
+            onClick={requestBulkDeleteAll}
+            className="rounded-md border border-red-400/30 px-3 py-2 text-xs font-medium whitespace-nowrap text-red-300 transition-colors hover:bg-red-500/10"
+          >
+            Borrar {search.trim() ? "filtrados" : "todos"}
+          </button>
+        </div>
+      )}
+
+      {pendingBulkDelete && (
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-md border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+          <span>¿Borrar {pendingBulkDelete.label}? Esta acción no se puede deshacer.</span>
+          <div className="flex gap-2">
+            <button
+              onClick={handleConfirmBulkDelete}
+              disabled={isBulkDeleting}
+              className="rounded bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-500 disabled:opacity-50"
+            >
+              {isBulkDeleting ? "Borrando..." : "Sí, borrar"}
+            </button>
+            <button
+              onClick={() => setPendingBulkDelete(null)}
+              disabled={isBulkDeleting}
+              className="rounded bg-zinc-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-zinc-600 disabled:opacity-50"
+            >
+              Cancelar
+            </button>
+          </div>
         </div>
       )}
 
@@ -479,6 +587,14 @@ export default function ProductsPage() {
               >
                 ⠿
               </span>
+              <input
+                type="checkbox"
+                checked={selectedIds.has(product.id)}
+                onChange={() => toggleSelectedForDeletion(product.id)}
+                title="Seleccionar para borrar"
+                className="h-4 w-4"
+                style={{ accentColor: "#dc2626" }}
+              />
               <input
                 key={`${product.id}-${products.findIndex((p) => p.id === product.id)}`}
                 type="number"
