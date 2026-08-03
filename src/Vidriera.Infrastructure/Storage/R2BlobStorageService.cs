@@ -50,12 +50,13 @@ public class R2BlobStorageService : IBlobStorageService
 
     public async Task<Stream> DownloadAsync(string key, CancellationToken cancellationToken)
     {
+        // Streamed straight through, not buffered into memory first -- for a large merged
+        // catalog PDF, fully downloading it here before forwarding a single byte to the
+        // browser meant waiting out the whole R2-to-server transfer *twice* (once into this
+        // process, once out to the client) before the viewer could even start parsing it.
+        // Disposing the returned stream also disposes the underlying GetObjectResponse.
         var response = await _client.GetObjectAsync(_bucketName, key, cancellationToken);
-
-        var memoryStream = new MemoryStream();
-        await response.ResponseStream.CopyToAsync(memoryStream, cancellationToken);
-        memoryStream.Position = 0;
-        return memoryStream;
+        return response.ResponseStream;
     }
 
     public async Task DeleteAsync(string key, CancellationToken cancellationToken)
