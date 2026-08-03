@@ -27,9 +27,12 @@ export default function ProductsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [newFile, setNewFile] = useState<File | null>(null);
+  const [newFiles, setNewFiles] = useState<File[]>([]);
   const [newName, setNewName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(
+    null
+  );
   const newFileInputRef = useRef<HTMLInputElement>(null);
 
   const [isGenerating, setIsGenerating] = useState(false);
@@ -123,21 +126,73 @@ export default function ProductsPage() {
     }
   }
 
+  // Operates on whatever the search box currently shows, so a filtered subset can be
+  // bulk-toggled without touching the rest of a long (e.g. 200-product) list.
+  async function handleBulkStockToggle(nextValue: boolean) {
+    if (!auth) return;
+    const query = search.trim().toLowerCase();
+    const targets = products.filter(
+      (p) => p.name.toLowerCase().includes(query) && p.hasStock !== nextValue
+    );
+    if (targets.length === 0) return;
+
+    const targetIds = new Set(targets.map((p) => p.id));
+    setProducts((prev) =>
+      prev.map((p) => (targetIds.has(p.id) ? { ...p, hasStock: nextValue } : p))
+    );
+    try {
+      await Promise.all(targets.map((p) => updateStock(auth.token, p.id, nextValue)));
+    } catch {
+      setError("No se pudo actualizar el stock de todos los productos, revisá la lista.");
+      loadProducts(auth.token);
+    }
+  }
+
   async function handleCreateProduct(e: React.FormEvent) {
     e.preventDefault();
-    if (!auth || !newFile) return;
+    if (!auth || newFiles.length === 0) return;
     setIsCreating(true);
     setError(null);
-    try {
-      const created = await createProduct(auth.token, newFile, newName.trim() || undefined);
-      setProducts((prev) => [...prev, created]);
-      setNewFile(null);
-      setNewName("");
-      if (newFileInputRef.current) newFileInputRef.current.value = "";
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "No se pudo crear el producto.");
-    } finally {
-      setIsCreating(false);
+    setUploadProgress({ done: 0, total: newFiles.length });
+
+    // The name override only makes sense for a single file; for a bulk pick every
+    // product falls back to its own filename (the backend's existing default).
+    const nameOverride = newFiles.length === 1 ? newName.trim() || undefined : undefined;
+    const failed: { name: string; message: string }[] = [];
+    const files = newFiles;
+    const CONCURRENCY = 4;
+    let cursor = 0;
+
+    async function worker() {
+      while (cursor < files.length) {
+        const file = files[cursor++];
+        try {
+          const created = await createProduct(auth!.token, file, nameOverride);
+          setProducts((prev) => [...prev, created]);
+        } catch (err) {
+          failed.push({
+            name: file.name,
+            message: err instanceof ApiError ? err.message : "Error desconocido",
+          });
+        }
+        setUploadProgress((prev) => (prev ? { ...prev, done: prev.done + 1 } : prev));
+      }
+    }
+
+    await Promise.all(Array.from({ length: Math.min(CONCURRENCY, files.length) }, worker));
+
+    setIsCreating(false);
+    setUploadProgress(null);
+    setNewFiles([]);
+    setNewName("");
+    if (newFileInputRef.current) newFileInputRef.current.value = "";
+
+    if (failed.length > 0) {
+      setError(
+        `${failed.length} de ${files.length} archivo(s) no se pudieron subir: ${failed
+          .map((f) => f.name)
+          .join(", ")}`
+      );
     }
   }
 
@@ -299,46 +354,71 @@ export default function ProductsPage() {
 
       <form
         onSubmit={handleCreateProduct}
-        className="mb-6 flex flex-wrap items-end gap-4 rounded-xl border border-black/10 bg-[#ecdcc0] p-5 shadow-lg dark:border-white/10 dark:bg-zinc-900"
+        className="mb-6 flex flex-col gap-4 rounded-xl border border-black/10 bg-[#ecdcc0] p-5 shadow-lg dark:border-white/10 dark:bg-zinc-900"
       >
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Ficha PDF (nuevo producto)
-          </label>
-          <label className="flex cursor-pointer items-center gap-2 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800">
-            <span className="rounded bg-[#c9a86a] px-2 py-0.5 text-xs font-medium text-zinc-900">
-              Elegir archivo
-            </span>
-            <span className="truncate">{newFile ? newFile.name : "Ningún archivo elegido"}</span>
+        <div className="flex flex-wrap items-end gap-4">
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              Fichas PDF (nuevo/s producto/s)
+            </label>
+            <label className="flex cursor-pointer items-center gap-2 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800">
+              <span className="rounded bg-[#c9a86a] px-2 py-0.5 text-xs font-medium text-zinc-900">
+                Elegir archivos
+              </span>
+              <span className="truncate">
+                {newFiles.length === 0
+                  ? "Ningún archivo elegido"
+                  : newFiles.length === 1
+                    ? newFiles[0].name
+                    : `${newFiles.length} archivos elegidos`}
+              </span>
+              <input
+                ref={newFileInputRef}
+                type="file"
+                accept="application/pdf"
+                multiple
+                required
+                onChange={(e) => setNewFiles(Array.from(e.target.files ?? []))}
+                className="hidden"
+              />
+            </label>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              Nombre (opcional, solo si elegís un único archivo)
+            </label>
             <input
-              ref={newFileInputRef}
-              type="file"
-              accept="application/pdf"
-              required
-              onChange={(e) => setNewFile(e.target.files?.[0] ?? null)}
-              className="hidden"
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              disabled={newFiles.length > 1}
+              placeholder="Se toma del PDF si lo dejás vacío"
+              className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
             />
-          </label>
+          </div>
+          <button
+            type="submit"
+            disabled={newFiles.length === 0 || isCreating}
+            className="rounded-md bg-[#8a5a35] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#a06b41] disabled:opacity-50"
+          >
+            {isCreating
+              ? `Subiendo ${uploadProgress?.done ?? 0}/${uploadProgress?.total ?? 0}...`
+              : newFiles.length > 1
+                ? `+ Cargar ${newFiles.length} productos`
+                : "+ Nuevo producto"}
+          </button>
         </div>
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Nombre (opcional, por defecto el del archivo)
-          </label>
-          <input
-            type="text"
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            placeholder="Se toma del PDF si lo dejás vacío"
-            className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={!newFile || isCreating}
-          className="rounded-md bg-[#8a5a35] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#a06b41] disabled:opacity-50"
-        >
-          {isCreating ? "Subiendo..." : "+ Nuevo producto"}
-        </button>
+
+        {uploadProgress && (
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-black/10">
+            <div
+              className="h-full rounded-full bg-[#c9a86a] transition-all"
+              style={{
+                width: `${(uploadProgress.done / uploadProgress.total) * 100}%`,
+              }}
+            />
+          </div>
+        )}
       </form>
 
       {error && (
@@ -348,13 +428,29 @@ export default function ProductsPage() {
       )}
 
       {products.length > 0 && (
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Buscar por nombre..."
-          className="mb-3 w-full rounded-md border border-white/20 bg-black/20 px-3 py-2 text-sm text-white placeholder:text-zinc-300 outline-none focus:border-[#e4c98a]"
-        />
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar por nombre..."
+            className="min-w-0 flex-1 rounded-md border border-white/20 bg-black/20 px-3 py-2 text-sm text-white placeholder:text-zinc-300 outline-none focus:border-[#e4c98a]"
+          />
+          <button
+            type="button"
+            onClick={() => handleBulkStockToggle(true)}
+            className="rounded-md border border-white/20 px-3 py-2 text-xs font-medium whitespace-nowrap text-zinc-100 transition-colors hover:bg-white/10"
+          >
+            Marcar {search.trim() ? "filtrados" : "todos"}
+          </button>
+          <button
+            type="button"
+            onClick={() => handleBulkStockToggle(false)}
+            className="rounded-md border border-white/20 px-3 py-2 text-xs font-medium whitespace-nowrap text-zinc-100 transition-colors hover:bg-white/10"
+          >
+            Desmarcar {search.trim() ? "filtrados" : "todos"}
+          </button>
+        </div>
       )}
 
       {isLoading ? (
