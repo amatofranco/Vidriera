@@ -237,35 +237,42 @@ export default function ProductsPage() {
   );
 
   return (
-    <div className="mx-auto w-full max-w-3xl flex-1 px-4 py-8">
-      <header className="mb-8">
+    <div
+      className="w-full flex-1 px-4 py-10"
+      style={{
+        background:
+          "radial-gradient(ellipse 80% 60% at 50% 0%, #f0dcae 0%, #d4ac78 45%, #9c6f47 100%)",
+      }}
+    >
+      <div className="fixed top-4 left-4 z-10">
+        <Image
+          src="/vidriera-logo.png"
+          alt="Vidriera"
+          width={1000}
+          height={245}
+          className="h-11 w-auto"
+        />
+      </div>
+      <div className="mx-auto w-full max-w-3xl">
+        <header className="mb-6">
         {logoUrl && (
           // eslint-disable-next-line @next/next/no-img-element -- imagen autenticada vía blob URL, no un asset estático de Next
           <img
             src={logoUrl}
             alt={`Banner de ${auth.companyName}`}
-            className="mb-4 h-32 w-full rounded-lg object-cover"
+            className="mb-4 h-40 w-full rounded-xl bg-white object-contain opacity-85 shadow-lg"
           />
         )}
-        <div className="flex items-center justify-between">
-          <div className="inline-flex items-center rounded-lg bg-zinc-900 px-3 py-1.5">
-            <Image
-              src="/vidriera-logo.png"
-              alt="Vidriera"
-              width={1000}
-              height={245}
-              className="h-7 w-auto"
-            />
+        <div className="flex items-center justify-between rounded-xl border border-white/10 bg-black/25 px-5 py-4 backdrop-blur-sm">
+          <div className="flex items-center gap-4 text-sm text-zinc-100">
+            <span className="font-medium">{auth.name}</span>
+            <button onClick={logout} className="underline hover:text-white">
+              Salir
+            </button>
           </div>
           <div className="flex flex-col items-end gap-1">
-            <div className="flex items-center gap-4 text-sm text-zinc-600 dark:text-zinc-400">
-              <span>{auth.name}</span>
-              <button onClick={logout} className="underline hover:text-zinc-900 dark:hover:text-zinc-50">
-                Salir
-              </button>
-            </div>
-            <span className="text-xs text-zinc-500 dark:text-zinc-500">{auth.companyName}</span>
-            <label className="cursor-pointer text-xs text-blue-600 underline dark:text-blue-400">
+            <span className="text-xs text-zinc-300">{auth.companyName}</span>
+            <label className="cursor-pointer text-xs text-[#e4c98a] underline hover:text-[#f0d9a8]">
               {isUploadingLogo ? "Subiendo..." : logoUrl ? "Cambiar banner" : "Subir banner de empresa"}
               <input
                 type="file"
@@ -284,14 +291,14 @@ export default function ProductsPage() {
 
       <form
         onSubmit={handleCreateProduct}
-        className="mb-8 flex flex-wrap items-end gap-3 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800"
+        className="mb-6 flex flex-wrap items-end gap-4 rounded-xl border border-black/10 bg-[#ecdcc0] p-5 shadow-lg dark:border-white/10 dark:bg-zinc-900"
       >
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
             Ficha PDF (nuevo producto)
           </label>
           <label className="flex cursor-pointer items-center gap-2 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800">
-            <span className="rounded bg-zinc-200 px-2 py-0.5 text-xs font-medium text-zinc-800 dark:bg-zinc-700 dark:text-zinc-100">
+            <span className="rounded bg-[#c9a86a] px-2 py-0.5 text-xs font-medium text-zinc-900">
               Elegir archivo
             </span>
             <span className="truncate">{newFile ? newFile.name : "Ningún archivo elegido"}</span>
@@ -320,7 +327,7 @@ export default function ProductsPage() {
         <button
           type="submit"
           disabled={!newFile || isCreating}
-          className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-300"
+          className="rounded-md bg-[#8a5a35] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#a06b41] disabled:opacity-50"
         >
           {isCreating ? "Subiendo..." : "+ Nuevo producto"}
         </button>
@@ -338,18 +345,18 @@ export default function ProductsPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Buscar por nombre..."
-          className="mb-3 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+          className="mb-3 w-full rounded-md border border-white/20 bg-black/20 px-3 py-2 text-sm text-white placeholder:text-zinc-300 outline-none focus:border-[#e4c98a]"
         />
       )}
 
       {isLoading ? (
-        <p className="text-zinc-500">Cargando productos...</p>
+        <p className="text-zinc-200">Cargando productos...</p>
       ) : products.length === 0 ? (
-        <p className="text-zinc-500">Todavía no hay productos cargados.</p>
+        <p className="text-zinc-200">Todavía no hay productos cargados.</p>
       ) : filteredProducts.length === 0 ? (
-        <p className="mb-8 text-zinc-500">Ningún producto coincide con la búsqueda.</p>
+        <p className="mb-8 text-zinc-200">Ningún producto coincide con la búsqueda.</p>
       ) : (
-        <ul className="mb-8 divide-y divide-zinc-200 rounded-lg border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
+        <ul className="mb-6 divide-y divide-zinc-200 rounded-xl border border-black/10 bg-[#ecdcc0] shadow-lg dark:divide-zinc-800 dark:border-white/10 dark:bg-zinc-900">
           {filteredProducts.map((product) => (
             <li
               key={product.id}
@@ -387,6 +394,7 @@ export default function ProductsPage() {
                   checked={product.hasStock}
                   onChange={() => handleToggleStock(product)}
                   className="h-4 w-4"
+                  style={{ accentColor: "#c9a86a" }}
                 />
                 <span className="text-zinc-900 dark:text-zinc-50">{product.name}</span>
               </label>
@@ -442,11 +450,11 @@ export default function ProductsPage() {
         </ul>
       )}
 
-      <div className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
+      <div className="rounded-xl border border-black/10 bg-[#ecdcc0] p-5 shadow-lg dark:border-white/10 dark:bg-zinc-900">
         <button
           onClick={handleGenerateCatalog}
           disabled={selectableCount === 0 || isGenerating}
-          className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-300"
+          className="rounded-md bg-[#c9a86a] px-4 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-[#d4b57a] disabled:opacity-50"
         >
           {isGenerating
             ? "Generando..."
@@ -473,6 +481,7 @@ export default function ProductsPage() {
             )}
           </div>
         )}
+      </div>
       </div>
     </div>
   );
