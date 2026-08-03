@@ -965,7 +965,8 @@ export default function ProductsPage() {
             <button
               type="button"
               onClick={toggleBulkAssignMode}
-              className={`rounded-md border px-3 py-2 text-xs font-medium whitespace-nowrap transition-colors ${
+              disabled={isApplyingBulkAssign}
+              className={`rounded-md border px-3 py-2 text-xs font-medium whitespace-nowrap transition-colors disabled:opacity-40 ${
                 isBulkAssigningSection
                   ? "border-[#e4c98a] bg-[#e4c98a]/20 text-[#f0dca8]"
                   : "border-white/20 text-zinc-100 hover:bg-white/10"
@@ -987,7 +988,8 @@ export default function ProductsPage() {
             <select
               value={bulkAssignTargetId}
               onChange={(e) => setBulkAssignTargetId(e.target.value)}
-              className="rounded border border-white/20 bg-black/20 px-2 py-1.5 text-xs text-white"
+              disabled={isApplyingBulkAssign}
+              className="rounded border border-white/20 bg-black/20 px-2 py-1.5 text-xs text-white disabled:opacity-50"
             >
               <option value="">Sin carátula</option>
               {sections.map((s) => (
@@ -999,8 +1001,11 @@ export default function ProductsPage() {
             <button
               onClick={handleApplyBulkAssign}
               disabled={bulkAssignSelectedIds.size === 0 || isApplyingBulkAssign}
-              className="rounded bg-[#c9a86a] px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-[#d4b57a] disabled:opacity-50"
+              className="flex items-center gap-2 rounded bg-[#c9a86a] px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-[#d4b57a] disabled:opacity-50"
             >
+              {isApplyingBulkAssign && (
+                <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-zinc-900/25 border-t-zinc-900" />
+              )}
               {isApplyingBulkAssign ? "Aplicando..." : `Aplicar (${bulkAssignSelectedIds.size})`}
             </button>
           </div>
