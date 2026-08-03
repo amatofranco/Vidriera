@@ -75,6 +75,11 @@ export default function ProductsPage() {
   const [confirmingDeleteSectionId, setConfirmingDeleteSectionId] = useState<string | null>(null);
   const [isDeletingSection, setIsDeletingSection] = useState(false);
 
+  const [isBulkAssigningSection, setIsBulkAssigningSection] = useState(false);
+  const [bulkAssignSelectedIds, setBulkAssignSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkAssignTargetId, setBulkAssignTargetId] = useState("");
+  const [isApplyingBulkAssign, setIsApplyingBulkAssign] = useState(false);
+
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
 
@@ -508,6 +513,56 @@ export default function ProductsPage() {
     }
   }
 
+  function toggleBulkAssignMode() {
+    setIsBulkAssigningSection((prev) => !prev);
+    setBulkAssignSelectedIds(new Set());
+    setBulkAssignTargetId("");
+  }
+
+  function toggleBulkAssignSelected(productId: string) {
+    setBulkAssignSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(productId)) next.delete(productId);
+      else next.add(productId);
+      return next;
+    });
+  }
+
+  async function handleApplyBulkAssign() {
+    if (!auth || bulkAssignSelectedIds.size === 0) return;
+    setIsApplyingBulkAssign(true);
+    setError(null);
+
+    const targetSectionId = bulkAssignTargetId || null;
+    const targetIds = Array.from(bulkAssignSelectedIds);
+    const failed: string[] = [];
+    const CONCURRENCY = 4;
+    let cursor = 0;
+
+    async function worker() {
+      while (cursor < targetIds.length) {
+        const productId = targetIds[cursor++];
+        try {
+          await assignProductSection(auth!.token, productId, targetSectionId);
+        } catch {
+          failed.push(products.find((p) => p.id === productId)?.name ?? productId);
+        }
+      }
+    }
+
+    await Promise.all(Array.from({ length: Math.min(CONCURRENCY, targetIds.length) }, worker));
+    await loadProducts(auth.token);
+
+    setIsApplyingBulkAssign(false);
+    setIsBulkAssigningSection(false);
+    setBulkAssignSelectedIds(new Set());
+    setBulkAssignTargetId("");
+
+    if (failed.length > 0) {
+      setError(`${failed.length} producto(s) no se pudieron asociar: ${failed.join(", ")}`);
+    }
+  }
+
   async function handleGenerateCatalog() {
     if (!auth) return;
     const selected = products.filter((p) => p.hasStock && p.hasSheet);
@@ -563,6 +618,16 @@ export default function ProductsPage() {
         }
         className={`flex items-center justify-between gap-3 px-4 py-3 ${isDragged ? "opacity-40" : ""}`}
       >
+        {isBulkAssigningSection && (
+          <input
+            type="checkbox"
+            checked={bulkAssignSelectedIds.has(product.id)}
+            onChange={() => toggleBulkAssignSelected(product.id)}
+            title="Seleccionar para asociar a carátula"
+            className="h-4 w-4"
+            style={{ accentColor: "#e4c98a" }}
+          />
+        )}
         <span
           draggable
           onDragStart={() =>
@@ -883,6 +948,49 @@ export default function ProductsPage() {
           >
             Borrar {search.trim() ? "filtrados" : "todos"}
           </button>
+          {sections.length > 0 && (
+            <button
+              type="button"
+              onClick={toggleBulkAssignMode}
+              className={`rounded-md border px-3 py-2 text-xs font-medium whitespace-nowrap transition-colors ${
+                isBulkAssigningSection
+                  ? "border-[#e4c98a] bg-[#e4c98a]/20 text-[#f0dca8]"
+                  : "border-white/20 text-zinc-100 hover:bg-white/10"
+              }`}
+            >
+              {isBulkAssigningSection ? "Cancelar asociación" : "Asociar a carátula"}
+            </button>
+          )}
+        </div>
+      )}
+
+      {isBulkAssigningSection && (
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-md border border-[#e4c98a]/40 bg-[#e4c98a]/10 px-4 py-3 text-sm text-[#f0dca8]">
+          <span>
+            Tildá los productos de la lista para asociarlos ({bulkAssignSelectedIds.size} seleccionado
+            {bulkAssignSelectedIds.size === 1 ? "" : "s"}).
+          </span>
+          <div className="flex items-center gap-2">
+            <select
+              value={bulkAssignTargetId}
+              onChange={(e) => setBulkAssignTargetId(e.target.value)}
+              className="rounded border border-white/20 bg-black/20 px-2 py-1.5 text-xs text-white"
+            >
+              <option value="">Sin carátula</option>
+              {sections.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={handleApplyBulkAssign}
+              disabled={bulkAssignSelectedIds.size === 0 || isApplyingBulkAssign}
+              className="rounded bg-[#c9a86a] px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-[#d4b57a] disabled:opacity-50"
+            >
+              {isApplyingBulkAssign ? "Aplicando..." : `Aplicar (${bulkAssignSelectedIds.size})`}
+            </button>
+          </div>
         </div>
       )}
 
