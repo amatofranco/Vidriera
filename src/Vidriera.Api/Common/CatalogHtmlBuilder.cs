@@ -366,9 +366,11 @@ public static class CatalogHtmlBuilder
                     const dpr = window.devicePixelRatio || 1;
                     const LENS_HEADROOM = 1.6;
                     const targetPixelWidth = Math.min(targetCssWidth * dpr * LENS_HEADROOM, 3400);
-                    const images = [];
-                    for (let i = 1; i <= doc.numPages; i++) {
-                        const page = await doc.getPage(i);
+                    const images = new Array(doc.numPages);
+                    let renderedCount = 0;
+
+                    async function renderPage(pageNumber) {
+                        const page = await doc.getPage(pageNumber);
                         const naturalViewport = page.getViewport({ scale: 1 });
                         const scale = targetPixelWidth / naturalViewport.width;
                         const viewport = page.getViewport({ scale });
@@ -379,9 +381,26 @@ public static class CatalogHtmlBuilder
                         ctx.fillStyle = "#ffffff";
                         ctx.fillRect(0, 0, canvas.width, canvas.height);
                         await page.render({ canvasContext: ctx, viewport }).promise;
-                        images.push(canvas.toDataURL("image/png"));
-                        loadingTextEl.textContent = `Preparando catálogo... (${i}/${doc.numPages})`;
+                        images[pageNumber - 1] = canvas.toDataURL("image/png");
+                        renderedCount++;
+                        loadingTextEl.textContent = `Preparando catálogo... (${renderedCount}/${doc.numPages})`;
                     }
+
+                    // Rendering pages one at a time in sequence left most of the CPU idle between
+                    // each await; a handful running concurrently (each with its own canvas, so no
+                    // shared-state races) cuts the total wall-clock time notably on big catalogs.
+                    const RENDER_CONCURRENCY = 4;
+                    let nextPageNumber = 1;
+                    async function renderWorker() {
+                        while (nextPageNumber <= doc.numPages) {
+                            const pageNumber = nextPageNumber++;
+                            await renderPage(pageNumber);
+                        }
+                    }
+                    await Promise.all(
+                        Array.from({ length: Math.min(RENDER_CONCURRENCY, doc.numPages) }, renderWorker)
+                    );
+
                     return images;
                 }
 
