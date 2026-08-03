@@ -341,6 +341,15 @@ public static class CatalogHtmlBuilder
                     target.style.transformOrigin = `${relX}% ${relY}%`;
                 });
 
+                // Lines the panel's own top up with the toolbar's, rather than each centering
+                // independently (which drifts apart whenever their heights differ).
+                function positionIndexPanel() {
+                    if (!indexPanel) return;
+                    const rect = toolbarEl.getBoundingClientRect();
+                    indexPanel.style.top = `${rect.top}px`;
+                    indexPanel.style.transform = "none";
+                }
+
                 // Hugs the arrows to the actual rendered book/page edges (measured live, rather
                 // than guessed from the fit-size math) so they sit close to the PDF regardless of
                 // how much empty space is left around it at the current window size.
@@ -510,6 +519,7 @@ public static class CatalogHtmlBuilder
                                 const isZoomChange = Math.abs(dpr - lastDpr) > 0.01;
                                 lastDpr = dpr;
                                 if (!isZoomChange) fitStatic();
+                                positionIndexPanel();
                             }, 200);
                         });
 
@@ -522,6 +532,7 @@ public static class CatalogHtmlBuilder
                         nextBtn.disabled = true;
                         pageInfoEl.textContent = "1 / 1";
                         pageInfoEl.style.display = "block";
+                        positionIndexPanel();
                         return;
                     }
 
@@ -620,6 +631,7 @@ public static class CatalogHtmlBuilder
                             const isZoomChange = Math.abs(dpr - lastDpr) > 0.01;
                             lastDpr = dpr;
                             if (!isZoomChange) buildPageFlip();
+                            positionIndexPanel();
                         }, 200);
                     });
 
@@ -632,6 +644,7 @@ public static class CatalogHtmlBuilder
                     nextBtn.style.display = "flex";
                     pageInfoEl.style.display = "block";
                     flipbookEl.style.visibility = "visible";
+                    positionIndexPanel();
                 }).catch((e) => {
                     console.error("Catalog viewer failed:", e);
                     loadingTextEl.textContent = "Error: " + (e && e.message ? e.message : e);
