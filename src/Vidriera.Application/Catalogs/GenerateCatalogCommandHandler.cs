@@ -89,7 +89,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
                     continue;
                 }
 
-                pdfBytesInOrder.Add(await DownloadBytesAsync(section.CoverPdfBlobKey, cancellationToken));
+                pdfBytesInOrder.Add(await DownloadBytesAsync(section.CoverPdfBlobKey!, cancellationToken));
                 foreach (var member in members)
                 {
                     pdfBytesInOrder.Add(await DownloadBytesAsync(member.SheetPdfBlobKey!, cancellationToken));

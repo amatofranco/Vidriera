@@ -51,6 +51,9 @@ public class DeleteSectionCommandHandler : IRequestHandler<DeleteSectionCommand>
         await _session.DeleteAsync(section, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
-        await _blobStorageService.DeleteAsync(section.CoverPdfBlobKey, cancellationToken);
+        if (!string.IsNullOrEmpty(section.CoverPdfBlobKey))
+        {
+            await _blobStorageService.DeleteAsync(section.CoverPdfBlobKey, cancellationToken);
+        }
     }
 }
