@@ -149,12 +149,13 @@ public static class CatalogHtmlBuilder
                     z-index: 20; display: none; flex-direction: column; gap: 2px;
                 }
                 .index-panel.open { display: flex; }
+                #index-list { display: flex; flex-direction: column; gap: 2px; }
                 .index-panel h3 {
                     margin: 0 0 8px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
                     color: #a1a1a6;
                 }
                 .index-item {
-                    background: transparent; border: none; color: #f5f5f7; text-align: left;
+                    width: 100%; background: transparent; border: none; color: #f5f5f7; text-align: left;
                     padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 13px;
                     font-family: inherit;
                 }
