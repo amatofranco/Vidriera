@@ -20,11 +20,17 @@ public static class CatalogHtmlBuilder
         var sectionsJsonEncoded = hasSections
             ? WebUtility.HtmlEncode(JsonSerializer.Serialize(dto.Sections, SectionsJsonOptions))
             : "";
-        var sectionsDataHtml = hasSections
-            ? $"<div id=\"sections-data\" data-sections=\"{sectionsJsonEncoded}\" style=\"display: none;\"></div>"
-            : "";
         var indexButtonHtml = hasSections
             ? "<button id=\"index-btn\" title=\"Índice\">&#128209;</button>"
+            : "";
+        var indexPanelHtml = hasSections
+            ? $"""
+              <div id="index-panel" class="index-panel">
+                  <h3>Índice</h3>
+                  <div id="index-list"></div>
+              </div>
+              <div id="sections-data" data-sections="{sectionsJsonEncoded}" style="display: none;"></div>
+              """
             : "";
 
         return $$"""
@@ -141,14 +147,16 @@ public static class CatalogHtmlBuilder
                     transform: scale(2);
                 }
 
+                /* Docked right after the toolbar rail, at the same fixed offset -- reads as an
+                   extension of it rather than a separate floating popover. Open by default. */
                 .index-panel {
-                    position: fixed; right: 14px; top: 50%; transform: translateY(-50%);
+                    position: fixed; left: 84px; top: 50%; transform: translateY(-50%);
                     max-height: 70vh; overflow-y: auto; min-width: 180px; max-width: 280px;
                     background: #232325; border-radius: 12px; padding: 12px;
                     box-shadow: 0 8px 24px rgba(0,0,0,.4);
-                    z-index: 20; display: none; flex-direction: column; gap: 2px;
+                    z-index: 20; display: flex; flex-direction: column; gap: 2px;
                 }
-                .index-panel.open { display: flex; }
+                .index-panel.closed { display: none; }
                 #index-list { display: flex; flex-direction: column; gap: 2px; }
                 .index-panel h3 {
                     margin: 0 0 8px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
@@ -179,11 +187,7 @@ public static class CatalogHtmlBuilder
                 </div>
                 <button id="prev" class="side-nav" title="Anterior" style="display: none;">&#8249;</button>
                 <button id="next" class="side-nav" title="Siguiente" style="display: none;">&#8250;</button>
-                <div id="index-panel" class="index-panel">
-                    <h3>Índice</h3>
-                    <div id="index-list"></div>
-                </div>
-                {{sectionsDataHtml}}
+                {{indexPanelHtml}}
                 <div id="cover-info">
                     <div class="cover-info-company">{{companyName}}</div>
                     <div class="cover-info-label">Catálogo</div>
@@ -221,9 +225,15 @@ public static class CatalogHtmlBuilder
                     ? JSON.parse(sectionsDataEl.dataset.sections || "[]")
                     : [];
 
+                // Set by whichever branch (single page vs. flipbook) actually runs below, so
+                // toggling the index panel can re-fit the book/page to the space it frees up
+                // or takes back, regardless of which viewer mode is active.
+                let onIndexToggleRebuild = () => {};
+
                 if (indexBtn) {
                     indexBtn.addEventListener("click", () => {
-                        indexPanel.classList.toggle("open");
+                        indexPanel.classList.toggle("closed");
+                        onIndexToggleRebuild();
                     });
                 }
 
@@ -338,7 +348,9 @@ public static class CatalogHtmlBuilder
                     const rect = referenceEl.getBoundingClientRect();
                     const gap = 14;
                     const btnSize = 40;
-                    const minLeft = 78; // stay clear of the toolbar rail
+                    // Stay clear of the toolbar rail, and of the index panel too when it's open.
+                    const indexPanelOpen = indexPanel && !indexPanel.classList.contains("closed");
+                    const minLeft = indexPanelOpen ? 78 + 210 : 78;
                     prevBtn.style.left = `${Math.max(rect.left - gap - btnSize, minLeft)}px`;
                     nextBtn.style.right = `${Math.max(window.innerWidth - rect.right - gap - btnSize, 8)}px`;
                 }
@@ -351,7 +363,10 @@ public static class CatalogHtmlBuilder
                     const rect = referenceEl.getBoundingClientRect();
                     const niche = getNicheRect();
                     const padding = 32;
-                    const left = Math.max(niche.left + padding, 90); // stay clear of the toolbar rail
+                    // Stay clear of the toolbar rail, and of the index panel too when it's open.
+                    const indexPanelOpen = indexPanel && !indexPanel.classList.contains("closed");
+                    const minLeft = indexPanelOpen ? 90 + 210 : 90;
+                    const left = Math.max(niche.left + padding, minLeft);
                     coverInfoEl.style.left = `${left}px`;
                     coverInfoEl.style.maxWidth = `${Math.min(Math.max(rect.left - left - 20, 120), 320)}px`;
                 }
@@ -396,7 +411,8 @@ public static class CatalogHtmlBuilder
                     if (inFullscreen) {
                         availW = Math.max(window.innerWidth - margin * 2, 100);
                     } else {
-                        const toolbarSpace = 90;
+                        const indexPanelOpen = indexPanel && !indexPanel.classList.contains("closed");
+                        const toolbarSpace = indexPanelOpen ? 90 + 210 : 90;
                         const nicheW = getNicheMaxWidth() * 0.94;
                         availW = Math.max(Math.min(window.innerWidth - toolbarSpace - margin * 2, nicheW), 100);
                     }
@@ -483,6 +499,7 @@ public static class CatalogHtmlBuilder
                             img.style.height = `${height}px`;
                             positionSideNav(img);
                         }
+                        onIndexToggleRebuild = fitStatic;
                         fitStatic();
 
                         let resizeTimer = null;
@@ -576,6 +593,7 @@ public static class CatalogHtmlBuilder
                         });
                     }
 
+                    onIndexToggleRebuild = buildPageFlip;
                     buildPageFlip();
 
                     if (indexList && sectionsData.length > 0) {
@@ -585,7 +603,6 @@ public static class CatalogHtmlBuilder
                             item.textContent = entry.name;
                             item.addEventListener("click", () => {
                                 pageFlip.turnToPage(entry.startPage - 1);
-                                indexPanel.classList.remove("open");
                             });
                             indexList.appendChild(item);
                         });
