@@ -89,8 +89,12 @@ export default function ProductsPage() {
     }
   }, [auth, authLoading, router]);
 
-  async function loadProducts(token: string) {
-    setIsLoading(true);
+  async function loadProducts(token: string, options?: { silent?: boolean }) {
+    // "Silent" skips the isLoading flag -- used for refetches after an action already
+    // succeeded (assign/delete a section, bulk-assign) just to resync sortOrder, where
+    // swapping the whole list out for "Cargando..." reads as a glitch, not a refresh.
+    const silent = options?.silent ?? false;
+    if (!silent) setIsLoading(true);
     setError(null);
     try {
       const result = await getProducts(token);
@@ -103,7 +107,7 @@ export default function ProductsPage() {
       }
       setError(err instanceof ApiError ? err.message : "No se pudieron cargar los productos.");
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   }
 
@@ -489,7 +493,7 @@ export default function ProductsPage() {
       setSections((prev) => prev.filter((s) => s.id !== section.id));
       // Members are detached server-side, not deleted -- refetch so their new
       // top-level sectionId/sortOrder come back in sync.
-      loadProducts(auth.token);
+      loadProducts(auth.token, { silent: true });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : `No se pudo borrar la carátula "${section.name}".`);
     } finally {
@@ -506,7 +510,7 @@ export default function ProductsPage() {
       await assignProductSection(auth.token, product.id, sectionId);
       // Sort order shifts server-side (appended at the end of the destination) --
       // refetch so the position numbers reflect where it actually landed.
-      loadProducts(auth.token);
+      loadProducts(auth.token, { silent: true });
     } catch {
       setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, sectionId: previousSectionId } : p)));
       setError(`No se pudo mover "${product.name}".`);
@@ -551,7 +555,7 @@ export default function ProductsPage() {
     }
 
     await Promise.all(Array.from({ length: Math.min(CONCURRENCY, targetIds.length) }, worker));
-    await loadProducts(auth.token);
+    await loadProducts(auth.token, { silent: true });
 
     setIsApplyingBulkAssign(false);
     setIsBulkAssigningSection(false);
