@@ -5,20 +5,20 @@ using Vidriera.Application.Common;
 using Vidriera.Application.Common.Exceptions;
 using Vidriera.Domain.Entities;
 
-namespace Vidriera.Application.Products;
+namespace Vidriera.Application.Sections;
 
-public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand, ProductDto>
+public class CreateSectionCommandHandler : IRequestHandler<CreateSectionCommand, SectionDto>
 {
     private readonly ISession _session;
     private readonly IBlobStorageService _blobStorageService;
 
-    public CreateProductCommandHandler(ISession session, IBlobStorageService blobStorageService)
+    public CreateSectionCommandHandler(ISession session, IBlobStorageService blobStorageService)
     {
         _session = session;
         _blobStorageService = blobStorageService;
     }
 
-    public async Task<ProductDto> Handle(CreateProductCommand request, CancellationToken cancellationToken)
+    public async Task<SectionDto> Handle(CreateSectionCommand request, CancellationToken cancellationToken)
     {
         var company = await _session.GetAsync<Company>(request.CompanyId, cancellationToken);
         if (company is null)
@@ -32,27 +32,25 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
 
         var nextSortOrder = await TopLevelOrdering.NextTopLevelSortOrderAsync(_session, request.CompanyId, cancellationToken);
 
-        var product = new Product
+        var section = new Section
         {
             Company = company,
             Name = name,
-            HasStock = false,
-            IsActive = true,
             SortOrder = nextSortOrder
         };
 
         using var transaction = _session.BeginTransaction();
 
-        await _session.SaveAsync(product, cancellationToken);
+        await _session.SaveAsync(section, cancellationToken);
 
-        var blobKey = $"companies/{request.CompanyId}/products/{product.Id}/{Guid.NewGuid()}.pdf";
+        var blobKey = $"companies/{request.CompanyId}/sections/{section.Id}/{Guid.NewGuid()}.pdf";
         await _blobStorageService.UploadAsync(blobKey, request.FileContent, "application/pdf", cancellationToken);
 
-        product.SheetPdfBlobKey = blobKey;
-        product.SheetPdfOriginalName = request.OriginalFileName;
+        section.CoverPdfBlobKey = blobKey;
+        section.CoverPdfOriginalName = request.OriginalFileName;
 
         await transaction.CommitAsync(cancellationToken);
 
-        return new ProductDto(product.Id, product.Name, product.Code, product.HasStock, HasSheet: true, SectionId: null, product.SortOrder);
+        return new SectionDto(section.Id, section.Name, section.SortOrder);
     }
 }

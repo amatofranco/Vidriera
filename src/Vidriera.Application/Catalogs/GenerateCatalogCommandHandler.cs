@@ -36,11 +36,18 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             throw new ValidationException("Hay que seleccionar al menos un producto.");
         }
 
-        var products = await _session.Query<Product>()
-            .Where(p => p.Company.Id == request.CompanyId && request.ProductIds.Contains(p.Id))
+        // The requested ids are just the "which ones are checked" set -- the actual merge
+        // order is rebuilt here from each item's own SortOrder (already kept in sync by
+        // drag-and-drop/the reorder endpoints), not trusted from the request itself.
+        var allProducts = await _session.Query<Product>()
+            .Where(p => p.Company.Id == request.CompanyId)
+            .ToListAsync(cancellationToken);
+        var allSections = await _session.Query<Section>()
+            .Where(s => s.Company.Id == request.CompanyId)
             .ToListAsync(cancellationToken);
 
-        var productsById = products.ToDictionary(p => p.Id);
+        var productsById = allProducts.ToDictionary(p => p.Id);
+        var selectedIds = new HashSet<Guid>(request.ProductIds);
 
         foreach (var productId in request.ProductIds)
         {
@@ -55,14 +62,45 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             }
         }
 
+        var looseProducts = allProducts.Where(p => p.Section is null);
+        var topLevel = allSections.Cast<object>()
+            .Concat(looseProducts.Cast<object>())
+            .OrderBy(item => item switch
+            {
+                Section s => s.SortOrder,
+                Product p => p.SortOrder,
+                _ => 0
+            });
+
         var pdfBytesInOrder = new List<byte[]>();
-        foreach (var productId in request.ProductIds)
+        var includedProducts = new List<Product>();
+
+        foreach (var item in topLevel)
         {
-            var product = productsById[productId];
-            await using var stream = await _blobStorageService.DownloadAsync(product.SheetPdfBlobKey!, cancellationToken);
-            using var memoryStream = new MemoryStream();
-            await stream.CopyToAsync(memoryStream, cancellationToken);
-            pdfBytesInOrder.Add(memoryStream.ToArray());
+            if (item is Section section)
+            {
+                var members = allProducts
+                    .Where(p => p.Section?.Id == section.Id && selectedIds.Contains(p.Id))
+                    .OrderBy(p => p.SortOrder)
+                    .ToList();
+
+                if (members.Count == 0)
+                {
+                    continue;
+                }
+
+                pdfBytesInOrder.Add(await DownloadBytesAsync(section.CoverPdfBlobKey, cancellationToken));
+                foreach (var member in members)
+                {
+                    pdfBytesInOrder.Add(await DownloadBytesAsync(member.SheetPdfBlobKey!, cancellationToken));
+                    includedProducts.Add(member);
+                }
+            }
+            else if (item is Product product && selectedIds.Contains(product.Id))
+            {
+                pdfBytesInOrder.Add(await DownloadBytesAsync(product.SheetPdfBlobKey!, cancellationToken));
+                includedProducts.Add(product);
+            }
         }
 
         var mergedPdf = await _pdfMergeService.MergeAsync(pdfBytesInOrder, cancellationToken);
@@ -80,8 +118,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         var now = DateTime.UtcNow;
         var expiresAt = now.AddDays(_options.ExpirationDays);
 
-        var productsSnapshot = request.ProductIds
-            .Select(id => productsById[id])
+        var productsSnapshot = includedProducts
             .Select(p => new CatalogProductSnapshot(p.Id, p.Name, p.Code))
             .ToList();
 
@@ -102,5 +139,13 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
 
         var url = $"{_options.PublicBaseUrl.TrimEnd('/')}/api/catalogs/{catalog.Id}";
         return new GenerateCatalogResult(catalog.Id, url, expiresAt);
+    }
+
+    private async Task<byte[]> DownloadBytesAsync(string blobKey, CancellationToken cancellationToken)
+    {
+        await using var stream = await _blobStorageService.DownloadAsync(blobKey, cancellationToken);
+        using var memoryStream = new MemoryStream();
+        await stream.CopyToAsync(memoryStream, cancellationToken);
+        return memoryStream.ToArray();
     }
 }

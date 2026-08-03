@@ -68,11 +68,20 @@ public class ProductsController : ControllerBase
         return NoContent();
     }
 
-    [HttpPut("reorder")]
-    public async Task<IActionResult> Reorder([FromBody] ReorderProductsRequest request, CancellationToken cancellationToken)
+    [HttpPut("{id:guid}/section")]
+    public async Task<IActionResult> AssignSection(Guid id, [FromBody] AssignProductSectionRequest request, CancellationToken cancellationToken)
     {
         var companyId = User.GetCompanyId();
-        await _mediator.Send(new ReorderProductsCommand(companyId, request.ProductIds), cancellationToken);
+        await _mediator.Send(new AssignProductSectionCommand(companyId, id, request.SectionId), cancellationToken);
+        return NoContent();
+    }
+
+    [HttpPut("reorder")]
+    public async Task<IActionResult> Reorder([FromBody] ReorderTopLevelRequest request, CancellationToken cancellationToken)
+    {
+        var companyId = User.GetCompanyId();
+        var items = request.Items.Select(i => new TopLevelItemRef(i.Type == "section", i.Id)).ToList();
+        await _mediator.Send(new ReorderTopLevelCommand(companyId, items), cancellationToken);
         return NoContent();
     }
 }
@@ -81,4 +90,8 @@ public record UpdateStockRequest(bool HasStock);
 
 public record CreateProductRequest(IFormFile File, string? Name);
 
-public record ReorderProductsRequest(IReadOnlyList<Guid> ProductIds);
+public record AssignProductSectionRequest(Guid? SectionId);
+
+public record ReorderTopLevelItem(string Type, Guid Id);
+
+public record ReorderTopLevelRequest(IReadOnlyList<ReorderTopLevelItem> Items);

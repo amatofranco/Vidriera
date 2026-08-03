@@ -4,11 +4,11 @@ using Vidriera.Domain.Entities;
 
 namespace Vidriera.Infrastructure.Persistence.Mappings;
 
-public class ProductMapping : ClassMapping<Product>
+public class SectionMapping : ClassMapping<Section>
 {
-    public ProductMapping()
+    public SectionMapping()
     {
-        Table("products");
+        Table("sections");
 
         Id(x => x.Id, m =>
         {
@@ -29,32 +29,20 @@ public class ProductMapping : ClassMapping<Product>
             m.Length(300);
         });
 
-        Property(x => x.Code, m =>
+        Property(x => x.CoverPdfBlobKey, m =>
         {
-            m.Column("code");
-            m.Length(100);
-        });
-
-        Property(x => x.SheetPdfBlobKey, m =>
-        {
-            m.Column("sheet_pdf_blob_key");
+            m.Column("cover_pdf_blob_key");
+            m.NotNullable(true);
             m.Length(500);
         });
 
-        Property(x => x.SheetPdfOriginalName, m =>
+        Property(x => x.CoverPdfOriginalName, m =>
         {
-            m.Column("sheet_pdf_original_name");
+            m.Column("cover_pdf_original_name");
+            m.NotNullable(true);
             m.Length(300);
         });
 
-        Property(x => x.HasStock, m => m.Column("has_stock"));
-        Property(x => x.IsActive, m => m.Column("is_active"));
         Property(x => x.SortOrder, m => m.Column("sort_order"));
-
-        ManyToOne(x => x.Section, m =>
-        {
-            m.Column("section_id");
-            m.NotNullable(false);
-        });
     }
 }

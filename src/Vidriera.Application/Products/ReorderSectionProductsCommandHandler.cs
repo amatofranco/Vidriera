@@ -6,26 +6,28 @@ using Vidriera.Domain.Entities;
 
 namespace Vidriera.Application.Products;
 
-public class ReorderProductsCommandHandler : IRequestHandler<ReorderProductsCommand>
+public class ReorderSectionProductsCommandHandler : IRequestHandler<ReorderSectionProductsCommand>
 {
     private readonly ISession _session;
 
-    public ReorderProductsCommandHandler(ISession session)
+    public ReorderSectionProductsCommandHandler(ISession session)
     {
         _session = session;
     }
 
-    public async Task Handle(ReorderProductsCommand request, CancellationToken cancellationToken)
+    public async Task Handle(ReorderSectionProductsCommand request, CancellationToken cancellationToken)
     {
         var products = await _session.Query<Product>()
-            .Where(p => p.Company.Id == request.CompanyId && request.OrderedProductIds.Contains(p.Id))
+            .Where(p => p.Company.Id == request.CompanyId
+                && p.Section != null && p.Section.Id == request.SectionId
+                && request.OrderedProductIds.Contains(p.Id))
             .ToListAsync(cancellationToken);
 
         var productsById = products.ToDictionary(p => p.Id);
 
         if (productsById.Count != request.OrderedProductIds.Count)
         {
-            throw new ValidationException("Alguno de los productos no existe o no pertenece a esta empresa.");
+            throw new ValidationException("Alguno de los productos no existe o no pertenece a esta carátula.");
         }
 
         using var transaction = _session.BeginTransaction();

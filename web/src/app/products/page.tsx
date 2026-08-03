@@ -6,17 +6,23 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import {
   ApiError,
+  assignProductSection,
   createProduct,
+  createSection,
   deleteProduct,
+  deleteSection,
   fetchCompanyLogoUrl,
   generateCatalog,
   getProducts,
-  reorderProducts,
+  getSections,
+  reorderSectionProducts,
+  reorderTopLevel,
   updateStock,
   uploadCompanyLogo,
   uploadSheet,
   type GenerateCatalogResult,
   type Product,
+  type Section,
 } from "@/lib/api";
 
 export default function ProductsPage() {
@@ -48,7 +54,16 @@ export default function ProductsPage() {
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
   const [search, setSearch] = useState("");
-  const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [draggedTopLevelId, setDraggedTopLevelId] = useState<string | null>(null);
+  const [draggedSectionMemberId, setDraggedSectionMemberId] = useState<string | null>(null);
+
+  const [sections, setSections] = useState<Section[]>([]);
+  const [newSectionFile, setNewSectionFile] = useState<File | null>(null);
+  const [newSectionName, setNewSectionName] = useState("");
+  const [isCreatingSection, setIsCreatingSection] = useState(false);
+  const newSectionFileInputRef = useRef<HTMLInputElement>(null);
+  const [confirmingDeleteSectionId, setConfirmingDeleteSectionId] = useState<string | null>(null);
+  const [isDeletingSection, setIsDeletingSection] = useState(false);
 
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
@@ -77,11 +92,22 @@ export default function ProductsPage() {
     }
   }
 
+  async function loadSections(token: string) {
+    try {
+      const result = await getSections(token);
+      setSections(result);
+    } catch {
+      // Las carátulas son un complemento -- si esto falla, la lista de productos
+      // sigue andando igual (se ven todos como sueltos).
+    }
+  }
+
   useEffect(() => {
     if (!auth) return;
     // Fetching from the API on mount/auth-change, not derivable during render.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadProducts(auth.token);
+    loadSections(auth.token);
   }, [auth]);
 
   useEffect(() => {
@@ -280,45 +306,176 @@ export default function ProductsPage() {
     }
   }
 
-  async function persistReorder(newOrder: Product[]) {
+  // Sections and loose (unsectioned) products share one ordering space at the top
+  // level -- this is the same list the backend interleaves when it walks the catalog
+  // to decide where each cover/product actually lands in the merged PDF.
+  function buildTopLevelRows(): Array<
+    | { type: "section"; id: string; sortOrder: number; section: Section }
+    | { type: "product"; id: string; sortOrder: number; product: Product }
+  > {
+    const looseProducts = products.filter((p) => p.sectionId === null);
+    return [
+      ...sections.map((s) => ({ type: "section" as const, id: s.id, sortOrder: s.sortOrder, section: s })),
+      ...looseProducts.map((p) => ({ type: "product" as const, id: p.id, sortOrder: p.sortOrder, product: p })),
+    ].sort((a, b) => a.sortOrder - b.sortOrder);
+  }
+
+  async function persistTopLevelReorder(rows: ReturnType<typeof buildTopLevelRows>) {
     if (!auth) return;
     try {
-      await reorderProducts(auth.token, newOrder.map((p) => p.id));
+      await reorderTopLevel(
+        auth.token,
+        rows.map((r) => ({ type: r.type, id: r.id }))
+      );
     } catch {
       setError("No se pudo guardar el nuevo orden.");
+      loadProducts(auth.token);
+      loadSections(auth.token);
+    }
+  }
+
+  function moveTopLevelItem(id: string, toIndex: number) {
+    const rows = buildTopLevelRows();
+    const fromIndex = rows.findIndex((r) => r.id === id);
+    if (fromIndex === -1) return;
+    const clampedToIndex = Math.min(Math.max(toIndex, 0), rows.length - 1);
+    if (clampedToIndex === fromIndex) return;
+
+    const next = [...rows];
+    const [moved] = next.splice(fromIndex, 1);
+    next.splice(clampedToIndex, 0, moved);
+
+    const sortOrderById = new Map(next.map((row, index) => [row.id, index]));
+    setSections((prev) =>
+      prev.map((s) => (sortOrderById.has(s.id) ? { ...s, sortOrder: sortOrderById.get(s.id)! } : s))
+    );
+    setProducts((prev) =>
+      prev.map((p) =>
+        p.sectionId === null && sortOrderById.has(p.id) ? { ...p, sortOrder: sortOrderById.get(p.id)! } : p
+      )
+    );
+
+    persistTopLevelReorder(next);
+  }
+
+  function handleTopLevelDrop(targetId: string) {
+    if (!draggedTopLevelId || draggedTopLevelId === targetId) {
+      setDraggedTopLevelId(null);
+      return;
+    }
+    const toIndex = buildTopLevelRows().findIndex((r) => r.id === targetId);
+    if (toIndex !== -1) moveTopLevelItem(draggedTopLevelId, toIndex);
+    setDraggedTopLevelId(null);
+  }
+
+  function handleTopLevelMoveToPosition(id: string, rawValue: string) {
+    const position = parseInt(rawValue, 10);
+    if (Number.isNaN(position)) return;
+    moveTopLevelItem(id, position - 1);
+  }
+
+  function sectionMembers(sectionId: string) {
+    return products.filter((p) => p.sectionId === sectionId).sort((a, b) => a.sortOrder - b.sortOrder);
+  }
+
+  async function persistSectionReorder(sectionId: string, members: Product[]) {
+    if (!auth) return;
+    try {
+      await reorderSectionProducts(
+        auth.token,
+        sectionId,
+        members.map((p) => p.id)
+      );
+    } catch {
+      setError("No se pudo guardar el orden de la carátula.");
       loadProducts(auth.token);
     }
   }
 
-  function moveProduct(id: string, toIndex: number) {
-    setProducts((prev) => {
-      const fromIndex = prev.findIndex((p) => p.id === id);
-      if (fromIndex === -1) return prev;
-      const clampedToIndex = Math.min(Math.max(toIndex, 0), prev.length - 1);
-      if (clampedToIndex === fromIndex) return prev;
+  function moveSectionMember(sectionId: string, id: string, toIndex: number) {
+    const members = sectionMembers(sectionId);
+    const fromIndex = members.findIndex((p) => p.id === id);
+    if (fromIndex === -1) return;
+    const clampedToIndex = Math.min(Math.max(toIndex, 0), members.length - 1);
+    if (clampedToIndex === fromIndex) return;
 
-      const next = [...prev];
-      const [moved] = next.splice(fromIndex, 1);
-      next.splice(clampedToIndex, 0, moved);
-      persistReorder(next);
-      return next;
-    });
+    const next = [...members];
+    const [moved] = next.splice(fromIndex, 1);
+    next.splice(clampedToIndex, 0, moved);
+
+    const sortOrderById = new Map(next.map((p, index) => [p.id, index]));
+    setProducts((prev) =>
+      prev.map((p) => (sortOrderById.has(p.id) ? { ...p, sortOrder: sortOrderById.get(p.id)! } : p))
+    );
+
+    persistSectionReorder(sectionId, next);
   }
 
-  function handleDrop(targetId: string) {
-    if (!draggedId || draggedId === targetId) {
-      setDraggedId(null);
+  function handleSectionMemberDrop(sectionId: string, targetId: string) {
+    if (!draggedSectionMemberId || draggedSectionMemberId === targetId) {
+      setDraggedSectionMemberId(null);
       return;
     }
-    const toIndex = products.findIndex((p) => p.id === targetId);
-    if (toIndex !== -1) moveProduct(draggedId, toIndex);
-    setDraggedId(null);
+    const toIndex = sectionMembers(sectionId).findIndex((p) => p.id === targetId);
+    if (toIndex !== -1) moveSectionMember(sectionId, draggedSectionMemberId, toIndex);
+    setDraggedSectionMemberId(null);
   }
 
-  function handleMoveToPosition(productId: string, rawValue: string) {
+  function handleSectionMemberMoveToPosition(sectionId: string, id: string, rawValue: string) {
     const position = parseInt(rawValue, 10);
     if (Number.isNaN(position)) return;
-    moveProduct(productId, position - 1);
+    moveSectionMember(sectionId, id, position - 1);
+  }
+
+  async function handleCreateSection(e: React.FormEvent) {
+    e.preventDefault();
+    if (!auth || !newSectionFile) return;
+    setIsCreatingSection(true);
+    setError(null);
+    try {
+      const created = await createSection(auth.token, newSectionFile, newSectionName.trim() || undefined);
+      setSections((prev) => [...prev, created]);
+      setNewSectionFile(null);
+      setNewSectionName("");
+      if (newSectionFileInputRef.current) newSectionFileInputRef.current.value = "";
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "No se pudo crear la carátula.");
+    } finally {
+      setIsCreatingSection(false);
+    }
+  }
+
+  async function handleDeleteSection(section: Section) {
+    if (!auth) return;
+    setIsDeletingSection(true);
+    setError(null);
+    try {
+      await deleteSection(auth.token, section.id);
+      setSections((prev) => prev.filter((s) => s.id !== section.id));
+      // Members are detached server-side, not deleted -- refetch so their new
+      // top-level sectionId/sortOrder come back in sync.
+      loadProducts(auth.token);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : `No se pudo borrar la carátula "${section.name}".`);
+    } finally {
+      setIsDeletingSection(false);
+      setConfirmingDeleteSectionId(null);
+    }
+  }
+
+  async function handleAssignSection(product: Product, sectionId: string | null) {
+    if (!auth) return;
+    const previousSectionId = product.sectionId;
+    setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, sectionId } : p)));
+    try {
+      await assignProductSection(auth.token, product.id, sectionId);
+      // Sort order shifts server-side (appended at the end of the destination) --
+      // refetch so the position numbers reflect where it actually landed.
+      loadProducts(auth.token);
+    } catch {
+      setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, sectionId: previousSectionId } : p)));
+      setError(`No se pudo mover "${product.name}".`);
+    }
   }
 
   async function handleGenerateCatalog() {
@@ -348,6 +505,133 @@ export default function ProductsPage() {
   const filteredProducts = products.filter((p) =>
     p.name.toLowerCase().includes(search.trim().toLowerCase())
   );
+
+  const searchQuery = search.trim().toLowerCase();
+  const matchesSearch = (name: string) => name.toLowerCase().includes(searchQuery);
+
+  const allTopLevelRows = buildTopLevelRows();
+  const filteredTopLevelRows = !searchQuery
+    ? allTopLevelRows
+    : allTopLevelRows.filter((row) => {
+        if (row.type === "product") return matchesSearch(row.product.name);
+        return matchesSearch(row.section.name) || sectionMembers(row.section.id).some((m) => matchesSearch(m.name));
+      });
+
+  function renderProductRow(product: Product, sectionId: string | null) {
+    const isDragged = sectionId ? draggedSectionMemberId === product.id : draggedTopLevelId === product.id;
+    const positionMax = sectionId ? sectionMembers(sectionId).length : allTopLevelRows.length;
+    const positionValue = sectionId
+      ? sectionMembers(sectionId).findIndex((p) => p.id === product.id) + 1
+      : allTopLevelRows.findIndex((r) => r.id === product.id) + 1;
+
+    return (
+      <li
+        key={product.id}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={() =>
+          sectionId ? handleSectionMemberDrop(sectionId, product.id) : handleTopLevelDrop(product.id)
+        }
+        className={`flex items-center justify-between gap-3 px-4 py-3 ${isDragged ? "opacity-40" : ""}`}
+      >
+        <span
+          draggable
+          onDragStart={() =>
+            sectionId ? setDraggedSectionMemberId(product.id) : setDraggedTopLevelId(product.id)
+          }
+          onDragEnd={() => (sectionId ? setDraggedSectionMemberId(null) : setDraggedTopLevelId(null))}
+          title="Arrastrar para reordenar"
+          className="cursor-grab select-none text-zinc-400 dark:text-zinc-600"
+        >
+          ⠿
+        </span>
+        <input
+          key={`${product.id}-${positionValue}`}
+          type="number"
+          min={1}
+          max={positionMax}
+          defaultValue={positionValue}
+          onBlur={(e) =>
+            sectionId
+              ? handleSectionMemberMoveToPosition(sectionId, product.id, e.target.value)
+              : handleTopLevelMoveToPosition(product.id, e.target.value)
+          }
+          onKeyDown={(e) => {
+            if (e.key === "Enter") e.currentTarget.blur();
+          }}
+          title="Posición en el orden"
+          className="w-12 rounded border border-zinc-300 px-1 py-0.5 text-center text-xs text-zinc-700 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+        />
+        <label className="flex flex-1 items-center gap-3">
+          <input
+            type="checkbox"
+            checked={product.hasStock}
+            onChange={() => handleToggleStock(product)}
+            className="h-4 w-4"
+            style={{ accentColor: "#c9a86a" }}
+          />
+          <span className="text-zinc-900 dark:text-zinc-50">{product.name}</span>
+        </label>
+        <select
+          value={product.sectionId ?? ""}
+          onChange={(e) => handleAssignSection(product, e.target.value || null)}
+          title="Carátula"
+          className="rounded border border-zinc-300 bg-white px-1 py-1 text-xs text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+        >
+          <option value="">Sin carátula</option>
+          {sections.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
+            </option>
+          ))}
+        </select>
+
+        {confirmingDeleteId === product.id ? (
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-zinc-600 dark:text-zinc-400">¿Borrar?</span>
+            <button
+              onClick={() => handleDeleteProduct(product)}
+              disabled={isDeleting}
+              className="rounded bg-red-600 px-2 py-1 font-medium text-white hover:bg-red-500 disabled:opacity-50"
+            >
+              Sí
+            </button>
+            <button
+              onClick={() => setConfirmingDeleteId(null)}
+              disabled={isDeleting}
+              className="rounded bg-zinc-200 px-2 py-1 font-medium text-zinc-800 hover:bg-zinc-300 dark:bg-zinc-700 dark:text-zinc-100"
+            >
+              Cancelar
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3">
+            {product.hasSheet ? (
+              <span className="text-xs text-emerald-600 dark:text-emerald-400">Ficha cargada</span>
+            ) : (
+              <label className="cursor-pointer text-xs text-amber-600 underline dark:text-amber-400">
+                Subir ficha
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleUploadSheet(product, file);
+                  }}
+                />
+              </label>
+            )}
+            <button
+              onClick={() => setConfirmingDeleteId(product.id)}
+              className="text-xs text-red-600 underline hover:text-red-500 dark:text-red-400"
+            >
+              Borrar
+            </button>
+          </div>
+        )}
+      </li>
+    );
+  }
 
   return (
     <div
@@ -479,13 +763,59 @@ export default function ProductsPage() {
         )}
       </form>
 
+      <form
+        onSubmit={handleCreateSection}
+        className="mb-6 flex flex-wrap items-end gap-4 rounded-xl border border-black/10 bg-[#ecdcc0] p-5 shadow-lg dark:border-white/10 dark:bg-zinc-900"
+      >
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+            PDF de carátula (nueva sección)
+          </label>
+          <label className="flex cursor-pointer items-center gap-2 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800">
+            <span className="rounded bg-[#c9a86a] px-2 py-0.5 text-xs font-medium text-zinc-900">
+              Elegir archivo
+            </span>
+            <span className="truncate">
+              {newSectionFile ? newSectionFile.name : "Ningún archivo elegido"}
+            </span>
+            <input
+              ref={newSectionFileInputRef}
+              type="file"
+              accept="application/pdf"
+              required
+              onChange={(e) => setNewSectionFile(e.target.files?.[0] ?? null)}
+              className="hidden"
+            />
+          </label>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+            Nombre (opcional, por defecto el del archivo)
+          </label>
+          <input
+            type="text"
+            value={newSectionName}
+            onChange={(e) => setNewSectionName(e.target.value)}
+            placeholder="Se toma del PDF si lo dejás vacío"
+            className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+          />
+        </div>
+        <button
+          type="submit"
+          disabled={!newSectionFile || isCreatingSection}
+          className="rounded-md bg-[#8a5a35] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#a06b41] disabled:opacity-50"
+        >
+          {isCreatingSection ? "Subiendo..." : "+ Nueva carátula"}
+        </button>
+      </form>
+
       {error && (
         <p className="mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
           {error}
         </p>
       )}
 
-      {products.length > 0 && (
+      {(products.length > 0 || sections.length > 0) && (
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <input
             type="text"
@@ -550,102 +880,84 @@ export default function ProductsPage() {
 
       {isLoading ? (
         <p className="text-zinc-200">Cargando productos...</p>
-      ) : products.length === 0 ? (
-        <p className="text-zinc-200">Todavía no hay productos cargados.</p>
-      ) : filteredProducts.length === 0 ? (
+      ) : products.length === 0 && sections.length === 0 ? (
+        <p className="text-zinc-200">Todavía no hay productos ni carátulas cargadas.</p>
+      ) : filteredTopLevelRows.length === 0 ? (
         <p className="mb-8 text-zinc-200">Ningún producto coincide con la búsqueda.</p>
       ) : (
         <ul className="mb-6 max-h-[520px] divide-y divide-zinc-200 overflow-y-auto rounded-xl border border-black/10 bg-[#ecdcc0] shadow-lg dark:divide-zinc-800 dark:border-white/10 dark:bg-zinc-900">
-          {filteredProducts.map((product) => (
-            <li
-              key={product.id}
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={() => handleDrop(product.id)}
-              className={`flex items-center justify-between gap-4 px-4 py-3 ${
-                draggedId === product.id ? "opacity-40" : ""
-              }`}
-            >
-              <span
-                draggable
-                onDragStart={() => setDraggedId(product.id)}
-                onDragEnd={() => setDraggedId(null)}
-                title="Arrastrar para reordenar"
-                className="cursor-grab select-none text-zinc-400 dark:text-zinc-600"
-              >
-                ⠿
-              </span>
-              <input
-                key={`${product.id}-${products.findIndex((p) => p.id === product.id)}`}
-                type="number"
-                min={1}
-                max={products.length}
-                defaultValue={products.findIndex((p) => p.id === product.id) + 1}
-                onBlur={(e) => handleMoveToPosition(product.id, e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") e.currentTarget.blur();
-                }}
-                title="Posición en el orden"
-                className="w-12 rounded border border-zinc-300 px-1 py-0.5 text-center text-xs text-zinc-700 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
-              />
-              <label className="flex flex-1 items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={product.hasStock}
-                  onChange={() => handleToggleStock(product)}
-                  className="h-4 w-4"
-                  style={{ accentColor: "#c9a86a" }}
-                />
-                <span className="text-zinc-900 dark:text-zinc-50">{product.name}</span>
-              </label>
-
-              {confirmingDeleteId === product.id ? (
-                <div className="flex items-center gap-2 text-xs">
-                  <span className="text-zinc-600 dark:text-zinc-400">¿Borrar?</span>
-                  <button
-                    onClick={() => handleDeleteProduct(product)}
-                    disabled={isDeleting}
-                    className="rounded bg-red-600 px-2 py-1 font-medium text-white hover:bg-red-500 disabled:opacity-50"
+          {filteredTopLevelRows.map((row) =>
+            row.type === "section" ? (
+              <li key={row.id} className="bg-black/5 dark:bg-white/5">
+                <div
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={() => handleTopLevelDrop(row.id)}
+                  className={`flex items-center justify-between gap-3 px-4 py-3 ${
+                    draggedTopLevelId === row.id ? "opacity-40" : ""
+                  }`}
+                >
+                  <span
+                    draggable
+                    onDragStart={() => setDraggedTopLevelId(row.id)}
+                    onDragEnd={() => setDraggedTopLevelId(null)}
+                    title="Arrastrar para reordenar"
+                    className="cursor-grab select-none text-zinc-400 dark:text-zinc-600"
                   >
-                    Sí
-                  </button>
-                  <button
-                    onClick={() => setConfirmingDeleteId(null)}
-                    disabled={isDeleting}
-                    className="rounded bg-zinc-200 px-2 py-1 font-medium text-zinc-800 hover:bg-zinc-300 dark:bg-zinc-700 dark:text-zinc-100"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-3">
-                  {product.hasSheet ? (
-                    <span className="text-xs text-emerald-600 dark:text-emerald-400">
-                      Ficha cargada
-                    </span>
+                    ⠿
+                  </span>
+                  <input
+                    key={`${row.id}-${allTopLevelRows.findIndex((r) => r.id === row.id) + 1}`}
+                    type="number"
+                    min={1}
+                    max={allTopLevelRows.length}
+                    defaultValue={allTopLevelRows.findIndex((r) => r.id === row.id) + 1}
+                    onBlur={(e) => handleTopLevelMoveToPosition(row.id, e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") e.currentTarget.blur();
+                    }}
+                    title="Posición en el orden"
+                    className="w-12 rounded border border-zinc-300 px-1 py-0.5 text-center text-xs text-zinc-700 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                  />
+                  <span className="flex-1 font-semibold text-zinc-900 dark:text-zinc-50">
+                    📑 {row.section.name}
+                  </span>
+                  {confirmingDeleteSectionId === row.id ? (
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-zinc-600 dark:text-zinc-400">¿Borrar carátula?</span>
+                      <button
+                        onClick={() => handleDeleteSection(row.section)}
+                        disabled={isDeletingSection}
+                        className="rounded bg-red-600 px-2 py-1 font-medium text-white hover:bg-red-500 disabled:opacity-50"
+                      >
+                        Sí
+                      </button>
+                      <button
+                        onClick={() => setConfirmingDeleteSectionId(null)}
+                        disabled={isDeletingSection}
+                        className="rounded bg-zinc-200 px-2 py-1 font-medium text-zinc-800 hover:bg-zinc-300 dark:bg-zinc-700 dark:text-zinc-100"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
                   ) : (
-                    <label className="cursor-pointer text-xs text-amber-600 underline dark:text-amber-400">
-                      Subir ficha
-                      <input
-                        type="file"
-                        accept="application/pdf"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) handleUploadSheet(product, file);
-                        }}
-                      />
-                    </label>
+                    <button
+                      onClick={() => setConfirmingDeleteSectionId(row.id)}
+                      className="text-xs text-red-600 underline hover:text-red-500 dark:text-red-400"
+                    >
+                      Borrar carátula
+                    </button>
                   )}
-                  <button
-                    onClick={() => setConfirmingDeleteId(product.id)}
-                    className="text-xs text-red-600 underline hover:text-red-500 dark:text-red-400"
-                  >
-                    Borrar
-                  </button>
                 </div>
-              )}
-            </li>
-          ))}
+                {sectionMembers(row.section.id).length > 0 && (
+                  <ul className="divide-y divide-black/5 border-t border-black/10 pl-8 dark:divide-white/5 dark:border-white/10">
+                    {sectionMembers(row.section.id).map((product) => renderProductRow(product, row.section.id))}
+                  </ul>
+                )}
+              </li>
+            ) : (
+              renderProductRow(row.product, null)
+            )
+          )}
         </ul>
       )}
 
