@@ -113,6 +113,11 @@ public static class CatalogHtmlBuilder
                     font-size: 14px; color: #a1a1a6;
                 }
 
+                #brand-logo {
+                    position: fixed; top: 18px; left: 18px; height: 30px; width: auto;
+                    z-index: 20; pointer-events: none;
+                }
+
                 .stage.zoom-armed { cursor: zoom-in; }
                 .stage.zoomed { cursor: zoom-out; }
                 .stage.zoomed #flipbook,
@@ -128,6 +133,7 @@ public static class CatalogHtmlBuilder
                 <span id="loading-text">Preparando catálogo...</span>
             </div>
             <div class="stage">
+                <img id="brand-logo" src="/images/vidriera-logo.png" alt="Vidriera" />
                 <div id="toolbar" class="toolbar" style="display: none;">
                     <button id="lens-btn" title="Zoom">&#128269;</button>
                     <button id="fullscreen-btn" title="Pantalla completa">&#9974;</button>

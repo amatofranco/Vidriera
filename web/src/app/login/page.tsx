@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { login, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
@@ -34,9 +35,18 @@ export default function LoginPage() {
         onSubmit={handleSubmit}
         className="w-full max-w-sm rounded-lg border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
       >
-        <h1 className="mb-6 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-          Vidriera
-        </h1>
+        <div className="mb-6 flex justify-center">
+          <div className="inline-flex items-center rounded-lg bg-zinc-900 px-4 py-2.5">
+            <Image
+              src="/vidriera-logo.png"
+              alt="Vidriera"
+              width={1000}
+              height={245}
+              priority
+              className="h-9 w-auto"
+            />
+          </div>
+        </div>
 
         <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
           Email

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import {
@@ -247,7 +248,15 @@ export default function ProductsPage() {
           />
         )}
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Vidriera</h1>
+          <div className="inline-flex items-center rounded-lg bg-zinc-900 px-3 py-1.5">
+            <Image
+              src="/vidriera-logo.png"
+              alt="Vidriera"
+              width={1000}
+              height={245}
+              className="h-7 w-auto"
+            />
+          </div>
           <div className="flex flex-col items-end gap-1">
             <div className="flex items-center gap-4 text-sm text-zinc-600 dark:text-zinc-400">
               <span>{auth.name}</span>
