@@ -643,6 +643,15 @@ export default function ProductsPage() {
         return matchesSearch(row.section.name) || sectionMembers(row.section.id).some((m) => matchesSearch(m.name));
       });
 
+  // Same "if the carátula's own name matches, show all its members; otherwise only the
+  // matching ones" rule used to decide whether the carátula shows up at all above -- applied
+  // here to what's actually rendered underneath it, instead of always showing every member.
+  function visibleSectionMembers(sectionId: string, sectionName: string) {
+    const members = sectionMembers(sectionId);
+    if (!searchQuery || matchesSearch(sectionName)) return members;
+    return members.filter((m) => matchesSearch(m.name));
+  }
+
   function renderProductRow(product: Product, sectionId: string | null) {
     const isDragged = sectionId ? draggedSectionMemberId === product.id : draggedTopLevelId === product.id;
     const positionMax = sectionId ? sectionMembers(sectionId).length : allTopLevelRows.length;
@@ -1158,9 +1167,11 @@ export default function ProductsPage() {
                     </button>
                   )}
                 </div>
-                {sectionMembers(row.section.id).length > 0 && (
+                {visibleSectionMembers(row.section.id, row.section.name).length > 0 && (
                   <ul className="divide-y divide-black/5 border-t border-black/10 pl-8 dark:divide-white/5 dark:border-white/10">
-                    {sectionMembers(row.section.id).map((product) => renderProductRow(product, row.section.id))}
+                    {visibleSectionMembers(row.section.id, row.section.name).map((product) =>
+                      renderProductRow(product, row.section.id)
+                    )}
                   </ul>
                 )}
               </li>
