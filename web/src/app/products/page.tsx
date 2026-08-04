@@ -834,60 +834,51 @@ export default function ProductsPage() {
 
       <form
         onSubmit={handleCreateProduct}
-        className="mb-6 flex flex-col gap-4 rounded-xl border border-black/10 bg-[#ecdcc0] p-5 shadow-lg dark:border-white/10 dark:bg-zinc-900"
+        className="mb-3 flex flex-wrap items-center gap-3 rounded-xl border border-black/10 bg-[#ecdcc0] px-4 py-3 shadow-lg dark:border-white/10 dark:bg-zinc-900"
       >
-        <div className="flex flex-wrap items-end gap-4">
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-              Fichas PDF (nuevo/s producto/s) <span className="font-normal text-zinc-500 dark:text-zinc-500">(máx. {MAX_FILE_SIZE_LABEL} c/u)</span>
-            </label>
-            <label className="flex cursor-pointer items-center gap-2 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800">
-              <span className="rounded bg-[#c9a86a] px-2 py-0.5 text-xs font-medium text-zinc-900">
-                Elegir archivos
-              </span>
-              <span className="truncate">
-                {newFiles.length === 0
-                  ? "Ningún archivo elegido"
-                  : newFiles.length === 1
-                    ? newFiles[0].name
-                    : `${newFiles.length} archivos elegidos`}
-              </span>
-              <input
-                ref={newFileInputRef}
-                type="file"
-                accept="application/pdf"
-                multiple
-                required
-                onChange={(e) => setNewFiles(Array.from(e.target.files ?? []))}
-                className="hidden"
-              />
-            </label>
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-              Nombre (opcional, solo si elegís un único archivo)
-            </label>
-            <input
-              type="text"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              disabled={newFiles.length > 1}
-              placeholder="Se toma del PDF si lo dejás vacío"
-              className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={newFiles.length === 0 || isCreating}
-            className="rounded-md bg-[#8a5a35] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#a06b41] disabled:opacity-50"
-          >
-            {isCreating
-              ? `Subiendo ${uploadProgress?.done ?? 0}/${uploadProgress?.total ?? 0}...`
-              : newFiles.length > 1
-                ? `+ Cargar ${newFiles.length} productos`
-                : "+ Nuevo producto"}
-          </button>
-        </div>
+        <span className="text-xs font-medium whitespace-nowrap text-zinc-600 dark:text-zinc-400">
+          Ficha/s PDF <span className="text-zinc-400 dark:text-zinc-500">(máx. {MAX_FILE_SIZE_LABEL} c/u)</span>
+        </span>
+        <label className="flex cursor-pointer items-center gap-2 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800">
+          <span className="rounded bg-[#c9a86a] px-2 py-0.5 text-xs font-medium text-zinc-900">
+            Elegir archivos
+          </span>
+          <span className="max-w-[160px] truncate">
+            {newFiles.length === 0
+              ? "Ningún archivo elegido"
+              : newFiles.length === 1
+                ? newFiles[0].name
+                : `${newFiles.length} archivos elegidos`}
+          </span>
+          <input
+            ref={newFileInputRef}
+            type="file"
+            accept="application/pdf"
+            multiple
+            required
+            onChange={(e) => setNewFiles(Array.from(e.target.files ?? []))}
+            className="hidden"
+          />
+        </label>
+        <input
+          type="text"
+          value={newName}
+          onChange={(e) => setNewName(e.target.value)}
+          disabled={newFiles.length > 1}
+          placeholder="Nombre (opcional)"
+          className="w-48 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+        />
+        <button
+          type="submit"
+          disabled={newFiles.length === 0 || isCreating}
+          className="ml-auto rounded-md bg-[#8a5a35] px-4 py-1.5 text-sm font-medium whitespace-nowrap text-white transition-colors hover:bg-[#a06b41] disabled:opacity-50"
+        >
+          {isCreating
+            ? `Subiendo ${uploadProgress?.done ?? 0}/${uploadProgress?.total ?? 0}...`
+            : newFiles.length > 1
+              ? `+ Cargar ${newFiles.length} productos`
+              : "+ Nuevo producto"}
+        </button>
 
         {uploadProgress && (
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-black/10">
@@ -903,45 +894,38 @@ export default function ProductsPage() {
 
       <form
         onSubmit={handleCreateSection}
-        className="mb-6 flex flex-wrap items-end gap-4 rounded-xl border border-black/10 bg-[#ecdcc0] p-5 shadow-lg dark:border-white/10 dark:bg-zinc-900"
+        className="mb-6 flex flex-wrap items-center gap-3 rounded-xl border border-black/10 bg-[#ecdcc0] px-4 py-3 shadow-lg dark:border-white/10 dark:bg-zinc-900"
       >
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            PDF de carátula (nueva sección) <span className="font-normal text-zinc-500 dark:text-zinc-500">(máx. {MAX_FILE_SIZE_LABEL})</span>
-          </label>
-          <label className="flex cursor-pointer items-center gap-2 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800">
-            <span className="rounded bg-[#c9a86a] px-2 py-0.5 text-xs font-medium text-zinc-900">
-              Elegir archivo
-            </span>
-            <span className="truncate">
-              {newSectionFile ? newSectionFile.name : "Ningún archivo elegido"}
-            </span>
-            <input
-              ref={newSectionFileInputRef}
-              type="file"
-              accept="application/pdf"
-              required
-              onChange={(e) => setNewSectionFile(e.target.files?.[0] ?? null)}
-              className="hidden"
-            />
-          </label>
-        </div>
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Nombre (opcional, por defecto el del archivo)
-          </label>
+        <span className="text-xs font-medium whitespace-nowrap text-zinc-600 dark:text-zinc-400">
+          PDF de carátula <span className="text-zinc-400 dark:text-zinc-500">(máx. {MAX_FILE_SIZE_LABEL})</span>
+        </span>
+        <label className="flex cursor-pointer items-center gap-2 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800">
+          <span className="rounded bg-[#c9a86a] px-2 py-0.5 text-xs font-medium text-zinc-900">
+            Elegir archivo
+          </span>
+          <span className="max-w-[160px] truncate">
+            {newSectionFile ? newSectionFile.name : "Ningún archivo elegido"}
+          </span>
           <input
-            type="text"
-            value={newSectionName}
-            onChange={(e) => setNewSectionName(e.target.value)}
-            placeholder="Se toma del PDF si lo dejás vacío"
-            className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+            ref={newSectionFileInputRef}
+            type="file"
+            accept="application/pdf"
+            required
+            onChange={(e) => setNewSectionFile(e.target.files?.[0] ?? null)}
+            className="hidden"
           />
-        </div>
+        </label>
+        <input
+          type="text"
+          value={newSectionName}
+          onChange={(e) => setNewSectionName(e.target.value)}
+          placeholder="Nombre (opcional)"
+          className="w-48 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+        />
         <button
           type="submit"
           disabled={!newSectionFile || isCreatingSection}
-          className="rounded-md bg-[#8a5a35] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#a06b41] disabled:opacity-50"
+          className="ml-auto rounded-md bg-[#8a5a35] px-4 py-1.5 text-sm font-medium whitespace-nowrap text-white transition-colors hover:bg-[#a06b41] disabled:opacity-50"
         >
           {isCreatingSection ? "Subiendo..." : "+ Nueva carátula"}
         </button>
