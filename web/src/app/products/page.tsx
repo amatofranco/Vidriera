@@ -870,14 +870,15 @@ export default function ProductsPage() {
         />
         <button
           type="submit"
+          title={newFiles.length > 1 ? `Cargar ${newFiles.length} productos` : "Nuevo producto"}
           disabled={newFiles.length === 0 || isCreating}
-          className="ml-auto rounded-md bg-[#8a5a35] px-4 py-1.5 text-sm font-medium whitespace-nowrap text-white transition-colors hover:bg-[#a06b41] disabled:opacity-50"
+          className="flex items-center justify-center rounded-md bg-[#8a5a35] px-3 py-1.5 text-white transition-colors hover:bg-[#a06b41] disabled:opacity-50"
         >
-          {isCreating
-            ? `Subiendo ${uploadProgress?.done ?? 0}/${uploadProgress?.total ?? 0}...`
-            : newFiles.length > 1
-              ? `+ Cargar ${newFiles.length} productos`
-              : "+ Nuevo producto"}
+          {isCreating ? (
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+          ) : (
+            <span className="text-lg leading-none">+</span>
+          )}
         </button>
 
         {uploadProgress && (
@@ -924,10 +925,15 @@ export default function ProductsPage() {
         />
         <button
           type="submit"
+          title="Nueva carátula"
           disabled={!newSectionFile || isCreatingSection}
-          className="ml-auto rounded-md bg-[#8a5a35] px-4 py-1.5 text-sm font-medium whitespace-nowrap text-white transition-colors hover:bg-[#a06b41] disabled:opacity-50"
+          className="flex items-center justify-center rounded-md bg-[#8a5a35] px-3 py-1.5 text-white transition-colors hover:bg-[#a06b41] disabled:opacity-50"
         >
-          {isCreatingSection ? "Subiendo..." : "+ Nueva carátula"}
+          {isCreatingSection ? (
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+          ) : (
+            <span className="text-lg leading-none">+</span>
+          )}
         </button>
       </form>
 
