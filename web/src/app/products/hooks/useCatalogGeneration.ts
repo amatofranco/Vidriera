@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { AuthState } from "@/lib/auth-context";
-import { ApiError, generateCatalog, type GenerateCatalogResult, type Product } from "@/lib/api";
+import { generateCatalog, type GenerateCatalogResult, type Product } from "@/lib/api";
+import { Messages, apiErrorMessage } from "@/lib/messages";
 
 export function useCatalogGeneration({
   auth,
@@ -35,7 +36,7 @@ export function useCatalogGeneration({
       // backend -- refrescar el historial si está abierto para que quede en sync.
       if (isHistoryOpen) loadCatalogHistory(auth.token);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "No se pudo generar el catálogo.");
+      setError(apiErrorMessage(err, Messages.catalogGenerationFailed));
     } finally {
       setIsGenerating(false);
     }

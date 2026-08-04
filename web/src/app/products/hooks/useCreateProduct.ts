@@ -3,6 +3,7 @@ import type { AuthState } from "@/lib/auth-context";
 import { runWithConcurrency } from "@/lib/concurrency";
 import { MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_LABEL, formatFileSize } from "@/lib/file-size";
 import { ApiError, createProduct, type Product } from "@/lib/api";
+import { Messages, bulkUploadFailed, fileTooLargeReason } from "@/lib/messages";
 
 export function useCreateProduct({
   auth,
@@ -34,7 +35,7 @@ export function useCreateProduct({
     for (const file of oversized) {
       failed.push({
         name: file.name,
-        message: `Pesa ${formatFileSize(file.size)}, supera el máximo de ${MAX_FILE_SIZE_LABEL}.`,
+        message: fileTooLargeReason(formatFileSize(file.size), MAX_FILE_SIZE_LABEL),
       });
     }
 
@@ -45,7 +46,7 @@ export function useCreateProduct({
       } catch (err) {
         failed.push({
           name: file.name,
-          message: err instanceof ApiError ? err.message : "Error desconocido",
+          message: err instanceof ApiError ? err.message : Messages.unknownError,
         });
       }
       setUploadProgress((prev) => (prev ? { ...prev, done: prev.done + 1 } : prev));
@@ -55,11 +56,7 @@ export function useCreateProduct({
     setUploadProgress(null);
 
     if (failed.length > 0) {
-      setError(
-        `${failed.length} de ${files.length} archivo(s) no se pudieron subir: ${failed
-          .map((f) => `${f.name} (${f.message})`)
-          .join(", ")}`
-      );
+      setError(bulkUploadFailed(files.length, failed));
     }
   }
 

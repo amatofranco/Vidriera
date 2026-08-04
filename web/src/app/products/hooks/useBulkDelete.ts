@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { AuthState } from "@/lib/auth-context";
 import { runWithConcurrency } from "@/lib/concurrency";
 import { deleteProduct, type Product } from "@/lib/api";
+import { bulkDeleteFailed } from "@/lib/messages";
 
 export function useBulkDelete({
   auth,
@@ -42,7 +43,7 @@ export function useBulkDelete({
     setIsBulkDeleting(false);
     setPendingBulkDelete(null);
     if (failed.length > 0) {
-      setError(`No se pudieron borrar: ${failed.join(", ")}`);
+      setError(bulkDeleteFailed(failed));
     }
   }
 

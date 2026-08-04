@@ -10,6 +10,7 @@ import {
   type Product,
   type Section,
 } from "@/lib/api";
+import { Messages, apiErrorMessage } from "@/lib/messages";
 
 // Owns the three lists the rest of the page reads from (products, sections, catalog
 // history) plus their loading/error state -- kept separate from reorder/bulk-assign/etc.
@@ -42,7 +43,7 @@ export function useProductsData(auth: AuthState | null, logout: () => void) {
         router.replace("/login");
         return;
       }
-      setError(err instanceof ApiError ? err.message : "No se pudieron cargar los productos.");
+      setError(apiErrorMessage(err, Messages.productsLoadFailed));
     } finally {
       if (!silent) setIsLoading(false);
     }

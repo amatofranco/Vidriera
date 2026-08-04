@@ -1,5 +1,6 @@
 import type { AuthState } from "@/lib/auth-context";
 import { updateStock, type Product } from "@/lib/api";
+import { Messages, sectionStockUpdateFailed } from "@/lib/messages";
 
 export function useBulkStockToggle({
   auth,
@@ -26,7 +27,7 @@ export function useBulkStockToggle({
       setProducts((prev) =>
         prev.map((p) => (p.id === product.id ? { ...p, hasStock: !nextValue } : p))
       );
-      setError("No se pudo actualizar el stock, intentá de nuevo.");
+      setError(Messages.stockUpdateFailed);
     }
   }
 
@@ -47,7 +48,7 @@ export function useBulkStockToggle({
     try {
       await Promise.all(targets.map((p) => updateStock(auth.token, p.id, nextValue)));
     } catch {
-      setError("No se pudo actualizar el stock de todos los productos, revisá la lista.");
+      setError(Messages.bulkStockUpdateFailed);
       loadProducts(auth.token);
     }
   }
@@ -61,7 +62,7 @@ export function useBulkStockToggle({
     try {
       await Promise.all(targets.map((p) => updateStock(auth.token, p.id, nextValue)));
     } catch {
-      setError(`No se pudo actualizar el stock de todos los productos de "${sectionName}".`);
+      setError(sectionStockUpdateFailed(sectionName));
       loadProducts(auth.token, { silent: true });
     }
   }

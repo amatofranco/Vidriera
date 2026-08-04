@@ -1,7 +1,8 @@
 import { useState } from "react";
 import type { AuthState } from "@/lib/auth-context";
-import { ApiError, deleteProduct, uploadSheet, type Product } from "@/lib/api";
+import { deleteProduct, uploadSheet, type Product } from "@/lib/api";
 import { MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_LABEL, formatFileSize } from "@/lib/file-size";
+import { apiErrorMessage, fileTooLarge, productDeleteFailed, sheetUploadFailed } from "@/lib/messages";
 
 export function useProductActions({
   auth,
@@ -18,7 +19,7 @@ export function useProductActions({
   async function handleUploadSheet(product: Product, file: File) {
     if (!auth) return;
     if (file.size > MAX_FILE_SIZE_BYTES) {
-      setError(`"${file.name}" pesa ${formatFileSize(file.size)}, supera el máximo de ${MAX_FILE_SIZE_LABEL}.`);
+      setError(fileTooLarge(file.name, formatFileSize(file.size), MAX_FILE_SIZE_LABEL));
       return;
     }
     try {
@@ -27,7 +28,7 @@ export function useProductActions({
         prev.map((p) => (p.id === product.id ? { ...p, hasSheet: true } : p))
       );
     } catch {
-      setError(`No se pudo subir la ficha de "${product.name}".`);
+      setError(sheetUploadFailed(product.name));
     }
   }
 
@@ -39,7 +40,7 @@ export function useProductActions({
       await deleteProduct(auth.token, product.id);
       setProducts((prev) => prev.filter((p) => p.id !== product.id));
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : `No se pudo borrar "${product.name}".`);
+      setError(apiErrorMessage(err, productDeleteFailed(product.name)));
     } finally {
       setIsDeleting(false);
       setConfirmingDeleteId(null);

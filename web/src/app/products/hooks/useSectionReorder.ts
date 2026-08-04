@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { AuthState } from "@/lib/auth-context";
 import { reorderSectionProducts, type Product } from "@/lib/api";
+import { Messages } from "@/lib/messages";
 
 export function useSectionReorder({
   auth,
@@ -30,7 +31,7 @@ export function useSectionReorder({
         members.map((p) => p.id)
       );
     } catch {
-      setError("No se pudo guardar el orden de la carátula.");
+      setError(Messages.sectionOrderSaveFailed);
       loadProducts(auth.token);
     }
   }

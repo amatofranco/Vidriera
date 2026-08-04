@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { AuthState } from "@/lib/auth-context";
 import { runWithConcurrency } from "@/lib/concurrency";
 import { assignProductSection, type Product } from "@/lib/api";
+import { bulkAssignFailed } from "@/lib/messages";
 
 export function useBulkAssign({
   auth,
@@ -66,7 +67,7 @@ export function useBulkAssign({
     setBulkAssignTargetId("");
 
     if (failed.length > 0) {
-      setError(`${failed.length} producto(s) no se pudieron asociar: ${failed.join(", ")}`);
+      setError(bulkAssignFailed(failed));
     }
   }
 

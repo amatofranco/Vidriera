@@ -3,8 +3,9 @@
 import { useState, type FormEvent } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { login, ApiError } from "@/lib/api";
+import { login } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { Messages, apiErrorMessage } from "@/lib/messages";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -23,7 +24,7 @@ export default function LoginPage() {
       setAuth(result);
       router.replace("/products");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "No se pudo iniciar sesión.");
+      setError(apiErrorMessage(err, Messages.loginFailed));
     } finally {
       setIsSubmitting(false);
     }

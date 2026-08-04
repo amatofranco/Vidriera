@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { AuthState } from "@/lib/auth-context";
 import { reorderTopLevel, type Product, type Section } from "@/lib/api";
+import { Messages } from "@/lib/messages";
 
 export type TopLevelRow =
   | { type: "section"; id: string; sortOrder: number; section: Section }
@@ -46,7 +47,7 @@ export function useTopLevelReorder({
         rows.map((r) => ({ type: r.type, id: r.id }))
       );
     } catch {
-      setError("No se pudo guardar el nuevo orden.");
+      setError(Messages.topLevelOrderSaveFailed);
       loadProducts(auth.token);
       loadSections(auth.token);
     }

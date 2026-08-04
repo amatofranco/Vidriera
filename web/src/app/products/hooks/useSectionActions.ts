@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { AuthState } from "@/lib/auth-context";
-import { ApiError, assignProductSection, deleteSection, type Product, type Section } from "@/lib/api";
+import { assignProductSection, deleteSection, type Product, type Section } from "@/lib/api";
+import { apiErrorMessage, productMoveFailed, sectionDeleteFailed } from "@/lib/messages";
 
 export function useSectionActions({
   auth,
@@ -29,7 +30,7 @@ export function useSectionActions({
       // top-level sectionId/sortOrder come back in sync.
       loadProducts(auth.token, { silent: true });
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : `No se pudo borrar la carátula "${section.name}".`);
+      setError(apiErrorMessage(err, sectionDeleteFailed(section.name)));
     } finally {
       setIsDeletingSection(false);
       setConfirmingDeleteSectionId(null);
@@ -47,7 +48,7 @@ export function useSectionActions({
       loadProducts(auth.token, { silent: true });
     } catch {
       setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, sectionId: previousSectionId } : p)));
-      setError(`No se pudo mover "${product.name}".`);
+      setError(productMoveFailed(product.name));
     }
   }
 

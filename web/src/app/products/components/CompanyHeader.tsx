@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import type { AuthState } from "@/lib/auth-context";
-import { ApiError, fetchCompanyLogoUrl, uploadCompanyLogo } from "@/lib/api";
+import { fetchCompanyLogoUrl, uploadCompanyLogo } from "@/lib/api";
+import { Messages, apiErrorMessage } from "@/lib/messages";
 
 export function CompanyHeader({
   auth,
@@ -26,7 +27,7 @@ export function CompanyHeader({
       const url = await fetchCompanyLogoUrl(auth.token);
       onLogoChanged(url);
     } catch (err) {
-      onError(err instanceof ApiError ? err.message : "No se pudo subir el banner.");
+      onError(apiErrorMessage(err, Messages.logoUploadFailed));
     } finally {
       setIsUploadingLogo(false);
     }

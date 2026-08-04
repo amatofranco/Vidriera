@@ -1,7 +1,8 @@
 import { useState } from "react";
 import type { AuthState } from "@/lib/auth-context";
 import { MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_LABEL, formatFileSize } from "@/lib/file-size";
-import { ApiError, createSection, type Section } from "@/lib/api";
+import { createSection, type Section } from "@/lib/api";
+import { Messages, apiErrorMessage, fileTooLarge } from "@/lib/messages";
 
 export function useCreateSection({
   auth,
@@ -18,7 +19,7 @@ export function useCreateSection({
     const file = files[0];
     if (!auth || !file) return;
     if (file.size > MAX_FILE_SIZE_BYTES) {
-      setError(`"${file.name}" pesa ${formatFileSize(file.size)}, supera el máximo de ${MAX_FILE_SIZE_LABEL}.`);
+      setError(fileTooLarge(file.name, formatFileSize(file.size), MAX_FILE_SIZE_LABEL));
       return;
     }
     setIsCreatingSection(true);
@@ -27,7 +28,7 @@ export function useCreateSection({
       const created = await createSection(auth.token, file, name || undefined);
       setSections((prev) => [...prev, created]);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "No se pudo crear la carátula.");
+      setError(apiErrorMessage(err, Messages.sectionCreateFailed));
     } finally {
       setIsCreatingSection(false);
     }
