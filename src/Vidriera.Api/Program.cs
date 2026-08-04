@@ -108,4 +108,9 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+// Sin auth ni acceso a la base -- pensado para un ping periódico externo (ver
+// .github/workflows/keep-alive.yml) que evite que Render duerma la instancia gratuita por
+// inactividad.
+app.MapGet("/api/health", () => Results.Ok(new { status = "ok" }));
+
 app.Run();

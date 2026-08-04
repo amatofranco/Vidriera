@@ -1,0 +1,16 @@
+name: Keep Render API awake
+
+on:
+  schedule:
+    # Render's free tier sleeps an instance after ~15 min without a request; pinging every
+    # 10 min keeps it from ever hitting that. GitHub may delay a scheduled run under load, so
+    # this isn't a hard guarantee, but in practice it's close enough.
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping health endpoint
+        run: curl --fail --silent --show-error --max-time 30 https://vidriera-api.onrender.com/api/health
