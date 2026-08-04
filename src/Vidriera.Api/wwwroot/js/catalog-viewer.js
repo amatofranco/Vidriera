@@ -3,9 +3,6 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs
 
 const loadingEl = document.getElementById("loading");
 const loadingTextEl = document.getElementById("loading-text");
-// Not const: pageFlip.destroy() below removes this element from the DOM entirely
-// (it calls block.remove() internally, not just clearing its children), so every
-// rebuild after the first needs a brand new element in its place.
 let flipbookEl = document.getElementById("flipbook");
 const stageEl = document.querySelector(".stage");
 const pageInfoEl = document.getElementById("page-info");
@@ -23,13 +20,8 @@ const sectionsDataEl = document.getElementById("sections-data");
 const sectionsData = sectionsDataEl
     ? JSON.parse(sectionsDataEl.dataset.sections || "[]")
     : [];
-// The PDF url is already server-rendered into the download link's href -- reading it
-// from there instead of duplicating it into a data attribute.
 const url = document.getElementById("download-btn").href;
 
-// Set by whichever branch (single page vs. flipbook) actually runs below, so
-// toggling the index panel can re-fit the book/page to the space it frees up
-// or takes back, regardless of which viewer mode is active.
 let onIndexToggleRebuild = () => {};
 
 if (indexBtn) {
@@ -39,8 +31,6 @@ if (indexBtn) {
     });
 }
 
-// Fullscreen only the book's own stage, not the whole page -- so the scene
-// background and toolbar disappear entirely instead of coming along for the ride.
 fullscreenBtn.addEventListener("click", () => {
     if (document.fullscreenElement) {
         document.exitFullscreen();
@@ -49,9 +39,6 @@ fullscreenBtn.addEventListener("click", () => {
     }
 });
 printBtn.addEventListener("click", () => {
-    // A hidden iframe loading the raw PDF, print()'d directly on its contentWindow,
-    // goes straight to the print dialog -- window.open() just opens a new tab (same
-    // as the download button) and never triggers printing on its own.
     let printFrame = document.getElementById("print-frame");
     if (!printFrame) {
         printFrame = document.createElement("iframe");
@@ -71,21 +58,15 @@ printBtn.addEventListener("click", () => {
     printFrame.src = url;
 });
 
-// .click() on a <button disabled> is a no-op, so this naturally respects
-// whichever end of the book we're already at without extra bounds checking.
 document.addEventListener("keydown", (e) => {
     if (e.key === "ArrowLeft") prevBtn.click();
     else if (e.key === "ArrowRight") nextBtn.click();
 });
 
 const ZOOM_LEVEL = 2;
-// "Armed" = the zoom tool is selected (lupa cursor showing over the book), a
-// click on the book itself is what actually triggers the fixed zoom-in/out.
 let zoomArmed = false;
 let isZoomed = false;
 
-// The zoomed element gets recreated on every rebuild (see the fresh #flipbook
-// swap above), so it's queried fresh rather than captured once.
 function currentZoomTarget() {
     return document.getElementById("flipbook") || document.getElementById("static-page");
 }
@@ -112,18 +93,10 @@ lensBtn.addEventListener("click", () => {
     if (!zoomArmed && isZoomed) setZoomed(false);
 });
 
-// Toolbar and side-nav now live inside .stage too (so they still show up in
-// fullscreen), so their own clicks need to keep working as buttons instead of
-// being swallowed by the zoom-toggle logic below.
 function isChrome(target) {
     return target === prevBtn || target === nextBtn || toolbarEl.contains(target);
 }
 
-// page-flip's own page-turn gesture starts on "mousedown" (drag-to-flip), not
-// "click" -- stopping only the click wouldn't have stopped the turn, since by then
-// page-flip's mousedown handler already ran. Stopping mousedown in the capture
-// phase, ahead of page-flip's own listener on the book, is what actually keeps a
-// zoom click from also flipping the page underneath it.
 stageEl.addEventListener("mousedown", (e) => {
     if (zoomArmed && !isChrome(e.target)) e.stopPropagation();
 }, true);
@@ -143,8 +116,6 @@ stageEl.addEventListener("mousemove", (e) => {
     target.style.transformOrigin = `${relX}% ${relY}%`;
 });
 
-// Lines the panel's own top up with the toolbar's, rather than each centering
-// independently (which drifts apart whenever their heights differ).
 function positionIndexPanel() {
     if (!indexPanel) return;
     const rect = toolbarEl.getBoundingClientRect();
@@ -152,29 +123,20 @@ function positionIndexPanel() {
     indexPanel.style.transform = "none";
 }
 
-// Hugs the arrows to the actual rendered book/page edges (measured live, rather
-// than guessed from the fit-size math) so they sit close to the PDF regardless of
-// how much empty space is left around it at the current window size.
 function positionSideNav(referenceEl) {
     const rect = referenceEl.getBoundingClientRect();
     const gap = 14;
     const btnSize = 40;
-    // Stay clear of the toolbar rail, and of the index panel too when it's open.
     const indexPanelOpen = indexPanel && !indexPanel.classList.contains("closed");
     const minLeft = indexPanelOpen ? 78 + 210 : 78;
     prevBtn.style.left = `${Math.max(rect.left - gap - btnSize, minLeft)}px`;
     nextBtn.style.right = `${Math.max(window.innerWidth - rect.right - gap - btnSize, 8)}px`;
 }
 
-// Sits in the empty space to the left of the cover (page 1 alone, with
-// showCover, only occupies the right half of the spread) -- anchored to the
-// wooden niche's own left edge (not the book's), so it reads as sitting inside
-// the niche rather than out on the blurred bookshelves.
 function positionCoverInfo(referenceEl) {
     const rect = referenceEl.getBoundingClientRect();
     const niche = getNicheRect();
     const padding = 32;
-    // Stay clear of the toolbar rail, and of the index panel too when it's open.
     const indexPanelOpen = indexPanel && !indexPanel.classList.contains("closed");
     const minLeft = indexPanelOpen ? 90 + 210 : 90;
     const left = Math.max(niche.left + padding, minLeft);
@@ -182,10 +144,6 @@ function positionCoverInfo(referenceEl) {
     coverInfoEl.style.maxWidth = `${Math.min(Math.max(rect.left - left - 20, 120), 320)}px`;
 }
 
-// Pixel bounds of the wooden niche opening inside catalog-bg.jpg (2400x1570),
-// measured directly off that image so the book never spills onto the blurred
-// bookshelves at the sides. Since the scene renders as `background-size: cover`,
-// its on-screen scale/offset is reproduced here with the same cover math.
 const BG_IMG_W = 2400;
 const BG_IMG_H = 1570;
 const NICHE_LEFT_FRAC = 0.273;
@@ -197,8 +155,6 @@ function getNicheMaxWidth() {
     return (NICHE_RIGHT_FRAC - NICHE_LEFT_FRAC) * renderedW;
 }
 
-// Same cover-fit math as getNicheMaxWidth, but returning the niche's actual
-// left/right edges in viewport pixels (not just its width).
 function getNicheRect() {
     const scale = Math.max(window.innerWidth / BG_IMG_W, window.innerHeight / BG_IMG_H);
     const renderedW = BG_IMG_W * scale;
@@ -209,13 +165,7 @@ function getNicheRect() {
     };
 }
 
-// Fit-to-screen, no scrollbars: compute the exact size the page fits at within
-// the viewport (minus the toolbar rail) without overflowing either axis. Clamped
-// to a sane minimum so extreme browser zoom (Chrome's Ctrl+/Ctrl- affects
-// window.innerWidth/Height and devicePixelRatio) can't collapse it to 0.
 function computeFitSize(pageAspect) {
-    // Fullscreen shows only the book's own stage (no scene, no toolbar), so there's
-    // no niche to clamp to and no toolbar rail to dodge -- use the whole screen.
     const inFullscreen = !!document.fullscreenElement;
     const margin = inFullscreen ? 0 : 32;
     let availW;
@@ -239,12 +189,6 @@ function computeFitSize(pageAspect) {
 }
 
 async function renderAllPages(doc, targetCssWidth) {
-    // HTML mode (loadFromHTML below) draws real <img> elements, not page-flip's own
-    // internal canvas -- that canvas never accounted for devicePixelRatio at all
-    // (verified directly in its bundle), which is why the earlier canvas-mode
-    // version looked soft no matter how sharp the source image was. Real <img>
-    // elements scale the way the browser natively scales any image, which does
-    // respect devicePixelRatio.
     const dpr = window.devicePixelRatio || 1;
     const LENS_HEADROOM = 1.6;
     const targetPixelWidth = Math.min(targetCssWidth * dpr * LENS_HEADROOM, 3400);
@@ -268,9 +212,6 @@ async function renderAllPages(doc, targetCssWidth) {
         loadingTextEl.textContent = `Preparando catálogo... (${renderedCount}/${doc.numPages})`;
     }
 
-    // Rendering pages one at a time in sequence left most of the CPU idle between
-    // each await; a handful running concurrently (each with its own canvas, so no
-    // shared-state races) cuts the total wall-clock time notably on big catalogs.
     const RENDER_CONCURRENCY = 4;
     let nextPageNumber = 1;
     async function renderWorker() {
@@ -295,8 +236,6 @@ pdfjsLib.getDocument({ url }).promise.then(async (doc) => {
     let lastDpr = window.devicePixelRatio || 1;
 
     if (images.length <= 1) {
-        // Nothing to jump to with a single page -- hide the index button rather
-        // than leave it wired to a pageFlip instance that doesn't exist here.
         if (indexBtn) indexBtn.style.display = "none";
 
         const img = document.createElement("img");
@@ -353,17 +292,11 @@ pdfjsLib.getDocument({ url }).promise.then(async (doc) => {
         const { width, height } = computeFitSize(pageAspect);
         const wasOpenIndex = pageFlip ? pageFlip.getCurrentPageIndex() : 0;
         if (pageFlip) {
-            // Guard the teardown: if destroy() ever throws (seen around the
-            // fullscreen transition, where layout is momentarily in flux), we still
-            // want to fall through and rebuild rather than leave an empty container.
             try {
                 pageFlip.destroy();
             } catch (e) {
                 console.error("pageFlip.destroy() failed, rebuilding anyway", e);
             }
-            // destroy() removes flipbookEl itself from the DOM (block.remove()),
-            // not just its children -- swap in a fresh element so the next
-            // instance actually attaches to something still in the document.
             const fresh = document.createElement("div");
             fresh.id = "flipbook";
             fresh.style.visibility = "visible";
@@ -391,11 +324,6 @@ pdfjsLib.getDocument({ url }).promise.then(async (doc) => {
         });
         pageFlip.loadFromHTML(pageDivs);
         pageFlip.on("flip", updateInfo);
-        // The fold/shadow rendering briefly extends past the book's own box
-        // mid-flip -- clipping that (e.g. overflow:hidden on #flipbook) cuts off
-        // part of the visible page, so instead just suspend the body's own
-        // scrollbar for the moment the flip is actually in motion, then hand
-        // scrolling back to the browser zoom behavior once it settles on "read".
         pageFlip.on("changeState", (e) => {
             document.body.style.overflow = e.data === "read" ? "auto" : "hidden";
         });
@@ -422,10 +350,6 @@ pdfjsLib.getDocument({ url }).promise.then(async (doc) => {
         });
     }
 
-    // Only a genuine window resize rebuilds the book at a new fit size. A browser
-    // zoom change (Ctrl+/Ctrl-, which also fires "resize" and changes
-    // devicePixelRatio) is left alone so the native zoom just scales the existing
-    // CSS pixels up for real -- consistent with the single-page viewer's behavior.
     let resizeTimer = null;
     window.addEventListener("resize", () => {
         clearTimeout(resizeTimer);

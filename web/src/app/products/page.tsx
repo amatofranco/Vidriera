@@ -143,8 +143,6 @@ export default function ProductsPage() {
   const checkedCount = products.filter((p) => p.hasStock).length;
 
   function requestBulkDeleteSelected() {
-    // Same checkbox as "tiene stock" -- checking it means "selected", whether that
-    // selection ends up in a generated catalog or gets bulk-deleted.
     const targets = products.filter((p) => p.hasStock);
     requestBulkDelete(
       targets,
@@ -161,8 +159,6 @@ export default function ProductsPage() {
     );
   }
 
-  // Same dual meaning as the per-product checkbox: toggles "tiene stock" for every
-  // member normally, or toggles their bulk-assign selection while that mode is active.
   function sectionCheckboxChecked(sectionId: string) {
     const members = sectionMembers(sectionId);
     if (members.length === 0) return false;
@@ -225,9 +221,6 @@ export default function ProductsPage() {
     <div
       className="w-full flex-1 px-4 py-10"
       style={{
-        // Same wood-niche photo used on the login/catalog screens, zoomed into just the
-        // grained panel (no bookshelves) and tinted browner with a gradient on top -- gives
-        // real wood-grain texture instead of a flat color, without needing a new asset.
         backgroundImage:
           "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(240,220,174,0.55) 0%, rgba(160,110,60,0.55) 45%, rgba(90,55,25,0.75) 100%), url('/login-bg.jpg')",
         backgroundSize: "100% 100%, 240%",

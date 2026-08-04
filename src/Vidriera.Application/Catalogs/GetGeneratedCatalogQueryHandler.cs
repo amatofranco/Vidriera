@@ -41,9 +41,6 @@ public class GetGeneratedCatalogQueryHandler : IRequestHandler<GetGeneratedCatal
 
         var fileUrl = $"{_options.PublicBaseUrl.TrimEnd('/')}/api/catalogs/{catalog.Id}/file";
 
-        // Catalogs generated before the sections-index feature existed have ProductsSnapshotJson
-        // as a bare array (the old shape), which fails to deserialize as CatalogSnapshot -- treat
-        // that the same as "no sections", rather than a 500 on an old, otherwise-valid catalog.
         CatalogSnapshot snapshot;
         try
         {

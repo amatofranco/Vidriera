@@ -3,10 +3,6 @@ using Vidriera.Application.Abstractions;
 
 namespace Vidriera.Infrastructure.Auth;
 
-/// <summary>
-/// PBKDF2 (Rfc2898DeriveBytes), no external dependency. Stored format:
-/// {iterations}.{saltBase64}.{hashBase64}
-/// </summary>
 public class PasswordHasher : IPasswordHasher
 {
     private const int SaltSize = 16;

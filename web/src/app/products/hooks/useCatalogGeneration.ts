@@ -32,8 +32,6 @@ export function useCatalogGeneration({
     try {
       const result = await generateCatalog(auth.token, selected.map((p) => p.id));
       setCatalogResult(result);
-      // Un catálogo nuevo puede haber podado los más viejos (límite de 10) del lado del
-      // backend -- refrescar el historial si está abierto para que quede en sync.
       if (isHistoryOpen) loadCatalogHistory(auth.token);
     } catch (err) {
       setError(apiErrorMessage(err, Messages.catalogGenerationFailed));

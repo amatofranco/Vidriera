@@ -73,10 +73,6 @@ public class CatalogsController : ControllerBase
         try
         {
             var result = await _mediator.Send(new GetCatalogFileQuery(id), cancellationToken);
-            // Sin fileDownloadName: sirve inline (sin Content-Disposition: attachment), para que
-            // el iframe de impresión y el visor puedan cargarlo directo. El botón de "Descargar"
-            // del frontend ya fuerza la descarga con el atributo HTML `download`, independiente
-            // de este header.
             return File(result.Content, result.ContentType);
         }
         catch (NotFoundException)

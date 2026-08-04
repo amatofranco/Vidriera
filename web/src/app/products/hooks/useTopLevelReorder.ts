@@ -7,9 +7,6 @@ export type TopLevelRow =
   | { type: "section"; id: string; sortOrder: number; section: Section }
   | { type: "product"; id: string; sortOrder: number; product: Product };
 
-// Sections and loose (unsectioned) products share one ordering space at the top level --
-// this is the same list the backend interleaves when it walks the catalog to decide where
-// each cover/product actually lands in the merged PDF.
 export function useTopLevelReorder({
   auth,
   products,

@@ -5,11 +5,6 @@ using Vidriera.Application.Common.Exceptions;
 
 namespace Vidriera.Application.Common;
 
-/// <summary>
-/// The "load this entity, 404 if it's missing or belongs to another company" and "save/update
-/// in a one-line transaction" shapes repeated near-verbatim across most command handlers --
-/// collapsed here so a handler's own body is just its actual business logic.
-/// </summary>
 internal static class EntityLookup
 {
     public static async Task<TEntity> GetOrThrowAsync<TEntity>(

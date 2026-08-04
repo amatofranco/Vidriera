@@ -24,8 +24,6 @@ export function useCreateProduct({
     setIsCreating(true);
     setError(null);
 
-    // The name override only makes sense for a single file; for a bulk pick every
-    // product falls back to its own filename (the backend's existing default).
     const nameOverride = files.length === 1 ? name || undefined : undefined;
     const failed: { name: string; message: string }[] = [];
     const oversized = files.filter((f) => f.size > MAX_FILE_SIZE_BYTES);

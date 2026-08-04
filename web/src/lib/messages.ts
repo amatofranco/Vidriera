@@ -1,10 +1,5 @@
 import { ApiError } from "./api";
 
-// Every user-facing error string used across the products page (and login), in one place
-// instead of scattered as inline literals through each hook -- so the wording only has to
-// be found/changed in one spot, and so `apiErrorMessage` has one consistent way to fall
-// back to a static message when the error isn't one the backend sent a real reason for.
-
 export const Messages = {
   loginFailed: "No se pudo iniciar sesión.",
   logoUploadFailed: "No se pudo subir el banner.",
@@ -60,9 +55,6 @@ export function bulkUploadFailed(totalCount: number, failed: { name: string; mes
     .join(", ")}`;
 }
 
-// Replaces the `err instanceof ApiError ? err.message : "<fallback>"` ternary repeated at
-// every catch block -- prefer the backend's own message when there is one, fall back to a
-// generic Spanish message otherwise (e.g. a network error with no HTTP response at all).
 export function apiErrorMessage(err: unknown, fallback: string) {
   return err instanceof ApiError ? err.message : fallback;
 }

@@ -31,8 +31,6 @@ export function useBulkStockToggle({
     }
   }
 
-  // Operates on whatever the search box currently shows, so a filtered subset can be
-  // bulk-toggled without touching the rest of a long (e.g. 200-product) list.
   async function handleBulkStockToggle(nextValue: boolean, search: string) {
     if (!auth) return;
     const query = search.trim().toLowerCase();

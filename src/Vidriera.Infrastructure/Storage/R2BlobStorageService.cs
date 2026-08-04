@@ -20,9 +20,6 @@ public class R2BlobStorageService : IBlobStorageService
         {
             ServiceURL = r2.ServiceUrl,
             ForcePathStyle = true,
-            // R2 no soporta el streaming con checksum-por-trailer que el SDK
-            // usa por default desde 3.7.300+ ("STREAMING-AWS4-HMAC-SHA256-PAYLOAD-TRAILER
-            // not implemented"); con esto vuelve al firmado clásico.
             RequestChecksumCalculation = RequestChecksumCalculation.WHEN_REQUIRED,
             ResponseChecksumValidation = ResponseChecksumValidation.WHEN_REQUIRED
         };
@@ -39,8 +36,6 @@ public class R2BlobStorageService : IBlobStorageService
             InputStream = content,
             ContentType = contentType,
             AutoCloseStream = false,
-            // R2 no implementa ningún modo de firma "streaming" (con o sin trailer) del SDK;
-            // solo el clásico payload firmado de una. Esto evita que el SDK intente chunkear.
             DisablePayloadSigning = true
         };
 
@@ -50,11 +45,6 @@ public class R2BlobStorageService : IBlobStorageService
 
     public async Task<Stream> DownloadAsync(string key, CancellationToken cancellationToken)
     {
-        // Streamed straight through, not buffered into memory first -- for a large merged
-        // catalog PDF, fully downloading it here before forwarding a single byte to the
-        // browser meant waiting out the whole R2-to-server transfer *twice* (once into this
-        // process, once out to the client) before the viewer could even start parsing it.
-        // Disposing the returned stream also disposes the underlying GetObjectResponse.
         var response = await _client.GetObjectAsync(_bucketName, key, cancellationToken);
         return response.ResponseStream;
     }

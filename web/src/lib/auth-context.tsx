@@ -32,7 +32,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [auth, setAuthState] = useState<AuthState | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Hydrating client-only storage on mount (needs a real browser, can't be computed during render).
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);

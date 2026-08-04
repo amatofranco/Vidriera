@@ -39,8 +39,6 @@ public class GetCatalogHistoryQueryHandler : IRequestHandler<GetCatalogHistoryQu
             .ToList();
     }
 
-    // Older catalogs (pre-sections-index) stored ProductsSnapshotJson as a bare array; either
-    // shape deserializes fine here since we only need the product count, not the sections too.
     private static int CountProducts(string json)
     {
         try
@@ -50,7 +48,6 @@ public class GetCatalogHistoryQueryHandler : IRequestHandler<GetCatalogHistoryQu
         }
         catch (JsonException)
         {
-            // fall through to the legacy shape below
         }
 
         try

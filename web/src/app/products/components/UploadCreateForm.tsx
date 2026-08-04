@@ -2,9 +2,6 @@
 
 import { useRef, useState } from "react";
 
-// Shared shape behind both "+ Nuevo producto" (multiple files) and "+ Nueva carátula"
-// (single file) -- same layout, same file-picker pill, same icon button, only the
-// labels/multiplicity/submit behavior differ between the two call sites.
 export function UploadCreateForm({
   label,
   fileButtonLabel,

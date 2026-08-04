@@ -8,15 +8,10 @@ using Vidriera.Application.Auth;
 using Vidriera.Application.Catalogs;
 using Vidriera.Infrastructure;
 
-// Evita que WebApplication.CreateBuilder registre un FileSystemWatcher sobre appsettings*.json
-// (vía inotify) -- en el contenedor de Render eso venía agotando el límite de instancias de
-// inotify del proceso y tirando abajo el arranque entero con un IOException sin manejar. No
-// necesitamos hot-reload de configuración en producción: cada deploy ya es un contenedor nuevo.
 Environment.SetEnvironmentVariable("DOTNET_hostBuilder:reloadConfigOnChange", "false");
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Render (y plataformas similares) inyectan el puerto real via la variable PORT.
 var port = Environment.GetEnvironmentVariable("PORT");
 if (!string.IsNullOrEmpty(port))
 {
@@ -70,8 +65,6 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
-// Sin cookies de por medio (auth es siempre Bearer token), AllowAnyOrigin es seguro acá.
-// Si en el futuro se agrega auth basada en cookies, esto hay que restringirlo a orígenes concretos.
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy => policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
@@ -85,8 +78,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// Detrás del proxy de Render la conexión externa ya es HTTPS aunque Kestrel reciba HTTP;
-// sin esto, UseHttpsRedirection entraría en loop de redirects.
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
@@ -108,9 +99,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Sin auth ni acceso a la base -- pensado para un ping periódico externo (ver
-// .github/workflows/keep-alive.yml) que evite que Render duerma la instancia gratuita por
-// inactividad.
 app.MapGet("/api/health", () => Results.Ok(new { status = "ok" }));
 
 app.Run();

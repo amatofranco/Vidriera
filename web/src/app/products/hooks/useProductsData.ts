@@ -12,10 +12,6 @@ import {
 } from "@/lib/api";
 import { Messages, apiErrorMessage } from "@/lib/messages";
 
-// Owns the three lists the rest of the page reads from (products, sections, catalog
-// history) plus their loading/error state -- kept separate from reorder/bulk-assign/etc.
-// concerns, which just call the load*/set* functions this returns to refresh after an
-// action of their own.
 export function useProductsData(auth: AuthState | null, logout: () => void) {
   const router = useRouter();
 
@@ -28,9 +24,6 @@ export function useProductsData(auth: AuthState | null, logout: () => void) {
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
   async function loadProducts(token: string, options?: { silent?: boolean }) {
-    // "Silent" skips the isLoading flag -- used for refetches after an action already
-    // succeeded (assign/delete a section, bulk-assign) just to resync sortOrder, where
-    // swapping the whole list out for "Cargando..." reads as a glitch, not a refresh.
     const silent = options?.silent ?? false;
     if (!silent) setIsLoading(true);
     setError(null);
@@ -54,8 +47,6 @@ export function useProductsData(auth: AuthState | null, logout: () => void) {
       const result = await getSections(token);
       setSections(result);
     } catch {
-      // Las carátulas son un complemento -- si esto falla, la lista de productos
-      // sigue andando igual (se ven todos como sueltos).
     }
   }
 
@@ -65,7 +56,6 @@ export function useProductsData(auth: AuthState | null, logout: () => void) {
       const result = await getCatalogHistory(token);
       setCatalogHistory(result);
     } catch {
-      // El historial es un complemento -- no bloquea el resto de la página si falla.
     } finally {
       setIsLoadingHistory(false);
     }
@@ -73,7 +63,6 @@ export function useProductsData(auth: AuthState | null, logout: () => void) {
 
   useEffect(() => {
     if (!auth) return;
-    // Fetching from the API on mount/auth-change, not derivable during render.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadProducts(auth.token);
     loadSections(auth.token);

@@ -26,7 +26,6 @@ async function request<T>(
       const body = await response.json();
       message = body.detail ?? body.title ?? message;
     } catch {
-      // sin body JSON, nos quedamos con el mensaje genérico
     }
     throw new ApiError(message, response.status);
   }

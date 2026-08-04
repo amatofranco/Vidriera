@@ -25,9 +25,6 @@ public class DeleteSectionCommandHandler : IRequestHandler<DeleteSectionCommand>
             $"No se encontró la carátula {request.SectionId} para esta empresa.",
             cancellationToken);
 
-        // Members are detached, not deleted -- they go back to being loose products,
-        // appended after whatever is currently at the end of the top-level order,
-        // keeping their relative order to each other.
         var members = await _session.Query<Product>()
             .Where(p => p.Section != null && p.Section.Id == request.SectionId)
             .OrderBy(p => p.SortOrder)

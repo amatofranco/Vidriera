@@ -1,9 +1,5 @@
 namespace Vidriera.Application.Common;
 
-/// <summary>
-/// Builds the R2 object key for every kind of file this app stores, so the
-/// "companies/{companyId}/..." shape only has to be gotten right in one place.
-/// </summary>
 internal static class BlobKeys
 {
     public static string ProductSheet(Guid companyId, Guid productId) =>

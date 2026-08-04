@@ -26,8 +26,6 @@ export function useSectionActions({
     try {
       await deleteSection(auth.token, section.id);
       setSections((prev) => prev.filter((s) => s.id !== section.id));
-      // Members are detached server-side, not deleted -- refetch so their new
-      // top-level sectionId/sortOrder come back in sync.
       loadProducts(auth.token, { silent: true });
     } catch (err) {
       setError(apiErrorMessage(err, sectionDeleteFailed(section.name)));
@@ -43,8 +41,6 @@ export function useSectionActions({
     setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, sectionId } : p)));
     try {
       await assignProductSection(auth.token, product.id, sectionId);
-      // Sort order shifts server-side (appended at the end of the destination) --
-      // refetch so the position numbers reflect where it actually landed.
       loadProducts(auth.token, { silent: true });
     } catch {
       setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, sectionId: previousSectionId } : p)));

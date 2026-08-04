@@ -37,9 +37,6 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             throw new ValidationException("Hay que seleccionar al menos un producto.");
         }
 
-        // The requested ids are just the "which ones are checked" set -- the actual merge
-        // order is rebuilt here from each item's own SortOrder (already kept in sync by
-        // drag-and-drop/the reorder endpoints), not trusted from the request itself.
         var allProducts = await _session.Query<Product>()
             .Where(p => p.Company.Id == request.CompanyId)
             .ToListAsync(cancellationToken);
@@ -74,9 +71,6 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             });
 
         var pdfBytesInOrder = new List<byte[]>();
-        // Parallel to pdfBytesInOrder -- non-null at the index where a section's own cover
-        // page was added, so the page offsets returned by the merge can be matched back to
-        // "which section starts here" without re-walking topLevel a second time.
         var coverMarkers = new List<Section?>();
         var includedProducts = new List<Product>();
 
@@ -166,8 +160,6 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
 
     private const int MaxCatalogsPerCompany = 10;
 
-    // Keeps the history bounded: past the 10 most recent catalogs, the oldest ones are deleted
-    // outright (row + R2 blob), not just hidden -- a link that old stops working, by design.
     private async Task PruneOldCatalogsAsync(Guid companyId, CancellationToken cancellationToken)
     {
         var catalogs = await _session.Query<GeneratedCatalog>()

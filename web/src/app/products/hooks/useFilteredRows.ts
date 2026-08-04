@@ -24,9 +24,6 @@ export function useFilteredRows({
         return matchesSearch(row.section.name) || sectionMembers(row.section.id).some((m) => matchesSearch(m.name));
       });
 
-  // Same "if the carátula's own name matches, show all its members; otherwise only the
-  // matching ones" rule used to decide whether the carátula shows up at all above -- applied
-  // here to what's actually rendered underneath it, instead of always showing every member.
   function visibleSectionMembers(sectionId: string, sectionName: string) {
     const members = sectionMembers(sectionId);
     if (!searchQuery || matchesSearch(sectionName)) return members;

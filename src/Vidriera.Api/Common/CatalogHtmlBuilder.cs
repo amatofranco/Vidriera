@@ -14,8 +14,6 @@ public static class CatalogHtmlBuilder
         var companyName = WebUtility.HtmlEncode(dto.CompanyName);
         var generatedAt = WebUtility.HtmlEncode(dto.GeneratedAt.ToString("dd/MM/yyyy"));
 
-        // Only present at all when the catalog actually has carátulas -- an empty toolbar
-        // button/panel with nothing to show would just be dead UI on every other catalog.
         var hasSections = dto.Sections.Count > 0;
         var sectionsJsonEncoded = hasSections
             ? WebUtility.HtmlEncode(JsonSerializer.Serialize(dto.Sections, SectionsJsonOptions))

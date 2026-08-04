@@ -4,12 +4,6 @@ using Vidriera.Domain.Entities;
 
 namespace Vidriera.Application.Common;
 
-/// <summary>
-/// Sections and loose (unsectioned) products share one ordering space at the "top level"
-/// of a company's catalog -- this is where that shared space's next value gets computed,
-/// so every place that appends something to the end (create a section, detach a product,
-/// reassign a product to no section) agrees on what "the end" means.
-/// </summary>
 internal static class TopLevelOrdering
 {
     public static async Task<int> NextTopLevelSortOrderAsync(ISession session, Guid companyId, CancellationToken cancellationToken)

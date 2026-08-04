@@ -36,7 +36,7 @@ export function CompanyHeader({
   return (
     <header className="mb-6">
       {logoUrl && (
-        // eslint-disable-next-line @next/next/no-img-element -- imagen autenticada vía blob URL, no un asset estático de Next
+        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={logoUrl}
           alt={`Banner de ${auth.companyName}`}
