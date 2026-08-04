@@ -836,7 +836,7 @@ export default function ProductsPage() {
         onSubmit={handleCreateProduct}
         className="mb-3 flex flex-wrap items-center gap-3 rounded-xl border border-black/10 bg-[#ecdcc0] px-4 py-3 shadow-lg dark:border-white/10 dark:bg-zinc-900"
       >
-        <span className="text-xs font-medium whitespace-nowrap text-zinc-600 dark:text-zinc-400">
+        <span className="w-40 shrink-0 text-xs font-medium whitespace-nowrap text-zinc-600 dark:text-zinc-400">
           Ficha/s PDF <span className="text-zinc-400 dark:text-zinc-500">(máx. {MAX_FILE_SIZE_LABEL} c/u)</span>
         </span>
         <label className="flex cursor-pointer items-center gap-2 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800">
@@ -897,7 +897,7 @@ export default function ProductsPage() {
         onSubmit={handleCreateSection}
         className="mb-6 flex flex-wrap items-center gap-3 rounded-xl border border-black/10 bg-[#ecdcc0] px-4 py-3 shadow-lg dark:border-white/10 dark:bg-zinc-900"
       >
-        <span className="text-xs font-medium whitespace-nowrap text-zinc-600 dark:text-zinc-400">
+        <span className="w-40 shrink-0 text-xs font-medium whitespace-nowrap text-zinc-600 dark:text-zinc-400">
           PDF de carátula <span className="text-zinc-400 dark:text-zinc-500">(máx. {MAX_FILE_SIZE_LABEL})</span>
         </span>
         <label className="flex cursor-pointer items-center gap-2 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800">
