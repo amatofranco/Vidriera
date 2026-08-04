@@ -840,7 +840,7 @@ export default function ProductsPage() {
           Ficha/s PDF <span className="text-zinc-400 dark:text-zinc-500">(máx. {MAX_FILE_SIZE_LABEL} c/u)</span>
         </span>
         <label className="flex cursor-pointer items-center gap-2 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800">
-          <span className="w-[104px] shrink-0 rounded bg-[#c9a86a] px-2 py-0.5 text-center text-xs font-medium whitespace-nowrap text-zinc-900">
+          <span className="w-28 shrink-0 rounded bg-[#c9a86a] px-2 py-0.5 text-center text-xs font-medium whitespace-nowrap text-zinc-900">
             Elegir archivos
           </span>
           <span className="max-w-[160px] truncate">
@@ -901,7 +901,7 @@ export default function ProductsPage() {
           PDF de carátula <span className="text-zinc-400 dark:text-zinc-500">(máx. {MAX_FILE_SIZE_LABEL})</span>
         </span>
         <label className="flex cursor-pointer items-center gap-2 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800">
-          <span className="w-[104px] shrink-0 rounded bg-[#c9a86a] px-2 py-0.5 text-center text-xs font-medium whitespace-nowrap text-zinc-900">
+          <span className="w-28 shrink-0 rounded bg-[#c9a86a] px-2 py-0.5 text-center text-xs font-medium whitespace-nowrap text-zinc-900">
             Elegir archivo
           </span>
           <span className="max-w-[160px] truncate">
