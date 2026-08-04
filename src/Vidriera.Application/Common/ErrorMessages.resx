@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="InvalidCredentials" xml:space="preserve">
+    <value>Email o contraseña incorrectos.</value>
+  </data>
+  <data name="MissingCompanyIdClaim" xml:space="preserve">
+    <value>El token no tiene un companyId válido.</value>
+  </data>
+  <data name="MissingUserIdClaim" xml:space="preserve">
+    <value>El token no tiene un identificador de usuario válido.</value>
+  </data>
+  <data name="MustSelectAtLeastOneProduct" xml:space="preserve">
+    <value>Hay que seleccionar al menos un producto.</value>
+  </data>
+  <data name="CatalogRevoked" xml:space="preserve">
+    <value>Este catálogo fue revocado.</value>
+  </data>
+  <data name="CatalogExpired" xml:space="preserve">
+    <value>Este catálogo ya expiró.</value>
+  </data>
+  <data name="InvalidSectionReorderItems" xml:space="preserve">
+    <value>Alguno de los productos no existe o no pertenece a esta carátula.</value>
+  </data>
+  <data name="InvalidTopLevelReorderItems" xml:space="preserve">
+    <value>Alguno de los ítems no existe o no pertenece a esta empresa.</value>
+  </data>
+  <data name="CompanyNotFound" xml:space="preserve">
+    <value>No existe la empresa {0}.</value>
+  </data>
+  <data name="CompanyLogoNotFound" xml:space="preserve">
+    <value>La empresa {0} no tiene logo cargado.</value>
+  </data>
+  <data name="EmailAlreadyRegistered" xml:space="preserve">
+    <value>Ya existe un usuario con el email '{0}'.</value>
+  </data>
+  <data name="CatalogNotFound" xml:space="preserve">
+    <value>No existe el catálogo {0}.</value>
+  </data>
+  <data name="ProductNotSelectable" xml:space="preserve">
+    <value>El producto {0} no existe o no pertenece a esta empresa.</value>
+  </data>
+  <data name="ProductSheetMissing" xml:space="preserve">
+    <value>El producto '{0}' todavía no tiene la hoja PDF cargada.</value>
+  </data>
+  <data name="ProductNotFound" xml:space="preserve">
+    <value>No se encontró el producto {0} para esta empresa.</value>
+  </data>
+  <data name="SectionNotFound" xml:space="preserve">
+    <value>No se encontró la carátula {0} para esta empresa.</value>
+  </data>
+</root>

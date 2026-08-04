@@ -22,7 +22,7 @@ public class DeleteSectionCommandHandler : IRequestHandler<DeleteSectionCommand>
     {
         var section = await _session.Query<Section>().GetOrThrowAsync(
             s => s.Id == request.SectionId && s.Company.Id == request.CompanyId,
-            $"No se encontró la carátula {request.SectionId} para esta empresa.",
+            ErrorMessages.SectionNotFound(request.SectionId),
             cancellationToken);
 
         var members = await _session.Query<Product>()

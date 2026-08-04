@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { AuthState } from "@/lib/auth-context";
 import { fetchCompanyLogoUrl, uploadCompanyLogo } from "@/lib/api";
+import { Labels } from "@/lib/labels";
 import { Messages, apiErrorMessage } from "@/lib/messages";
 
 export function CompanyHeader({
@@ -39,7 +40,7 @@ export function CompanyHeader({
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={logoUrl}
-          alt={`Banner de ${auth.companyName}`}
+          alt={Labels.bannerAlt(auth.companyName)}
           className="mb-4 h-40 w-full rounded-xl bg-white object-contain opacity-85 shadow-lg"
         />
       )}
@@ -55,7 +56,7 @@ export function CompanyHeader({
         </div>
         <div className="flex items-center gap-2">
           <label className="cursor-pointer rounded-md border border-white/15 px-3 py-1.5 text-xs font-medium text-[#e4c98a] transition-colors hover:bg-white/10">
-            {isUploadingLogo ? "Subiendo..." : logoUrl ? "Cambiar banner" : "Subir banner"}
+            {isUploadingLogo ? Labels.uploadingBanner : logoUrl ? Labels.changeBanner : Labels.uploadBanner}
             <input
               type="file"
               accept="image/*"
@@ -71,7 +72,7 @@ export function CompanyHeader({
             onClick={logout}
             className="rounded-md border border-white/15 px-3 py-1.5 text-xs font-medium text-zinc-100 transition-colors hover:border-red-400/40 hover:bg-red-500/10 hover:text-red-300"
           >
-            Salir
+            {Labels.logout}
           </button>
         </div>
       </div>

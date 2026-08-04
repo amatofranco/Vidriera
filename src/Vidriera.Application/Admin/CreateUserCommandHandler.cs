@@ -2,6 +2,7 @@ using MediatR;
 using NHibernate;
 using NHibernate.Linq;
 using Vidriera.Application.Abstractions;
+using Vidriera.Application.Common;
 using Vidriera.Application.Common.Exceptions;
 using Vidriera.Domain.Entities;
 
@@ -23,7 +24,7 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Creat
         var company = await _session.GetAsync<Company>(request.CompanyId, cancellationToken);
         if (company is null)
         {
-            throw new NotFoundException($"No existe la empresa {request.CompanyId}.");
+            throw new NotFoundException(ErrorMessages.CompanyNotFound(request.CompanyId));
         }
 
         var emailInUse = await _session.Query<User>()
@@ -31,7 +32,7 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Creat
 
         if (emailInUse)
         {
-            throw new ValidationException($"Ya existe un usuario con el email '{request.Email}'.");
+            throw new ValidationException(ErrorMessages.EmailAlreadyRegistered(request.Email));
         }
 
         var user = new User

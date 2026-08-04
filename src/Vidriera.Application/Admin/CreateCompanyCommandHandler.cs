@@ -2,6 +2,7 @@ using MediatR;
 using NHibernate;
 using NHibernate.Linq;
 using Vidriera.Application.Abstractions;
+using Vidriera.Application.Common;
 using Vidriera.Application.Common.Exceptions;
 using Vidriera.Domain.Entities;
 
@@ -25,7 +26,7 @@ public class CreateCompanyCommandHandler : IRequestHandler<CreateCompanyCommand,
 
         if (emailInUse)
         {
-            throw new ValidationException($"Ya existe un usuario con el email '{request.UserEmail}'.");
+            throw new ValidationException(ErrorMessages.EmailAlreadyRegistered(request.UserEmail));
         }
 
         var company = new Company

@@ -2,6 +2,7 @@ using MediatR;
 using NHibernate;
 using NHibernate.Linq;
 using Vidriera.Application.Abstractions;
+using Vidriera.Application.Common;
 using Vidriera.Application.Common.Exceptions;
 using Vidriera.Domain.Entities;
 
@@ -27,7 +28,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResult>
 
         if (user is null || !_passwordHasher.Verify(request.Password, user.PasswordHash))
         {
-            throw new UnauthorizedException("Email o contraseña incorrectos.");
+            throw new UnauthorizedException(ErrorMessages.InvalidCredentials);
         }
 
         var token = _jwtTokenGenerator.GenerateToken(user.Id, user.Company.Id, user.Email);

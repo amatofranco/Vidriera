@@ -1,6 +1,7 @@
 "use client";
 
 import type { Section } from "@/lib/api";
+import { Labels } from "@/lib/labels";
 
 export function BulkAssignBar({
   selectedCount,
@@ -19,10 +20,7 @@ export function BulkAssignBar({
 }) {
   return (
     <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-md border border-[#e4c98a]/40 bg-[#e4c98a]/10 px-4 py-3 text-sm text-[#f0dca8]">
-      <span>
-        Tildá los productos de la lista para asociarlos ({selectedCount} seleccionado
-        {selectedCount === 1 ? "" : "s"}).
-      </span>
+      <span>{Labels.bulkAssignHint(selectedCount)}</span>
       <div className="flex items-center gap-2">
         <select
           value={targetId}
@@ -30,7 +28,7 @@ export function BulkAssignBar({
           disabled={isApplying}
           className="rounded border border-white/20 bg-black/20 px-2 py-1.5 text-xs text-white disabled:opacity-50"
         >
-          <option value="">Sin carátula</option>
+          <option value="">{Labels.noSectionOption}</option>
           {sections.map((s) => (
             <option key={s.id} value={s.id}>
               {s.name}
@@ -45,7 +43,7 @@ export function BulkAssignBar({
           {isApplying && (
             <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-zinc-900/25 border-t-zinc-900" />
           )}
-          {isApplying ? "Aplicando..." : `Aplicar (${selectedCount})`}
+          {isApplying ? Labels.applying : Labels.apply(selectedCount)}
         </button>
       </div>
     </div>

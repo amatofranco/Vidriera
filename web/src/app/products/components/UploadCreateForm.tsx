@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { Labels } from "@/lib/labels";
 
 export function UploadCreateForm({
   label,
@@ -38,10 +39,10 @@ export function UploadCreateForm({
 
   const fileLabelText =
     files.length === 0
-      ? "Ningún archivo elegido"
+      ? Labels.noFileChosen
       : files.length === 1
         ? files[0].name
-        : `${files.length} archivos elegidos`;
+        : Labels.filesChosenCount(files.length);
 
   return (
     <form
@@ -49,7 +50,7 @@ export function UploadCreateForm({
       className={`${marginBottomClassName} flex flex-wrap items-center gap-3 rounded-xl border border-black/10 bg-[#ecdcc0] px-4 py-3 shadow-lg dark:border-white/10 dark:bg-zinc-900`}
     >
       <span className="w-40 shrink-0 text-xs font-medium whitespace-nowrap text-zinc-600 dark:text-zinc-400">
-        {label} <span className="text-zinc-400 dark:text-zinc-500">(máx. {maxSizeLabel})</span>
+        {label} <span className="text-zinc-400 dark:text-zinc-500">{Labels.maxSizeSuffix(maxSizeLabel)}</span>
       </span>
       <label className="flex cursor-pointer items-center gap-2 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800">
         <span className="w-28 shrink-0 rounded bg-[#c9a86a] px-2 py-0.5 text-center text-xs font-medium whitespace-nowrap text-zinc-900">
@@ -71,7 +72,7 @@ export function UploadCreateForm({
         value={name}
         onChange={(e) => setName(e.target.value)}
         disabled={files.length > 1}
-        placeholder="Nombre (opcional)"
+        placeholder={Labels.optionalNamePlaceholder}
         className="w-48 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
       />
       <button

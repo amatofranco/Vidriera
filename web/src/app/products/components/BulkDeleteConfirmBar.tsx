@@ -1,5 +1,7 @@
 "use client";
 
+import { Labels } from "@/lib/labels";
+
 export function BulkDeleteConfirmBar({
   label,
   isDeleting,
@@ -13,21 +15,21 @@ export function BulkDeleteConfirmBar({
 }) {
   return (
     <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-md border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-      <span>¿Borrar {label}? Esta acción no se puede deshacer.</span>
+      <span>{Labels.confirmBulkDeleteQuestion(label)}</span>
       <div className="flex gap-2">
         <button
           onClick={onConfirm}
           disabled={isDeleting}
           className="rounded bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-500 disabled:opacity-50"
         >
-          {isDeleting ? "Borrando..." : "Sí, borrar"}
+          {isDeleting ? Labels.bulkDeleting : Labels.confirmYesDelete}
         </button>
         <button
           onClick={onCancel}
           disabled={isDeleting}
           className="rounded bg-zinc-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-zinc-600 disabled:opacity-50"
         >
-          Cancelar
+          {Labels.cancel}
         </button>
       </div>
     </div>

@@ -1,5 +1,7 @@
 "use client";
 
+import { Labels } from "@/lib/labels";
+
 export function BulkActionsToolbar({
   search,
   onSearchChange,
@@ -33,7 +35,7 @@ export function BulkActionsToolbar({
         type="text"
         value={search}
         onChange={(e) => onSearchChange(e.target.value)}
-        placeholder="Buscar por nombre..."
+        placeholder={Labels.searchPlaceholder}
         className="min-w-0 flex-1 rounded-md border border-white/20 bg-black/20 px-3 py-2 text-sm text-white placeholder:text-zinc-300 outline-none focus:border-[#e4c98a]"
       />
       <button
@@ -41,14 +43,14 @@ export function BulkActionsToolbar({
         onClick={onMarkAll}
         className="rounded-md border border-white/20 px-3 py-2 text-xs font-medium whitespace-nowrap text-zinc-100 transition-colors hover:bg-white/10"
       >
-        Marcar {isFiltered ? "filtrados" : "todos"}
+        {Labels.markAll(isFiltered)}
       </button>
       <button
         type="button"
         onClick={onUnmarkAll}
         className="rounded-md border border-white/20 px-3 py-2 text-xs font-medium whitespace-nowrap text-zinc-100 transition-colors hover:bg-white/10"
       >
-        Desmarcar {isFiltered ? "filtrados" : "todos"}
+        {Labels.unmarkAll(isFiltered)}
       </button>
       {!isBulkAssigningSection && (
         <button
@@ -57,7 +59,7 @@ export function BulkActionsToolbar({
           disabled={checkedCount === 0}
           className="rounded-md border border-red-400/30 px-3 py-2 text-xs font-medium whitespace-nowrap text-red-300 transition-colors hover:bg-red-500/10 disabled:opacity-40"
         >
-          Borrar seleccionados ({checkedCount})
+          {Labels.deleteSelectedCount(checkedCount)}
         </button>
       )}
       {!isBulkAssigningSection && (
@@ -66,7 +68,7 @@ export function BulkActionsToolbar({
           onClick={onRequestDeleteAll}
           className="rounded-md border border-red-400/30 px-3 py-2 text-xs font-medium whitespace-nowrap text-red-300 transition-colors hover:bg-red-500/10"
         >
-          Borrar {isFiltered ? "filtrados" : "todos"}
+          {Labels.deleteAllOrFiltered(isFiltered)}
         </button>
       )}
       {hasSections && (
@@ -80,7 +82,7 @@ export function BulkActionsToolbar({
               : "border-white/20 text-zinc-100 hover:bg-white/10"
           }`}
         >
-          {isBulkAssigningSection ? "Cancelar asociación" : "Asociar a carátula"}
+          {isBulkAssigningSection ? Labels.cancelBulkAssignMode : Labels.startBulkAssignMode}
         </button>
       )}
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import type { Product, Section } from "@/lib/api";
+import { Labels } from "@/lib/labels";
 
 export function ProductRow({
   product,
@@ -57,7 +58,7 @@ export function ProductRow({
         draggable
         onDragStart={onDragStart}
         onDragEnd={onDragEnd}
-        title="Arrastrar para reordenar"
+        title={Labels.dragToReorder}
         className="cursor-grab select-none text-zinc-400 dark:text-zinc-600"
       >
         ⠿
@@ -72,7 +73,7 @@ export function ProductRow({
         onKeyDown={(e) => {
           if (e.key === "Enter") e.currentTarget.blur();
         }}
-        title="Posición en el orden"
+        title={Labels.positionInOrder}
         className="w-12 rounded border border-zinc-300 px-1 py-0.5 text-center text-xs text-zinc-700 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
       />
       <label className="flex flex-1 items-center gap-3">
@@ -89,10 +90,10 @@ export function ProductRow({
       <select
         value={product.sectionId ?? ""}
         onChange={(e) => onAssignSection(e.target.value || null)}
-        title="Carátula"
+        title={Labels.sectionSelectTitle}
         className="rounded border border-zinc-300 bg-white px-1 py-1 text-xs text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
       >
-        <option value="">Sin carátula</option>
+        <option value="">{Labels.noSectionOption}</option>
         {sections.map((s) => (
           <option key={s.id} value={s.id}>
             {s.name}
@@ -102,29 +103,29 @@ export function ProductRow({
 
       {confirmingDelete ? (
         <div className="flex items-center gap-2 text-xs">
-          <span className="text-zinc-600 dark:text-zinc-400">¿Borrar?</span>
+          <span className="text-zinc-600 dark:text-zinc-400">{Labels.confirmDeleteProductQuestion}</span>
           <button
             onClick={onConfirmDelete}
             disabled={isDeleting}
             className="rounded bg-red-600 px-2 py-1 font-medium text-white hover:bg-red-500 disabled:opacity-50"
           >
-            Sí
+            {Labels.yes}
           </button>
           <button
             onClick={onCancelDelete}
             disabled={isDeleting}
             className="rounded bg-zinc-200 px-2 py-1 font-medium text-zinc-800 hover:bg-zinc-300 dark:bg-zinc-700 dark:text-zinc-100"
           >
-            Cancelar
+            {Labels.cancel}
           </button>
         </div>
       ) : (
         <div className="flex items-center gap-3">
           {product.hasSheet ? (
-            <span className="text-xs text-emerald-600 dark:text-emerald-400">Ficha cargada</span>
+            <span className="text-xs text-emerald-600 dark:text-emerald-400">{Labels.sheetLoaded}</span>
           ) : (
             <label className="cursor-pointer text-xs text-amber-600 underline dark:text-amber-400">
-              Subir ficha
+              {Labels.uploadSheet}
               <input
                 type="file"
                 accept="application/pdf"
@@ -140,7 +141,7 @@ export function ProductRow({
             onClick={onRequestDelete}
             className="text-xs text-red-600 underline hover:text-red-500 dark:text-red-400"
           >
-            Borrar
+            {Labels.delete}
           </button>
         </div>
       )}

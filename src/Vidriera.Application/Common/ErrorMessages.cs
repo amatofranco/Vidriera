@@ -1,0 +1,40 @@
+using System.Globalization;
+using System.Resources;
+
+namespace Vidriera.Application.Common;
+
+public static class ErrorMessages
+{
+    private static readonly ResourceManager Resources = new(
+        "Vidriera.Application.Common.ErrorMessages",
+        typeof(ErrorMessages).Assembly);
+
+    private static string Get(string name) => Resources.GetString(name, CultureInfo.CurrentUICulture)!;
+
+    public static string InvalidCredentials => Get(nameof(InvalidCredentials));
+    public static string MissingCompanyIdClaim => Get(nameof(MissingCompanyIdClaim));
+    public static string MissingUserIdClaim => Get(nameof(MissingUserIdClaim));
+
+    public static string MustSelectAtLeastOneProduct => Get(nameof(MustSelectAtLeastOneProduct));
+    public static string CatalogRevoked => Get(nameof(CatalogRevoked));
+    public static string CatalogExpired => Get(nameof(CatalogExpired));
+
+    public static string InvalidSectionReorderItems => Get(nameof(InvalidSectionReorderItems));
+    public static string InvalidTopLevelReorderItems => Get(nameof(InvalidTopLevelReorderItems));
+
+    public static string CompanyNotFound(Guid companyId) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(CompanyNotFound)), companyId);
+
+    public static string CompanyLogoNotFound(Guid companyId) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(CompanyLogoNotFound)), companyId);
+
+    public static string EmailAlreadyRegistered(string email) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(EmailAlreadyRegistered)), email);
+
+    public static string CatalogNotFound(Guid catalogId) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(CatalogNotFound)), catalogId);
+
+    public static string ProductNotSelectable(Guid productId) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(ProductNotSelectable)), productId);
+
+    public static string ProductSheetMissing(string productName) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(ProductSheetMissing)), productName);
+
+    public static string ProductNotFound(Guid productId) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(ProductNotFound)), productId);
+
+    public static string SectionNotFound(Guid sectionId) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(SectionNotFound)), sectionId);
+}

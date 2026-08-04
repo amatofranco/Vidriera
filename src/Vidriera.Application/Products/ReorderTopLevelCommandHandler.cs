@@ -1,6 +1,7 @@
 using MediatR;
 using NHibernate;
 using NHibernate.Linq;
+using Vidriera.Application.Common;
 using Vidriera.Application.Common.Exceptions;
 using Vidriera.Domain.Entities;
 
@@ -29,7 +30,7 @@ public class ReorderTopLevelCommandHandler : IRequestHandler<ReorderTopLevelComm
 
         if (sections.Count != sectionIds.Count || products.Count != productIds.Count)
         {
-            throw new ValidationException("Alguno de los ítems no existe o no pertenece a esta empresa.");
+            throw new ValidationException(ErrorMessages.InvalidTopLevelReorderItems);
         }
 
         var sectionsById = sections.ToDictionary(s => s.Id);

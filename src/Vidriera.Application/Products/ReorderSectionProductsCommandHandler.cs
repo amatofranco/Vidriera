@@ -1,6 +1,7 @@
 using MediatR;
 using NHibernate;
 using NHibernate.Linq;
+using Vidriera.Application.Common;
 using Vidriera.Application.Common.Exceptions;
 using Vidriera.Domain.Entities;
 
@@ -27,7 +28,7 @@ public class ReorderSectionProductsCommandHandler : IRequestHandler<ReorderSecti
 
         if (productsById.Count != request.OrderedProductIds.Count)
         {
-            throw new ValidationException("Alguno de los productos no existe o no pertenece a esta carátula.");
+            throw new ValidationException(ErrorMessages.InvalidSectionReorderItems);
         }
 
         using var transaction = _session.BeginTransaction();

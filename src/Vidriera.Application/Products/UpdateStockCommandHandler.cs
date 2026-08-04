@@ -18,7 +18,7 @@ public class UpdateStockCommandHandler : IRequestHandler<UpdateStockCommand>
     {
         var product = await _session.Query<Product>().GetOrThrowAsync(
             p => p.Id == request.ProductId && p.Company.Id == request.CompanyId,
-            $"No se encontró el producto {request.ProductId} para esta empresa.",
+            ErrorMessages.ProductNotFound(request.ProductId),
             cancellationToken);
 
         product.HasStock = request.HasStock;

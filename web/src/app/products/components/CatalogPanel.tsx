@@ -1,6 +1,7 @@
 "use client";
 
 import type { CatalogHistoryItem, GenerateCatalogResult } from "@/lib/api";
+import { Labels } from "@/lib/labels";
 
 export function CatalogPanel({
   selectableCount,
@@ -33,8 +34,8 @@ export function CatalogPanel({
             <span className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-900/25 border-t-zinc-900" />
           )}
           {isGenerating
-            ? "Generando catálogo..."
-            : `Generar catálogo (${selectableCount} con stock y ficha)`}
+            ? Labels.generatingCatalog
+            : Labels.generateCatalogButton(selectableCount)}
         </button>
         <button
           onClick={onToggleHistory}
@@ -44,26 +45,26 @@ export function CatalogPanel({
               : "border-zinc-300 text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
           }`}
         >
-          {isHistoryOpen ? "Ocultar historial" : "Historial de catálogos"}
+          {isHistoryOpen ? Labels.hideHistory : Labels.showHistory}
         </button>
       </div>
 
       {isGenerating && (
         <p className="mt-2 text-xs text-zinc-600 dark:text-zinc-400">
-          Puede tardar un momento si el catálogo tiene muchos productos.
+          {Labels.catalogGenerationHint}
         </p>
       )}
 
       {isHistoryOpen && (
         <div className="mt-4 border-t border-black/10 pt-4 dark:border-white/10">
           {isLoadingHistory ? (
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">Cargando historial...</p>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">{Labels.loadingHistory}</p>
           ) : catalogHistory.length === 0 ? (
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">Todavía no generaste ningún catálogo.</p>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">{Labels.noCatalogHistoryYet}</p>
           ) : (
             <>
               <p className="mb-2 text-xs text-zinc-500 dark:text-zinc-500">
-                Se guardan los últimos {catalogHistory.length < 10 ? catalogHistory.length : 10} catálogos generados; al pasar ese límite, el más viejo se borra.
+                {Labels.historyLimitHint(catalogHistory.length)}
               </p>
               <ul className="divide-y divide-black/10 rounded-md border border-black/10 dark:divide-white/10 dark:border-white/10">
                 {catalogHistory.map((item) => (
@@ -73,14 +74,14 @@ export function CatalogPanel({
                         {new Date(item.generatedAt).toLocaleString()}
                       </span>
                       <span className="text-xs text-zinc-500">
-                        {item.productCount} producto{item.productCount === 1 ? "" : "s"}
-                        {item.expiresAt && ` · vence ${new Date(item.expiresAt).toLocaleDateString()}`}
+                        {Labels.productCountLabel(item.productCount)}
+                        {item.expiresAt && Labels.expiresOnSuffix(new Date(item.expiresAt).toLocaleDateString())}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       {item.isExpired ? (
                         <span className="rounded-full bg-zinc-200 px-2 py-0.5 text-xs text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">
-                          Expirado
+                          {Labels.expiredBadge}
                         </span>
                       ) : (
                         <a
@@ -89,7 +90,7 @@ export function CatalogPanel({
                           rel="noopener noreferrer"
                           className="text-blue-600 underline dark:text-blue-400"
                         >
-                          Abrir
+                          {Labels.openLink}
                         </a>
                       )}
                     </div>
@@ -104,7 +105,7 @@ export function CatalogPanel({
       {catalogResult && (
         <div className="mt-4 text-sm text-zinc-700 dark:text-zinc-300">
           <p>
-            Link:{" "}
+            {Labels.linkPrefix}{" "}
             <a
               href={catalogResult.url}
               target="_blank"
@@ -116,7 +117,7 @@ export function CatalogPanel({
           </p>
           {catalogResult.expiresAt && (
             <p className="text-zinc-500">
-              Expira: {new Date(catalogResult.expiresAt).toLocaleString()}
+              {Labels.expiresPrefix} {new Date(catalogResult.expiresAt).toLocaleString()}
             </p>
           )}
         </div>

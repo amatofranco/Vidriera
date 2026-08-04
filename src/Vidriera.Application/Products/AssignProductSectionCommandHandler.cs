@@ -18,7 +18,7 @@ public class AssignProductSectionCommandHandler : IRequestHandler<AssignProductS
     {
         var product = await _session.Query<Product>().GetOrThrowAsync(
             p => p.Id == request.ProductId && p.Company.Id == request.CompanyId,
-            $"No se encontró el producto {request.ProductId} para esta empresa.",
+            ErrorMessages.ProductNotFound(request.ProductId),
             cancellationToken);
 
         Section? section = null;
@@ -26,7 +26,7 @@ public class AssignProductSectionCommandHandler : IRequestHandler<AssignProductS
         {
             section = await _session.Query<Section>().GetOrThrowAsync(
                 s => s.Id == request.SectionId.Value && s.Company.Id == request.CompanyId,
-                $"No se encontró la carátula {request.SectionId.Value} para esta empresa.",
+                ErrorMessages.SectionNotFound(request.SectionId.Value),
                 cancellationToken);
         }
 

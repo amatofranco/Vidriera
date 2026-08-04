@@ -36,7 +36,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
     {
         if (request.ProductIds.Count == 0)
         {
-            throw new ValidationException("Hay que seleccionar al menos un producto.");
+            throw new ValidationException(ErrorMessages.MustSelectAtLeastOneProduct);
         }
 
         var allProducts = await _session.Query<Product>()
@@ -99,12 +99,12 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         {
             if (!productsById.TryGetValue(productId, out var product))
             {
-                throw new ValidationException($"El producto {productId} no existe o no pertenece a esta empresa.");
+                throw new ValidationException(ErrorMessages.ProductNotSelectable(productId));
             }
 
             if (string.IsNullOrEmpty(product.SheetPdfBlobKey))
             {
-                throw new ValidationException($"El producto '{product.Name}' todavía no tiene la hoja PDF cargada.");
+                throw new ValidationException(ErrorMessages.ProductSheetMissing(product.Name));
             }
         }
     }

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { MAX_FILE_SIZE_LABEL } from "@/lib/file-size";
+import { Labels } from "@/lib/labels";
 import type { Product } from "@/lib/api";
 
 import { useProductsData } from "./hooks/useProductsData";
@@ -144,18 +145,15 @@ export default function ProductsPage() {
 
   function requestBulkDeleteSelected() {
     const targets = products.filter((p) => p.hasStock);
-    requestBulkDelete(
-      targets,
-      `${targets.length} producto${targets.length === 1 ? "" : "s"} seleccionado${targets.length === 1 ? "" : "s"}`
-    );
+    requestBulkDelete(targets, Labels.selectedProductsLabel(targets.length));
   }
 
   function requestBulkDeleteAll() {
     requestBulkDelete(
       filteredProducts,
       search.trim()
-        ? `${filteredProducts.length} producto${filteredProducts.length === 1 ? "" : "s"} filtrado${filteredProducts.length === 1 ? "" : "s"}`
-        : `TODOS los productos (${filteredProducts.length})`
+        ? Labels.filteredProductsLabel(filteredProducts.length)
+        : Labels.allProductsLabel(filteredProducts.length)
     );
   }
 
@@ -195,7 +193,7 @@ export default function ProductsPage() {
         isDragged={isDragged}
         isBulkAssigningSection={isBulkAssigningSection}
         isChecked={isBulkAssigningSection ? bulkAssignSelectedIds.has(product.id) : product.hasStock}
-        checkboxTitle={isBulkAssigningSection ? "Seleccionar para asociar a carátula" : "Tiene stock"}
+        checkboxTitle={isBulkAssigningSection ? Labels.selectForBulkAssignTitle : Labels.hasStockTitle}
         isDeleting={isDeleting}
         confirmingDelete={confirmingDeleteId === product.id}
         onDragStart={() => (sectionId ? setDraggedSectionMemberId(product.id) : setDraggedTopLevelId(product.id))}
@@ -230,7 +228,7 @@ export default function ProductsPage() {
       }}
     >
       <div className="fixed top-4 left-4 z-10">
-        <Image src="/vidriera-logo.png" alt="Vidriera" width={1000} height={245} className="h-11 w-auto" />
+        <Image src="/vidriera-logo.png" alt={Labels.logoAlt} width={1000} height={245} className="h-11 w-auto" />
       </div>
       <div className="mx-auto w-full max-w-3xl">
         <CompanyHeader
@@ -242,24 +240,24 @@ export default function ProductsPage() {
         />
 
         <UploadCreateForm
-          label="Ficha/s PDF"
-          fileButtonLabel="Elegir archivos"
+          label={Labels.productSheetFormLabel}
+          fileButtonLabel={Labels.chooseFilesPlural}
           multiple
           maxSizeLabel={MAX_FILE_SIZE_LABEL}
           isSubmitting={isCreating}
-          submitTitle={(count) => (count > 1 ? `Cargar ${count} productos` : "Nuevo producto")}
+          submitTitle={(count) => (count > 1 ? Labels.uploadProductsSubmitTitle(count) : Labels.newProductSubmitTitle)}
           progress={uploadProgress}
           onSubmit={handleCreateProduct}
           marginBottomClassName="mb-3"
         />
 
         <UploadCreateForm
-          label="PDF de carátula"
-          fileButtonLabel="Elegir archivo"
+          label={Labels.sectionCoverFormLabel}
+          fileButtonLabel={Labels.chooseFileSingular}
           multiple={false}
           maxSizeLabel={MAX_FILE_SIZE_LABEL}
           isSubmitting={isCreatingSection}
-          submitTitle={() => "Nueva carátula"}
+          submitTitle={() => Labels.newSectionSubmitTitle}
           onSubmit={handleCreateSection}
           marginBottomClassName="mb-6"
         />
@@ -317,12 +315,12 @@ export default function ProductsPage() {
         {isLoading ? (
           <div className="mb-6 flex flex-col items-center justify-center gap-3 py-10 text-zinc-200">
             <span className="h-8 w-8 animate-spin rounded-full border-4 border-white/20 border-t-[#c9a86a]" />
-            <p>Cargando productos...</p>
+            <p>{Labels.loadingProducts}</p>
           </div>
         ) : products.length === 0 && sections.length === 0 ? (
-          <p className="text-zinc-200">Todavía no hay productos ni carátulas cargadas.</p>
+          <p className="text-zinc-200">{Labels.noProductsOrSectionsYet}</p>
         ) : filteredTopLevelRows.length === 0 ? (
-          <p className="mb-8 text-zinc-200">Ningún producto coincide con la búsqueda.</p>
+          <p className="mb-8 text-zinc-200">{Labels.noSearchMatches}</p>
         ) : (
           <ul className="mb-6 max-h-[520px] divide-y divide-zinc-200 overflow-y-auto rounded-xl border border-black/10 bg-[#ecdcc0] shadow-lg dark:divide-zinc-800 dark:border-white/10 dark:bg-zinc-900">
             {filteredTopLevelRows.map((row) =>
@@ -336,8 +334,8 @@ export default function ProductsPage() {
                   isChecked={sectionCheckboxChecked(row.section.id)}
                   checkboxTitle={
                     isBulkAssigningSection
-                      ? "Seleccionar todos los productos de esta carátula"
-                      : "Marcar/desmarcar stock de todos los productos de esta carátula"
+                      ? Labels.selectAllSectionMembersTitle
+                      : Labels.toggleSectionStockTitle
                   }
                   checkboxDisabled={sectionMembers(row.section.id).length === 0}
                   isBulkAssigningSection={isBulkAssigningSection}

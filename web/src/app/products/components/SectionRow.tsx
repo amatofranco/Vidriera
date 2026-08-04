@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import type { Section } from "@/lib/api";
+import { Labels } from "@/lib/labels";
 
 export function SectionRow({
   section,
@@ -57,7 +58,7 @@ export function SectionRow({
           draggable
           onDragStart={onDragStart}
           onDragEnd={onDragEnd}
-          title="Arrastrar para reordenar"
+          title={Labels.dragToReorder}
           className="cursor-grab select-none text-zinc-400 dark:text-zinc-600"
         >
           ⠿
@@ -72,7 +73,7 @@ export function SectionRow({
           onKeyDown={(e) => {
             if (e.key === "Enter") e.currentTarget.blur();
           }}
-          title="Posición en el orden"
+          title={Labels.positionInOrder}
           className="w-12 rounded border border-zinc-300 px-1 py-0.5 text-center text-xs text-zinc-700 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
         />
         <input
@@ -89,20 +90,20 @@ export function SectionRow({
         </span>
         {confirmingDelete ? (
           <div className="flex items-center gap-2 text-xs">
-            <span className="text-zinc-600 dark:text-zinc-400">¿Borrar carátula?</span>
+            <span className="text-zinc-600 dark:text-zinc-400">{Labels.confirmDeleteSectionQuestion}</span>
             <button
               onClick={onConfirmDelete}
               disabled={isDeletingSection}
               className="rounded bg-red-600 px-2 py-1 font-medium text-white hover:bg-red-500 disabled:opacity-50"
             >
-              Sí
+              {Labels.yes}
             </button>
             <button
               onClick={onCancelDelete}
               disabled={isDeletingSection}
               className="rounded bg-zinc-200 px-2 py-1 font-medium text-zinc-800 hover:bg-zinc-300 dark:bg-zinc-700 dark:text-zinc-100"
             >
-              Cancelar
+              {Labels.cancel}
             </button>
           </div>
         ) : (
@@ -110,7 +111,7 @@ export function SectionRow({
             onClick={onRequestDelete}
             className="text-xs text-red-600 underline hover:text-red-500 dark:text-red-400"
           >
-            Borrar carátula
+            {Labels.deleteSection}
           </button>
         )}
       </div>

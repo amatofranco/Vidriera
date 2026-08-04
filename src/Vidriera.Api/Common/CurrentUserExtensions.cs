@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Vidriera.Application.Common;
 using Vidriera.Application.Common.Exceptions;
 
 namespace Vidriera.Api.Common;
@@ -10,7 +11,7 @@ public static class CurrentUserExtensions
         var value = user.FindFirstValue("companyId");
         if (value is null || !Guid.TryParse(value, out var companyId))
         {
-            throw new UnauthorizedException("El token no tiene un companyId válido.");
+            throw new UnauthorizedException(ErrorMessages.MissingCompanyIdClaim);
         }
 
         return companyId;
@@ -21,7 +22,7 @@ public static class CurrentUserExtensions
         var value = user.FindFirstValue(ClaimTypes.NameIdentifier);
         if (value is null || !Guid.TryParse(value, out var userId))
         {
-            throw new UnauthorizedException("El token no tiene un identificador de usuario válido.");
+            throw new UnauthorizedException(ErrorMessages.MissingUserIdClaim);
         }
 
         return userId;

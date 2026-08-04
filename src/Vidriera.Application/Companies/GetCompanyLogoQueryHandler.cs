@@ -1,6 +1,7 @@
 using MediatR;
 using NHibernate;
 using Vidriera.Application.Abstractions;
+using Vidriera.Application.Common;
 using Vidriera.Application.Common.Exceptions;
 using Vidriera.Domain.Entities;
 
@@ -23,7 +24,7 @@ public class GetCompanyLogoQueryHandler : IRequestHandler<GetCompanyLogoQuery, C
 
         if (company?.LogoBlobKey is null)
         {
-            throw new NotFoundException($"La empresa {request.CompanyId} no tiene logo cargado.");
+            throw new NotFoundException(ErrorMessages.CompanyLogoNotFound(request.CompanyId));
         }
 
         var content = await _blobStorageService.DownloadAsync(company.LogoBlobKey, cancellationToken);

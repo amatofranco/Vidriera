@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { login } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { Labels } from "@/lib/labels";
 import { Messages, apiErrorMessage } from "@/lib/messages";
 
 export default function LoginPage() {
@@ -45,7 +46,7 @@ export default function LoginPage() {
         <div className="mb-7 flex justify-center">
           <Image
             src="/vidriera-logo.png"
-            alt="Vidriera"
+            alt={Labels.logoAlt}
             width={1000}
             height={245}
             priority
@@ -53,7 +54,7 @@ export default function LoginPage() {
           />
         </div>
 
-        <label className="mb-1 block text-sm font-medium text-zinc-300">Email</label>
+        <label className="mb-1 block text-sm font-medium text-zinc-300">{Labels.emailFieldLabel}</label>
         <input
           type="email"
           required
@@ -62,7 +63,7 @@ export default function LoginPage() {
           className="mb-4 w-full rounded-md border border-white/15 bg-white/5 px-3 py-2 text-zinc-50 outline-none focus:border-[#c9a86a]"
         />
 
-        <label className="mb-1 block text-sm font-medium text-zinc-300">Contraseña</label>
+        <label className="mb-1 block text-sm font-medium text-zinc-300">{Labels.passwordFieldLabel}</label>
         <input
           type="password"
           required
@@ -81,7 +82,7 @@ export default function LoginPage() {
           {isSubmitting && (
             <span className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-900/30 border-t-zinc-900" />
           )}
-          {isSubmitting ? "Ingresando..." : "Ingresar"}
+          {isSubmitting ? Labels.loginSubmitting : Labels.loginSubmit}
         </button>
       </form>
     </div>

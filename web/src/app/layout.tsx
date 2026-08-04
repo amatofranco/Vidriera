@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AuthProvider } from "@/lib/auth-context";
+import { Labels } from "@/lib/labels";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Vidriera",
-  description: "Catálogo y stock de Vidriera",
+  title: Labels.appTitle,
+  description: Labels.appDescription,
 };
 
 export default function RootLayout({
