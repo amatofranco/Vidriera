@@ -8,6 +8,12 @@ using Vidriera.Application.Auth;
 using Vidriera.Application.Catalogs;
 using Vidriera.Infrastructure;
 
+// Evita que WebApplication.CreateBuilder registre un FileSystemWatcher sobre appsettings*.json
+// (vía inotify) -- en el contenedor de Render eso venía agotando el límite de instancias de
+// inotify del proceso y tirando abajo el arranque entero con un IOException sin manejar. No
+// necesitamos hot-reload de configuración en producción: cada deploy ya es un contenedor nuevo.
+Environment.SetEnvironmentVariable("DOTNET_hostBuilder:reloadConfigOnChange", "false");
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Render (y plataformas similares) inyectan el puerto real via la variable PORT.
