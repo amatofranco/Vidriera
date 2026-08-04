@@ -157,8 +157,42 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         await _session.SaveAsync(catalog, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
+        await PruneOldCatalogsAsync(request.CompanyId, cancellationToken);
+
         var url = $"{_options.PublicBaseUrl.TrimEnd('/')}/api/catalogs/{catalog.Id}";
         return new GenerateCatalogResult(catalog.Id, url, expiresAt);
+    }
+
+    private const int MaxCatalogsPerCompany = 10;
+
+    // Keeps the history bounded: past the 10 most recent catalogs, the oldest ones are deleted
+    // outright (row + R2 blob), not just hidden -- a link that old stops working, by design.
+    private async Task PruneOldCatalogsAsync(Guid companyId, CancellationToken cancellationToken)
+    {
+        var catalogs = await _session.Query<GeneratedCatalog>()
+            .Where(c => c.Company.Id == companyId)
+            .OrderBy(c => c.GeneratedAt)
+            .ToListAsync(cancellationToken);
+
+        var excess = catalogs.Count - MaxCatalogsPerCompany;
+        if (excess <= 0)
+        {
+            return;
+        }
+
+        var toDelete = catalogs.Take(excess).ToList();
+
+        using var pruneTransaction = _session.BeginTransaction();
+        foreach (var old in toDelete)
+        {
+            await _session.DeleteAsync(old, cancellationToken);
+        }
+        await pruneTransaction.CommitAsync(cancellationToken);
+
+        foreach (var old in toDelete)
+        {
+            await _blobStorageService.DeleteAsync(old.GeneratedPdfBlobKey, cancellationToken);
+        }
     }
 
     private async Task<byte[]> DownloadBytesAsync(string blobKey, CancellationToken cancellationToken)

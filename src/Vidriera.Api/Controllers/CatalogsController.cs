@@ -34,6 +34,15 @@ public class CatalogsController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet]
+    [Authorize]
+    public async Task<ActionResult<IReadOnlyList<CatalogHistoryItemDto>>> GetHistory(CancellationToken cancellationToken)
+    {
+        var companyId = User.GetCompanyId();
+        var result = await _mediator.Send(new GetCatalogHistoryQuery(companyId), cancellationToken);
+        return Ok(result);
+    }
+
     [HttpGet("{id:guid}")]
     [AllowAnonymous]
     public async Task<ContentResult> View(Guid id, CancellationToken cancellationToken)

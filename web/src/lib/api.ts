@@ -207,3 +207,16 @@ export function generateCatalog(token: string, productIds: string[]) {
     body: JSON.stringify({ productIds }),
   });
 }
+
+export interface CatalogHistoryItem {
+  id: string;
+  generatedAt: string;
+  expiresAt: string | null;
+  isExpired: boolean;
+  viewUrl: string;
+  productCount: number;
+}
+
+export function getCatalogHistory(token: string) {
+  return request<CatalogHistoryItem[]>("/api/catalogs", { token });
+}
