@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { runWithConcurrency } from "@/lib/concurrency";
 import {
   ApiError,
   assignProductSection,
@@ -230,8 +231,6 @@ export default function ProductsPage() {
     const oversized = newFiles.filter((f) => f.size > MAX_FILE_SIZE_BYTES);
     const files = newFiles.filter((f) => f.size <= MAX_FILE_SIZE_BYTES);
     setUploadProgress({ done: 0, total: files.length });
-    const CONCURRENCY = 4;
-    let cursor = 0;
 
     for (const file of oversized) {
       failed.push({
@@ -240,23 +239,18 @@ export default function ProductsPage() {
       });
     }
 
-    async function worker() {
-      while (cursor < files.length) {
-        const file = files[cursor++];
-        try {
-          const created = await createProduct(auth!.token, file, nameOverride);
-          setProducts((prev) => [...prev, created]);
-        } catch (err) {
-          failed.push({
-            name: file.name,
-            message: err instanceof ApiError ? err.message : "Error desconocido",
-          });
-        }
-        setUploadProgress((prev) => (prev ? { ...prev, done: prev.done + 1 } : prev));
+    await runWithConcurrency(files, 4, async (file) => {
+      try {
+        const created = await createProduct(auth!.token, file, nameOverride);
+        setProducts((prev) => [...prev, created]);
+      } catch (err) {
+        failed.push({
+          name: file.name,
+          message: err instanceof ApiError ? err.message : "Error desconocido",
+        });
       }
-    }
-
-    await Promise.all(Array.from({ length: Math.min(CONCURRENCY, files.length) }, worker));
+      setUploadProgress((prev) => (prev ? { ...prev, done: prev.done + 1 } : prev));
+    });
 
     setIsCreating(false);
     setUploadProgress(null);
@@ -333,22 +327,15 @@ export default function ProductsPage() {
     setError(null);
     const targets = pendingBulkDelete.targets;
     const failed: string[] = [];
-    const CONCURRENCY = 4;
-    let cursor = 0;
 
-    async function worker() {
-      while (cursor < targets.length) {
-        const product = targets[cursor++];
-        try {
-          await deleteProduct(auth!.token, product.id);
-          setProducts((prev) => prev.filter((p) => p.id !== product.id));
-        } catch {
-          failed.push(product.name);
-        }
+    await runWithConcurrency(targets, 4, async (product) => {
+      try {
+        await deleteProduct(auth!.token, product.id);
+        setProducts((prev) => prev.filter((p) => p.id !== product.id));
+      } catch {
+        failed.push(product.name);
       }
-    }
-
-    await Promise.all(Array.from({ length: Math.min(CONCURRENCY, targets.length) }, worker));
+    });
 
     setIsBulkDeleting(false);
     setPendingBulkDelete(null);
@@ -595,21 +582,14 @@ export default function ProductsPage() {
     const targetSectionId = bulkAssignTargetId || null;
     const targetIds = Array.from(bulkAssignSelectedIds);
     const failed: string[] = [];
-    const CONCURRENCY = 4;
-    let cursor = 0;
 
-    async function worker() {
-      while (cursor < targetIds.length) {
-        const productId = targetIds[cursor++];
-        try {
-          await assignProductSection(auth!.token, productId, targetSectionId);
-        } catch {
-          failed.push(products.find((p) => p.id === productId)?.name ?? productId);
-        }
+    await runWithConcurrency(targetIds, 4, async (productId) => {
+      try {
+        await assignProductSection(auth!.token, productId, targetSectionId);
+      } catch {
+        failed.push(products.find((p) => p.id === productId)?.name ?? productId);
       }
-    }
-
-    await Promise.all(Array.from({ length: Math.min(CONCURRENCY, targetIds.length) }, worker));
+    });
     await loadProducts(auth.token, { silent: true });
 
     setIsApplyingBulkAssign(false);
