@@ -315,7 +315,10 @@ export default function ProductsPage() {
         )}
 
         {isLoading ? (
-          <p className="text-zinc-200">Cargando productos...</p>
+          <div className="mb-6 flex flex-col items-center justify-center gap-3 py-10 text-zinc-200">
+            <span className="h-8 w-8 animate-spin rounded-full border-4 border-white/20 border-t-[#c9a86a]" />
+            <p>Cargando productos...</p>
+          </div>
         ) : products.length === 0 && sections.length === 0 ? (
           <p className="text-zinc-200">Todavía no hay productos ni carátulas cargadas.</p>
         ) : filteredTopLevelRows.length === 0 ? (

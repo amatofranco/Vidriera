@@ -76,8 +76,11 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full rounded-md bg-[#c9a86a] px-4 py-2 font-medium text-zinc-900 transition-colors hover:bg-[#d4b57a] disabled:opacity-50"
+          className="flex w-full items-center justify-center gap-2 rounded-md bg-[#c9a86a] px-4 py-2 font-medium text-zinc-900 transition-colors hover:bg-[#d4b57a] disabled:opacity-50"
         >
+          {isSubmitting && (
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-900/30 border-t-zinc-900" />
+          )}
           {isSubmitting ? "Ingresando..." : "Ingresar"}
         </button>
       </form>
