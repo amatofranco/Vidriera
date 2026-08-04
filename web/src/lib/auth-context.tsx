@@ -9,7 +9,7 @@ import {
 } from "react";
 import type { LoginResult } from "./api";
 
-interface AuthState {
+export interface AuthState {
   token: string;
   userId: string;
   companyId: string;
