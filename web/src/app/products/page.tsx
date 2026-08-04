@@ -775,8 +775,15 @@ export default function ProductsPage() {
     <div
       className="w-full flex-1 px-4 py-10"
       style={{
-        background:
-          "radial-gradient(ellipse 80% 60% at 50% 0%, #f0dcae 0%, #d4ac78 45%, #9c6f47 100%)",
+        // Same wood-niche photo used on the login/catalog screens, zoomed into just the
+        // grained panel (no bookshelves) and tinted browner with a gradient on top -- gives
+        // real wood-grain texture instead of a flat color, without needing a new asset.
+        backgroundImage:
+          "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(240,220,174,0.55) 0%, rgba(160,110,60,0.55) 45%, rgba(90,55,25,0.75) 100%), url('/login-bg.jpg')",
+        backgroundSize: "100% 100%, 240%",
+        backgroundPosition: "center, center 38%",
+        backgroundRepeat: "no-repeat, no-repeat",
+        backgroundAttachment: "fixed, fixed",
       }}
     >
       <div className="fixed top-4 left-4 z-10">
