@@ -2,7 +2,6 @@ using MediatR;
 using NHibernate;
 using Vidriera.Application.Abstractions;
 using Vidriera.Application.Common;
-using Vidriera.Application.Common.Exceptions;
 using Vidriera.Domain.Entities;
 
 namespace Vidriera.Application.Sections;
@@ -20,11 +19,10 @@ public class CreateSectionCommandHandler : IRequestHandler<CreateSectionCommand,
 
     public async Task<SectionDto> Handle(CreateSectionCommand request, CancellationToken cancellationToken)
     {
-        var company = await _session.GetAsync<Company>(request.CompanyId, cancellationToken);
-        if (company is null)
-        {
-            throw new NotFoundException($"No existe la empresa {request.CompanyId}.");
-        }
+        var company = await _session.GetOrThrowAsync<Company>(
+            request.CompanyId,
+            $"No existe la empresa {request.CompanyId}.",
+            cancellationToken);
 
         var name = string.IsNullOrWhiteSpace(request.Name)
             ? Path.GetFileNameWithoutExtension(request.OriginalFileName)
@@ -43,7 +41,7 @@ public class CreateSectionCommandHandler : IRequestHandler<CreateSectionCommand,
 
         await _session.SaveAsync(section, cancellationToken);
 
-        var blobKey = $"companies/{request.CompanyId}/sections/{section.Id}/{Guid.NewGuid()}.pdf";
+        var blobKey = BlobKeys.SectionCover(request.CompanyId, section.Id);
         await _blobStorageService.UploadAsync(blobKey, request.FileContent, "application/pdf", cancellationToken);
 
         section.CoverPdfBlobKey = blobKey;

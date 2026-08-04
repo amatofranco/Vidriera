@@ -1,8 +1,6 @@
 using MediatR;
 using NHibernate;
-using NHibernate.Linq;
 using Vidriera.Application.Common;
-using Vidriera.Application.Common.Exceptions;
 using Vidriera.Domain.Entities;
 
 namespace Vidriera.Application.Products;
@@ -18,24 +16,18 @@ public class AssignProductSectionCommandHandler : IRequestHandler<AssignProductS
 
     public async Task Handle(AssignProductSectionCommand request, CancellationToken cancellationToken)
     {
-        var product = await _session.Query<Product>()
-            .FirstOrDefaultAsync(p => p.Id == request.ProductId && p.Company.Id == request.CompanyId, cancellationToken);
-
-        if (product is null)
-        {
-            throw new NotFoundException($"No se encontró el producto {request.ProductId} para esta empresa.");
-        }
+        var product = await _session.Query<Product>().GetOrThrowAsync(
+            p => p.Id == request.ProductId && p.Company.Id == request.CompanyId,
+            $"No se encontró el producto {request.ProductId} para esta empresa.",
+            cancellationToken);
 
         Section? section = null;
         if (request.SectionId.HasValue)
         {
-            section = await _session.Query<Section>()
-                .FirstOrDefaultAsync(s => s.Id == request.SectionId.Value && s.Company.Id == request.CompanyId, cancellationToken);
-
-            if (section is null)
-            {
-                throw new NotFoundException($"No se encontró la carátula {request.SectionId.Value} para esta empresa.");
-            }
+            section = await _session.Query<Section>().GetOrThrowAsync(
+                s => s.Id == request.SectionId.Value && s.Company.Id == request.CompanyId,
+                $"No se encontró la carátula {request.SectionId.Value} para esta empresa.",
+                cancellationToken);
         }
 
         // Appended at the end of whichever container it's moving into -- the same "drop it
@@ -47,8 +39,6 @@ public class AssignProductSectionCommandHandler : IRequestHandler<AssignProductS
         product.Section = section;
         product.SortOrder = nextSortOrder;
 
-        using var transaction = _session.BeginTransaction();
-        await _session.UpdateAsync(product, cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+        await _session.UpdateInTransactionAsync(product, cancellationToken);
     }
 }

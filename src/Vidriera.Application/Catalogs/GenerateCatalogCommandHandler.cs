@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using NHibernate;
 using NHibernate.Linq;
 using Vidriera.Application.Abstractions;
+using Vidriera.Application.Common;
 using Vidriera.Application.Common.Exceptions;
 using Vidriera.Domain.Entities;
 using Vidriera.Domain.Enums;
@@ -123,7 +124,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             pageCursor += mergeResult.PageCounts[i];
         }
 
-        var generatedBlobKey = $"companies/{request.CompanyId}/catalogs/{Guid.NewGuid()}.pdf";
+        var generatedBlobKey = BlobKeys.GeneratedCatalog(request.CompanyId);
 
         using (var mergedStream = new MemoryStream(mergeResult.Bytes))
         {

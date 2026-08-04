@@ -1,8 +1,7 @@
 using MediatR;
 using NHibernate;
-using NHibernate.Linq;
 using Vidriera.Application.Abstractions;
-using Vidriera.Application.Common.Exceptions;
+using Vidriera.Application.Common;
 using Vidriera.Domain.Entities;
 
 namespace Vidriera.Application.Products;
@@ -20,17 +19,12 @@ public class DeleteProductCommandHandler : IRequestHandler<DeleteProductCommand>
 
     public async Task Handle(DeleteProductCommand request, CancellationToken cancellationToken)
     {
-        var product = await _session.Query<Product>()
-            .FirstOrDefaultAsync(p => p.Id == request.ProductId && p.Company.Id == request.CompanyId, cancellationToken);
+        var product = await _session.Query<Product>().GetOrThrowAsync(
+            p => p.Id == request.ProductId && p.Company.Id == request.CompanyId,
+            $"No se encontró el producto {request.ProductId} para esta empresa.",
+            cancellationToken);
 
-        if (product is null)
-        {
-            throw new NotFoundException($"No se encontró el producto {request.ProductId} para esta empresa.");
-        }
-
-        using var transaction = _session.BeginTransaction();
-        await _session.DeleteAsync(product, cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+        await _session.DeleteInTransactionAsync(product, cancellationToken);
 
         if (!string.IsNullOrEmpty(product.SheetPdfBlobKey))
         {

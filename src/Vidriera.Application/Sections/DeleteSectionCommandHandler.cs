@@ -3,7 +3,6 @@ using NHibernate;
 using NHibernate.Linq;
 using Vidriera.Application.Abstractions;
 using Vidriera.Application.Common;
-using Vidriera.Application.Common.Exceptions;
 using Vidriera.Domain.Entities;
 
 namespace Vidriera.Application.Sections;
@@ -21,13 +20,10 @@ public class DeleteSectionCommandHandler : IRequestHandler<DeleteSectionCommand>
 
     public async Task Handle(DeleteSectionCommand request, CancellationToken cancellationToken)
     {
-        var section = await _session.Query<Section>()
-            .FirstOrDefaultAsync(s => s.Id == request.SectionId && s.Company.Id == request.CompanyId, cancellationToken);
-
-        if (section is null)
-        {
-            throw new NotFoundException($"No se encontró la carátula {request.SectionId} para esta empresa.");
-        }
+        var section = await _session.Query<Section>().GetOrThrowAsync(
+            s => s.Id == request.SectionId && s.Company.Id == request.CompanyId,
+            $"No se encontró la carátula {request.SectionId} para esta empresa.",
+            cancellationToken);
 
         // Members are detached, not deleted -- they go back to being loose products,
         // appended after whatever is currently at the end of the top-level order,

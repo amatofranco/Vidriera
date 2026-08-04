@@ -1,7 +1,7 @@
 using MediatR;
 using NHibernate;
 using Vidriera.Application.Abstractions;
-using Vidriera.Application.Common.Exceptions;
+using Vidriera.Application.Common;
 using Vidriera.Domain.Entities;
 
 namespace Vidriera.Application.Companies;
@@ -19,20 +19,17 @@ public class UpdateCompanyLogoCommandHandler : IRequestHandler<UpdateCompanyLogo
 
     public async Task Handle(UpdateCompanyLogoCommand request, CancellationToken cancellationToken)
     {
-        var company = await _session.GetAsync<Company>(request.CompanyId, cancellationToken);
-        if (company is null)
-        {
-            throw new NotFoundException($"No existe la empresa {request.CompanyId}.");
-        }
+        var company = await _session.GetOrThrowAsync<Company>(
+            request.CompanyId,
+            $"No existe la empresa {request.CompanyId}.",
+            cancellationToken);
 
-        var blobKey = $"companies/{request.CompanyId}/logo";
+        var blobKey = BlobKeys.CompanyLogo(request.CompanyId);
         await _blobStorageService.UploadAsync(blobKey, request.FileContent, request.ContentType, cancellationToken);
 
         company.LogoBlobKey = blobKey;
         company.LogoContentType = request.ContentType;
 
-        using var transaction = _session.BeginTransaction();
-        await _session.UpdateAsync(company, cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+        await _session.UpdateInTransactionAsync(company, cancellationToken);
     }
 }

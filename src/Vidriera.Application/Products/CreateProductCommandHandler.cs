@@ -2,7 +2,6 @@ using MediatR;
 using NHibernate;
 using Vidriera.Application.Abstractions;
 using Vidriera.Application.Common;
-using Vidriera.Application.Common.Exceptions;
 using Vidriera.Domain.Entities;
 
 namespace Vidriera.Application.Products;
@@ -20,11 +19,10 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
 
     public async Task<ProductDto> Handle(CreateProductCommand request, CancellationToken cancellationToken)
     {
-        var company = await _session.GetAsync<Company>(request.CompanyId, cancellationToken);
-        if (company is null)
-        {
-            throw new NotFoundException($"No existe la empresa {request.CompanyId}.");
-        }
+        var company = await _session.GetOrThrowAsync<Company>(
+            request.CompanyId,
+            $"No existe la empresa {request.CompanyId}.",
+            cancellationToken);
 
         var name = string.IsNullOrWhiteSpace(request.Name)
             ? Path.GetFileNameWithoutExtension(request.OriginalFileName)
@@ -45,7 +43,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
 
         await _session.SaveAsync(product, cancellationToken);
 
-        var blobKey = $"companies/{request.CompanyId}/products/{product.Id}/{Guid.NewGuid()}.pdf";
+        var blobKey = BlobKeys.ProductSheet(request.CompanyId, product.Id);
         await _blobStorageService.UploadAsync(blobKey, request.FileContent, "application/pdf", cancellationToken);
 
         product.SheetPdfBlobKey = blobKey;
