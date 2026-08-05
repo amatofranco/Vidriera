@@ -1,11 +1,12 @@
 "use client";
 
-import type { CatalogHistoryItem, GenerateCatalogResult } from "@/lib/api";
+import type { CatalogGenerationProgress, CatalogHistoryItem, GenerateCatalogResult } from "@/lib/api";
 import { Labels } from "@/lib/labels";
 
 export function CatalogPanel({
   selectableCount,
   isGenerating,
+  generationProgress,
   onGenerate,
   catalogResult,
   isHistoryOpen,
@@ -15,6 +16,7 @@ export function CatalogPanel({
 }: {
   selectableCount: number;
   isGenerating: boolean;
+  generationProgress: CatalogGenerationProgress | null;
   onGenerate: () => void;
   catalogResult: GenerateCatalogResult | null;
   isHistoryOpen: boolean;
@@ -50,9 +52,25 @@ export function CatalogPanel({
       </div>
 
       {isGenerating && (
-        <p className="mt-2 text-xs text-zinc-600 dark:text-zinc-400">
-          {Labels.catalogGenerationHint}
-        </p>
+        <div className="mt-2">
+          {generationProgress ? (
+            <>
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/10">
+                <div
+                  className="h-full rounded-full bg-[#c9a86a] transition-all"
+                  style={{ width: `${Math.round((generationProgress.current / generationProgress.total) * 100)}%` }}
+                />
+              </div>
+              <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">
+                {generationProgress.stage === "rasterizing"
+                  ? Labels.generatingImagesProgress(generationProgress.current, generationProgress.total)
+                  : Labels.preparingFilesProgress(generationProgress.current, generationProgress.total)}
+              </p>
+            </>
+          ) : (
+            <p className="text-xs text-zinc-600 dark:text-zinc-400">{Labels.catalogGenerationHint}</p>
+          )}
+        </div>
       )}
 
       {isHistoryOpen && (

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,18 +21,44 @@ public class CatalogsController : ControllerBase
 
     [HttpPost]
     [Authorize]
-    public async Task<ActionResult<GenerateCatalogResult>> Generate(
+    public async Task Generate(
         [FromBody] GenerateCatalogRequest request,
         CancellationToken cancellationToken)
     {
         var companyId = User.GetCompanyId();
         var userId = User.GetUserId();
 
-        var result = await _mediator.Send(
-            new GenerateCatalogCommand(companyId, userId, request.ProductIds),
-            cancellationToken);
+        Response.ContentType = "application/x-ndjson";
 
-        return Ok(result);
+        async Task WriteLineAsync(object payload)
+        {
+            await Response.WriteAsync(JsonSerializer.Serialize(payload) + "\n", cancellationToken);
+            await Response.Body.FlushAsync(cancellationToken);
+        }
+
+        try
+        {
+            var result = await _mediator.Send(
+                new GenerateCatalogCommand(
+                    companyId,
+                    userId,
+                    request.ProductIds,
+                    progress => WriteLineAsync(new { type = "progress", stage = progress.Stage, current = progress.Current, total = progress.Total })),
+                cancellationToken);
+
+            await WriteLineAsync(new { type = "result", data = result });
+        }
+        catch (Exception ex)
+        {
+            var statusCode = ex switch
+            {
+                NotFoundException => StatusCodes.Status404NotFound,
+                ValidationException => StatusCodes.Status400BadRequest,
+                CatalogGoneException => StatusCodes.Status410Gone,
+                _ => StatusCodes.Status500InternalServerError
+            };
+            await WriteLineAsync(new { type = "error", status = statusCode, message = ex.Message });
+        }
     }
 
     [HttpGet]

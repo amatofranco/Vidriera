@@ -114,7 +114,7 @@ export default function ProductsPage() {
     handleAssignSection,
   } = useSectionActions({ auth, setSections, setProducts, loadProducts, setError });
 
-  const { isGenerating, catalogResult, selectableCount, handleGenerateCatalog } = useCatalogGeneration({
+  const { isGenerating, catalogResult, generationProgress, selectableCount, handleGenerateCatalog } = useCatalogGeneration({
     auth,
     products,
     setError,
@@ -367,6 +367,7 @@ export default function ProductsPage() {
         <CatalogPanel
           selectableCount={selectableCount}
           isGenerating={isGenerating}
+          generationProgress={generationProgress}
           onGenerate={handleGenerateCatalog}
           catalogResult={catalogResult}
           isHistoryOpen={isHistoryOpen}

@@ -198,13 +198,57 @@ export interface GenerateCatalogResult {
   expiresAt: string | null;
 }
 
-export function generateCatalog(token: string, productIds: string[]) {
-  return request<GenerateCatalogResult>("/api/catalogs", {
+export interface CatalogGenerationProgress {
+  stage: "downloading" | "rasterizing";
+  current: number;
+  total: number;
+}
+
+export async function generateCatalog(
+  token: string,
+  productIds: string[],
+  onProgress?: (progress: CatalogGenerationProgress) => void
+): Promise<GenerateCatalogResult> {
+  const response = await fetch(`${API_URL}/api/catalogs`, {
     method: "POST",
-    token,
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify({ productIds }),
   });
+
+  if (!response.body) {
+    throw new ApiError(`Error ${response.status}`, response.status);
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+
+    let newlineIndex;
+    while ((newlineIndex = buffer.indexOf("\n")) >= 0) {
+      const line = buffer.slice(0, newlineIndex);
+      buffer = buffer.slice(newlineIndex + 1);
+      if (!line.trim()) continue;
+
+      const payload = JSON.parse(line);
+      if (payload.type === "progress") {
+        onProgress?.({ stage: payload.stage, current: payload.current, total: payload.total });
+      } else if (payload.type === "result") {
+        return payload.data as GenerateCatalogResult;
+      } else if (payload.type === "error") {
+        throw new ApiError(payload.message, payload.status);
+      }
+    }
+  }
+
+  throw new ApiError("La generación del catálogo no devolvió un resultado.", response.status);
 }
 
 export interface CatalogHistoryItem {

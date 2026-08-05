@@ -51,6 +51,8 @@ export const Labels = {
   hideHistory: "Ocultar historial",
   showHistory: "Historial de catálogos",
   catalogGenerationHint: "Puede tardar un momento si el catálogo tiene muchos productos.",
+  preparingFilesProgress: (current: number, total: number) => `Preparando archivos (${current}/${total})`,
+  generatingImagesProgress: (current: number, total: number) => `Generando imágenes (${current}/${total})`,
   loadingHistory: "Cargando historial...",
   noCatalogHistoryYet: "Todavía no generaste ningún catálogo.",
   historyLimitHint: (count: number) => `Se guardan los últimos ${Math.min(count, 10)} catálogos generados; al pasar ese límite, el más viejo se borra.`,

@@ -47,15 +47,15 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
 
         var selectedIds = new HashSet<Guid>(request.ProductIds);
         var topLevel = BuildTopLevelSequence(allSections, allProducts);
-        var entries = BuildMergeEntries(topLevel, allProducts, selectedIds);
-        var mergePlan = await BuildMergePlanAsync(entries, cancellationToken);
+        var entries = BuildMergeEntries(topLevel, allProducts, selectedIds).ToList();
+        var mergePlan = await BuildMergePlanAsync(entries, request.OnProgress, cancellationToken);
 
         var mergeResult = await _pdfMergeService.MergeAsync(mergePlan.PdfBytes, cancellationToken);
         var sectionsSnapshot = BuildSectionsSnapshot(mergeResult.PageCounts, mergePlan.CoverMarkers);
 
         var generatedBlobKey = await UploadMergedPdfAsync(request.CompanyId, mergeResult.Bytes, cancellationToken);
         var catalog = await CreateCatalogAsync(request, mergePlan.IncludedProducts, sectionsSnapshot, generatedBlobKey, cancellationToken);
-        await RasterizePagesAsync(catalog, mergeResult.Bytes, cancellationToken);
+        await RasterizePagesAsync(catalog, mergeResult.Bytes, mergeResult.PageCounts.Sum(), request.OnProgress, cancellationToken);
 
         await PruneOldCatalogsAsync(request.CompanyId, cancellationToken);
 
@@ -159,12 +159,16 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
 
     private sealed record MergePlan(List<byte[]> PdfBytes, List<Section?> CoverMarkers, List<Product> IncludedProducts);
 
-    private async Task<MergePlan> BuildMergePlanAsync(IEnumerable<MergeEntry> entries, CancellationToken cancellationToken)
+    private async Task<MergePlan> BuildMergePlanAsync(
+        IReadOnlyList<MergeEntry> entries,
+        Func<CatalogGenerationProgress, Task>? onProgress,
+        CancellationToken cancellationToken)
     {
         var pdfBytesInOrder = new List<byte[]>();
         var coverMarkers = new List<Section?>();
         var includedProducts = new List<Product>();
 
+        var current = 0;
         foreach (var entry in entries)
         {
             switch (entry)
@@ -180,10 +184,16 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
                     includedProducts.Add(productEntry.Product);
                     break;
             }
+
+            current++;
+            await ReportProgressAsync(onProgress, "downloading", current, entries.Count);
         }
 
         return new MergePlan(pdfBytesInOrder, coverMarkers, includedProducts);
     }
+
+    private static Task ReportProgressAsync(Func<CatalogGenerationProgress, Task>? onProgress, string stage, int current, int total)
+        => onProgress is null ? Task.CompletedTask : onProgress(new CatalogGenerationProgress(stage, current, total));
 
     private static List<CatalogSectionSnapshot> BuildSectionsSnapshot(
         IReadOnlyList<int> pageCounts,
@@ -247,7 +257,12 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         return catalog;
     }
 
-    private async Task RasterizePagesAsync(GeneratedCatalog catalog, byte[] mergedPdfBytes, CancellationToken cancellationToken)
+    private async Task RasterizePagesAsync(
+        GeneratedCatalog catalog,
+        byte[] mergedPdfBytes,
+        int totalPages,
+        Func<CatalogGenerationProgress, Task>? onProgress,
+        CancellationToken cancellationToken)
     {
         var uploadedPageCount = 0;
         try
@@ -258,6 +273,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
                 var blobKey = BlobKeys.GeneratedCatalogPage(catalog.Company.Id, catalog.Id, uploadedPageCount);
                 using var stream = new MemoryStream(jpegBytes);
                 await _blobStorageService.UploadAsync(blobKey, stream, "image/jpeg", cancellationToken);
+                await ReportProgressAsync(onProgress, "rasterizing", uploadedPageCount, totalPages);
             }
 
             catalog.RasterizedPageCount = uploadedPageCount;
