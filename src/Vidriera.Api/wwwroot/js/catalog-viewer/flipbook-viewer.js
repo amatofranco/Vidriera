@@ -1,6 +1,54 @@
 import { computeFitSize, positionSideNav, positionCoverInfo, positionIndexPanel } from "./layout.js";
 
-export function renderFlipbookViewer({ catalogId, pageCount, pageAspect, dom, flipbookEl, sectionsData, rebuildRef }) {
+const INITIAL_LOAD_COUNT = 5;
+
+function buildPageDivs(catalogId, pageCount) {
+    const divs = [];
+    const imgs = [];
+    for (let pageNumber = 1; pageNumber <= pageCount; pageNumber++) {
+        const div = document.createElement("div");
+        div.className = "page-content";
+        const img = document.createElement("img");
+        img.src = `/api/catalogs/${catalogId}/pages/${pageNumber}`;
+        div.appendChild(img);
+        divs.push(div);
+        imgs.push(img);
+    }
+    return { divs, imgs };
+}
+
+function waitForImagesLoaded(imgs, pageNumbers) {
+    return Promise.all(
+        pageNumbers
+            .filter((pageNumber) => pageNumber >= 1 && pageNumber <= imgs.length)
+            .map((pageNumber) => {
+                const img = imgs[pageNumber - 1];
+                if (img.complete) return Promise.resolve();
+                return new Promise((resolve) => {
+                    img.addEventListener("load", () => resolve(), { once: true });
+                    img.addEventListener("error", () => resolve(), { once: true });
+                });
+            })
+    );
+}
+
+function buildPriorityPageList(pageCount, sectionsData) {
+    const pages = new Set();
+    for (let p = 1; p <= Math.min(INITIAL_LOAD_COUNT, pageCount); p++) {
+        pages.add(p);
+    }
+    sectionsData.forEach((entry) => {
+        if (entry.startPage >= 1 && entry.startPage <= pageCount) {
+            pages.add(entry.startPage);
+        }
+    });
+    return Array.from(pages);
+}
+
+export async function renderFlipbookViewer({ catalogId, pageCount, pageAspect, dom, flipbookEl, sectionsData, rebuildRef }) {
+    const { divs: pageDivs, imgs: pageImgs } = buildPageDivs(catalogId, pageCount);
+    await waitForImagesLoaded(pageImgs, buildPriorityPageList(pageCount, sectionsData));
+
     let pageFlip = null;
 
     function updateInfo() {
@@ -9,19 +57,6 @@ export function renderFlipbookViewer({ catalogId, pageCount, pageAspect, dom, fl
         dom.prevBtn.disabled = current <= 1;
         dom.nextBtn.disabled = current >= pageCount;
         dom.coverInfoEl.style.display = current === 1 ? "block" : "none";
-    }
-
-    function buildPageDivs() {
-        const divs = [];
-        for (let pageNumber = 1; pageNumber <= pageCount; pageNumber++) {
-            const div = document.createElement("div");
-            div.className = "page-content";
-            const img = document.createElement("img");
-            img.src = `/api/catalogs/${catalogId}/pages/${pageNumber}`;
-            div.appendChild(img);
-            divs.push(div);
-        }
-        return divs;
     }
 
     function buildPageFlip() {
@@ -49,7 +84,6 @@ export function renderFlipbookViewer({ catalogId, pageCount, pageAspect, dom, fl
             mobileScrollSupport: false,
         });
 
-        const pageDivs = buildPageDivs();
         pageDivs.forEach((div) => flipbookEl.appendChild(div));
         pageFlip.loadFromHTML(pageDivs);
         pageFlip.on("flip", updateInfo);

@@ -36,7 +36,7 @@ async function start() {
         return;
     }
 
-    renderFlipbookViewer({
+    await renderFlipbookViewer({
         catalogId: dom.catalogId,
         pageCount: dom.pageCount,
         pageAspect,
