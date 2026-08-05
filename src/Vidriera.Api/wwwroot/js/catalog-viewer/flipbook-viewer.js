@@ -1,39 +1,27 @@
 import { computeFitSize, positionSideNav, positionCoverInfo, positionIndexPanel } from "./layout.js";
-import { computeTargetPixelWidth } from "./pdf-render.js";
-import { createLazyPageRenderer } from "./lazy-page-renderer.js";
 
-const INITIAL_RENDER_COUNT = 4;
-
-function buildPriorityPageList(pageCount, sectionsData) {
-    const pages = new Set();
-    for (let p = 1; p <= Math.min(INITIAL_RENDER_COUNT, pageCount); p++) {
-        pages.add(p);
-    }
-    sectionsData.forEach((entry) => {
-        if (entry.startPage >= 1 && entry.startPage <= pageCount) {
-            pages.add(entry.startPage);
-        }
-    });
-    return Array.from(pages);
-}
-
-export async function renderFlipbookViewer({ doc, pageAspect, dom, flipbookEl, sectionsData, rebuildRef }) {
-    const fitSize = computeFitSize(pageAspect, dom);
-    const targetPixelWidth = computeTargetPixelWidth(fitSize.width);
-    const pageRenderer = createLazyPageRenderer(doc, targetPixelWidth);
-    const pageDivs = pageRenderer.buildPageDivs();
-
-    await pageRenderer.ensureRendered(buildPriorityPageList(pageRenderer.pageCount, sectionsData));
-
+export function renderFlipbookViewer({ catalogId, pageCount, pageAspect, dom, flipbookEl, sectionsData, rebuildRef }) {
     let pageFlip = null;
 
     function updateInfo() {
         const current = pageFlip.getCurrentPageIndex() + 1;
-        dom.pageInfoEl.textContent = `${current} / ${pageRenderer.pageCount}`;
+        dom.pageInfoEl.textContent = `${current} / ${pageCount}`;
         dom.prevBtn.disabled = current <= 1;
-        dom.nextBtn.disabled = current >= pageRenderer.pageCount;
+        dom.nextBtn.disabled = current >= pageCount;
         dom.coverInfoEl.style.display = current === 1 ? "block" : "none";
-        pageRenderer.ensureRendered(pageRenderer.nearbyRange(current));
+    }
+
+    function buildPageDivs() {
+        const divs = [];
+        for (let pageNumber = 1; pageNumber <= pageCount; pageNumber++) {
+            const div = document.createElement("div");
+            div.className = "page-content";
+            const img = document.createElement("img");
+            img.src = `/api/catalogs/${catalogId}/pages/${pageNumber}`;
+            div.appendChild(img);
+            divs.push(div);
+        }
+        return divs;
     }
 
     function buildPageFlip() {
@@ -61,6 +49,7 @@ export async function renderFlipbookViewer({ doc, pageAspect, dom, flipbookEl, s
             mobileScrollSupport: false,
         });
 
+        const pageDivs = buildPageDivs();
         pageDivs.forEach((div) => flipbookEl.appendChild(div));
         pageFlip.loadFromHTML(pageDivs);
         pageFlip.on("flip", updateInfo);
@@ -83,8 +72,7 @@ export async function renderFlipbookViewer({ doc, pageAspect, dom, flipbookEl, s
             const item = document.createElement("button");
             item.className = "index-item";
             item.textContent = entry.name;
-            item.addEventListener("click", async () => {
-                await pageRenderer.ensureRendered(pageRenderer.nearbyRange(entry.startPage));
+            item.addEventListener("click", () => {
                 pageFlip.turnToPage(entry.startPage - 1);
             });
             dom.indexList.appendChild(item);
@@ -115,6 +103,4 @@ export async function renderFlipbookViewer({ doc, pageAspect, dom, flipbookEl, s
     flipbookEl.style.visibility = "visible";
     if (dom.indexPanel) dom.indexPanel.classList.add("visible");
     positionIndexPanel(dom);
-
-    pageRenderer.fillRemainingInBackground();
 }

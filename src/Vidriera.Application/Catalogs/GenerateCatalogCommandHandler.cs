@@ -249,22 +249,31 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
 
     private async Task RasterizePagesAsync(GeneratedCatalog catalog, byte[] mergedPdfBytes, CancellationToken cancellationToken)
     {
+        var uploadedPageCount = 0;
         try
         {
-            var pageNumber = 0;
             await foreach (var jpegBytes in _pdfRasterizerService.RasterizePagesToJpegAsync(mergedPdfBytes, cancellationToken))
             {
-                pageNumber++;
-                var blobKey = BlobKeys.GeneratedCatalogPage(catalog.Company.Id, catalog.Id, pageNumber);
+                uploadedPageCount++;
+                var blobKey = BlobKeys.GeneratedCatalogPage(catalog.Company.Id, catalog.Id, uploadedPageCount);
                 using var stream = new MemoryStream(jpegBytes);
                 await _blobStorageService.UploadAsync(blobKey, stream, "image/jpeg", cancellationToken);
             }
 
-            catalog.RasterizedPageCount = pageNumber;
+            catalog.RasterizedPageCount = uploadedPageCount;
             await _session.UpdateInTransactionAsync(catalog, cancellationToken);
         }
-        catch (Exception) when (!cancellationToken.IsCancellationRequested)
+        catch
         {
+            await _session.DeleteInTransactionAsync(catalog, cancellationToken);
+            await _blobStorageService.DeleteAsync(catalog.GeneratedPdfBlobKey, cancellationToken);
+            for (var pageNumber = 1; pageNumber <= uploadedPageCount; pageNumber++)
+            {
+                await _blobStorageService.DeleteAsync(
+                    BlobKeys.GeneratedCatalogPage(catalog.Company.Id, catalog.Id, pageNumber),
+                    cancellationToken);
+            }
+            throw;
         }
     }
 
