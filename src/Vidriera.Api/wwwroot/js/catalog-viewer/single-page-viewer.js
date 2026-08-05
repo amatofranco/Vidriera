@@ -1,11 +1,11 @@
 import { computeFitSize, positionSideNav, positionIndexPanel } from "./layout.js";
 
-export function renderSinglePageViewer({ images, pageAspect, dom, flipbookEl, rebuildRef }) {
+export function renderSinglePageViewer({ dataUrl, pageAspect, dom, flipbookEl, rebuildRef }) {
     if (dom.indexBtn) dom.indexBtn.style.display = "none";
 
     const img = document.createElement("img");
     img.id = "static-page";
-    img.src = images[0];
+    img.src = dataUrl;
     flipbookEl.replaceWith(img);
 
     function fitStatic() {
