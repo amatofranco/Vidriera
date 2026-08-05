@@ -46,5 +46,7 @@ public class GeneratedCatalogMapping : ClassMapping<GeneratedCatalog>
             m.Column("products_snapshot");
             m.NotNullable(true);
         });
+
+        Property(x => x.RasterizedPageCount, m => m.Column("rasterized_page_count"));
     }
 }

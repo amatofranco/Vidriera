@@ -1,4 +1,5 @@
 const sectionsDataEl = document.getElementById("sections-data");
+const catalogMetaEl = document.getElementById("catalog-meta");
 
 export const dom = {
     loadingEl: document.getElementById("loading"),
@@ -19,4 +20,6 @@ export const dom = {
     sectionsData: sectionsDataEl
         ? JSON.parse(sectionsDataEl.dataset.sections || "[]")
         : [],
+    catalogId: catalogMetaEl ? catalogMetaEl.dataset.catalogId : null,
+    pageCount: catalogMetaEl ? parseInt(catalogMetaEl.dataset.pageCount, 10) || 0 : 0,
 };

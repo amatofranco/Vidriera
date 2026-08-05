@@ -10,4 +10,5 @@ public record GeneratedCatalogViewDto(
     DateTime? ExpiresAt,
     string FileUrl,
     string CompanyName,
-    IReadOnlyList<CatalogSectionSnapshot> Sections);
+    IReadOnlyList<CatalogSectionSnapshot> Sections,
+    int RasterizedPageCount);

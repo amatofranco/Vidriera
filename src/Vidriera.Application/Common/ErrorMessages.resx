@@ -106,4 +106,7 @@
   <data name="SectionNotFound" xml:space="preserve">
     <value>No se encontró la carátula {0} para esta empresa.</value>
   </data>
+  <data name="CatalogPageNotFound" xml:space="preserve">
+    <value>El catálogo {0} no tiene la página {1}.</value>
+  </data>
 </root>

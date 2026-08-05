@@ -18,17 +18,20 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
     private readonly ISession _session;
     private readonly IBlobStorageService _blobStorageService;
     private readonly IPdfMergeService _pdfMergeService;
+    private readonly IPdfRasterizerService _pdfRasterizerService;
     private readonly CatalogOptions _options;
 
     public GenerateCatalogCommandHandler(
         ISession session,
         IBlobStorageService blobStorageService,
         IPdfMergeService pdfMergeService,
+        IPdfRasterizerService pdfRasterizerService,
         IOptions<CatalogOptions> options)
     {
         _session = session;
         _blobStorageService = blobStorageService;
         _pdfMergeService = pdfMergeService;
+        _pdfRasterizerService = pdfRasterizerService;
         _options = options.Value;
     }
 
@@ -52,6 +55,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
 
         var generatedBlobKey = await UploadMergedPdfAsync(request.CompanyId, mergeResult.Bytes, cancellationToken);
         var catalog = await CreateCatalogAsync(request, mergePlan.IncludedProducts, sectionsSnapshot, generatedBlobKey, cancellationToken);
+        await RasterizePagesAsync(catalog, mergeResult.Bytes, cancellationToken);
 
         await PruneOldCatalogsAsync(request.CompanyId, cancellationToken);
 
@@ -243,6 +247,27 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         return catalog;
     }
 
+    private async Task RasterizePagesAsync(GeneratedCatalog catalog, byte[] mergedPdfBytes, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var pageNumber = 0;
+            await foreach (var jpegBytes in _pdfRasterizerService.RasterizePagesToJpegAsync(mergedPdfBytes, cancellationToken))
+            {
+                pageNumber++;
+                var blobKey = BlobKeys.GeneratedCatalogPage(catalog.Company.Id, catalog.Id, pageNumber);
+                using var stream = new MemoryStream(jpegBytes);
+                await _blobStorageService.UploadAsync(blobKey, stream, "image/jpeg", cancellationToken);
+            }
+
+            catalog.RasterizedPageCount = pageNumber;
+            await _session.UpdateInTransactionAsync(catalog, cancellationToken);
+        }
+        catch (Exception) when (!cancellationToken.IsCancellationRequested)
+        {
+        }
+    }
+
     private async Task PruneOldCatalogsAsync(Guid companyId, CancellationToken cancellationToken)
     {
         var catalogs = await _session.Query<GeneratedCatalog>()
@@ -268,6 +293,12 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         foreach (var old in toDelete)
         {
             await _blobStorageService.DeleteAsync(old.GeneratedPdfBlobKey, cancellationToken);
+            for (var pageNumber = 1; pageNumber <= old.RasterizedPageCount; pageNumber++)
+            {
+                await _blobStorageService.DeleteAsync(
+                    BlobKeys.GeneratedCatalogPage(companyId, old.Id, pageNumber),
+                    cancellationToken);
+            }
         }
     }
 

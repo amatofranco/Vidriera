@@ -59,6 +59,7 @@ public class GetGeneratedCatalogQueryHandler : IRequestHandler<GetGeneratedCatal
             catalog.ExpiresAt,
             fileUrl,
             catalog.Company.Name,
-            snapshot.Sections);
+            snapshot.Sections,
+            catalog.RasterizedPageCount);
     }
 }

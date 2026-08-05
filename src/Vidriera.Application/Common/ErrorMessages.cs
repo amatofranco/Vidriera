@@ -37,4 +37,6 @@ public static class ErrorMessages
     public static string ProductNotFound(Guid productId) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(ProductNotFound)), productId);
 
     public static string SectionNotFound(Guid sectionId) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(SectionNotFound)), sectionId);
+
+    public static string CatalogPageNotFound(Guid catalogId, int pageNumber) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(CatalogPageNotFound)), catalogId, pageNumber);
 }

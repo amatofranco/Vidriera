@@ -45,7 +45,9 @@ public static class CatalogHtmlBuilder
             .Replace("{{COMPANY_NAME}}", companyName)
             .Replace("{{GENERATED_AT}}", generatedAt)
             .Replace("{{INDEX_BUTTON}}", indexButtonHtml)
-            .Replace("{{INDEX_PANEL}}", indexPanelHtml);
+            .Replace("{{INDEX_PANEL}}", indexPanelHtml)
+            .Replace("{{CATALOG_ID}}", dto.Id.ToString())
+            .Replace("{{PAGE_COUNT}}", dto.RasterizedPageCount.ToString());
     }
 
     public static string BuildMessagePage(string title, string message)

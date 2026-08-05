@@ -13,4 +13,5 @@ public class GeneratedCatalog
     public virtual CatalogStatus Status { get; set; }
 
     public virtual string ProductsSnapshotJson { get; set; } = "[]";
+    public virtual int RasterizedPageCount { get; set; }
 }

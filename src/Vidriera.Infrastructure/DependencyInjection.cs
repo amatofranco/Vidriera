@@ -24,6 +24,7 @@ public static class DependencyInjection
         services.AddSingleton<IBlobStorageService, R2BlobStorageService>();
 
         services.AddSingleton<IPdfMergeService, PdfSharpMergeService>();
+        services.AddSingleton<IPdfRasterizerService, PdfiumRasterizerService>();
 
         services.Configure<JwtOptions>(configuration.GetSection("Jwt"));
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();

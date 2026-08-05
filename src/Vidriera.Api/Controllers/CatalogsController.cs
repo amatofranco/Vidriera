@@ -85,6 +85,25 @@ public class CatalogsController : ControllerBase
         }
     }
 
+    [HttpGet("{id:guid}/pages/{pageNumber:int}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetPage(Guid id, int pageNumber, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await _mediator.Send(new GetCatalogPageQuery(id, pageNumber), cancellationToken);
+            return File(result.Content, result.ContentType);
+        }
+        catch (NotFoundException)
+        {
+            return NotFound();
+        }
+        catch (CatalogGoneException)
+        {
+            return StatusCode(StatusCodes.Status410Gone);
+        }
+    }
+
     private ContentResult HtmlPage(string html, int statusCode)
         => new() { Content = html, ContentType = "text/html; charset=utf-8", StatusCode = statusCode };
 }

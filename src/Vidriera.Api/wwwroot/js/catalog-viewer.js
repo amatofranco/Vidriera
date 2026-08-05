@@ -1,13 +1,8 @@
-import * as pdfjsLib from "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.1.200/pdf.min.mjs";
 import { dom } from "./catalog-viewer/dom.js";
 import { setupZoom } from "./catalog-viewer/zoom.js";
 import { setupToolbar } from "./catalog-viewer/toolbar.js";
-import { computeFitSize } from "./catalog-viewer/layout.js";
-import { computeTargetPixelWidth, renderPageToDataUrl } from "./catalog-viewer/pdf-render.js";
 import { renderSinglePageViewer } from "./catalog-viewer/single-page-viewer.js";
-import { renderFlipbookViewer } from "./catalog-viewer/flipbook-viewer.js";
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.1.200/pdf.worker.min.mjs";
+import { renderImageFlipbookViewer } from "./catalog-viewer/image-flipbook-viewer.js";
 
 const rebuildRef = { current: () => {} };
 
@@ -21,7 +16,47 @@ if (dom.indexBtn) {
 setupZoom(dom);
 setupToolbar(dom);
 
-pdfjsLib.getDocument({ url: dom.fileUrl }).promise.then(async (doc) => {
+function loadImageDimensions(url) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+        img.onerror = reject;
+        img.src = url;
+    });
+}
+
+async function renderWithPrerasterizedImages() {
+    const flipbookEl = document.getElementById("flipbook");
+    const firstPageUrl = `/api/catalogs/${dom.catalogId}/pages/1`;
+    const { width, height } = await loadImageDimensions(firstPageUrl);
+    const pageAspect = width / height;
+
+    if (dom.pageCount <= 1) {
+        renderSinglePageViewer({ dataUrl: firstPageUrl, pageAspect, dom, flipbookEl, rebuildRef });
+        return;
+    }
+
+    renderImageFlipbookViewer({
+        catalogId: dom.catalogId,
+        pageCount: dom.pageCount,
+        pageAspect,
+        dom,
+        flipbookEl,
+        sectionsData: dom.sectionsData,
+        rebuildRef,
+    });
+}
+
+async function renderWithClientSidePdf() {
+    const [pdfjsLib, { computeFitSize }, { computeTargetPixelWidth, renderPageToDataUrl }, { renderFlipbookViewer }] = await Promise.all([
+        import("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.1.200/pdf.min.mjs"),
+        import("./catalog-viewer/layout.js"),
+        import("./catalog-viewer/pdf-render.js"),
+        import("./catalog-viewer/flipbook-viewer.js"),
+    ]);
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.1.200/pdf.worker.min.mjs";
+
+    const doc = await pdfjsLib.getDocument({ url: dom.fileUrl }).promise;
     const firstPage = await doc.getPage(1);
     const baseViewport = firstPage.getViewport({ scale: 1 });
     const pageAspect = baseViewport.width / baseViewport.height;
@@ -37,7 +72,11 @@ pdfjsLib.getDocument({ url: dom.fileUrl }).promise.then(async (doc) => {
     }
 
     await renderFlipbookViewer({ doc, pageAspect, dom, flipbookEl, sectionsData: dom.sectionsData, rebuildRef });
-}).catch((e) => {
+}
+
+const start = dom.pageCount > 0 ? renderWithPrerasterizedImages() : renderWithClientSidePdf();
+
+start.catch((e) => {
     console.error("Catalog viewer failed:", e);
     dom.loadingTextEl.textContent = "Error: " + (e && e.message ? e.message : e);
 });
