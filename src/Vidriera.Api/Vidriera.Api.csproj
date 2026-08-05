@@ -18,4 +18,9 @@
     <ProjectReference Include="..\Vidriera.Infrastructure\Vidriera.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Remove="Common\Templates\*.html" />
+    <EmbeddedResource Include="Common\Templates\*.html" />
+  </ItemGroup>
+
 </Project>

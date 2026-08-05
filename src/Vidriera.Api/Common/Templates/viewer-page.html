@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <title>Catálogo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/src/Style/stPageFlip.css" />
+    <link rel="stylesheet" href="/css/catalog-viewer.css" />
+</head>
+<body>
+    <div class="scene-bg"></div>
+    <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <span id="loading-text">Preparando catálogo...</span>
+    </div>
+    <div class="stage">
+        <img id="brand-logo" src="/images/vidriera-logo.png" alt="Vidriera" />
+        <div id="toolbar" class="toolbar" style="display: none;">
+            <button id="lens-btn" title="Zoom">&#128269;</button>
+            <button id="fullscreen-btn" title="Pantalla completa">&#9974;</button>
+            <button id="print-btn" title="Imprimir">&#128424;</button>
+            {{INDEX_BUTTON}}
+            <a id="download-btn" href="{{FILE_URL}}" download title="Descargar PDF">&#11015;</a>
+        </div>
+        <button id="prev" class="side-nav" title="Anterior" style="display: none;">&#8249;</button>
+        <button id="next" class="side-nav" title="Siguiente" style="display: none;">&#8250;</button>
+        {{INDEX_PANEL}}
+        <div id="cover-info">
+            <div class="cover-info-company">{{COMPANY_NAME}}</div>
+            <div class="cover-info-label">Catálogo</div>
+            <div class="cover-info-date">{{GENERATED_AT}}</div>
+        </div>
+        <div id="flipbook"></div>
+    </div>
+    <div id="page-info" class="page-info"></div>
+    <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
+    <script type="module" src="/js/catalog-viewer.js"></script>
+</body>
+</html>
