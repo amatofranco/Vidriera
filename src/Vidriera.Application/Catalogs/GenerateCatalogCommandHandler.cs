@@ -39,56 +39,38 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             throw new ValidationException(ErrorMessages.MustSelectAtLeastOneProduct);
         }
 
-        var allProducts = await _session.Query<Product>()
-            .Where(p => p.Company.Id == request.CompanyId)
-            .ToListAsync(cancellationToken);
-        var allSections = await _session.Query<Section>()
-            .Where(s => s.Company.Id == request.CompanyId)
-            .ToListAsync(cancellationToken);
-
+        var (allProducts, allSections) = await LoadCatalogDataAsync(request.CompanyId, cancellationToken);
         ValidateSelection(allProducts, request.ProductIds);
 
         var selectedIds = new HashSet<Guid>(request.ProductIds);
         var topLevel = BuildTopLevelSequence(allSections, allProducts);
-        var mergePlan = await BuildMergePlanAsync(topLevel, allProducts, selectedIds, cancellationToken);
+        var entries = BuildMergeEntries(topLevel, allProducts, selectedIds);
+        var mergePlan = await BuildMergePlanAsync(entries, cancellationToken);
 
         var mergeResult = await _pdfMergeService.MergeAsync(mergePlan.PdfBytes, cancellationToken);
         var sectionsSnapshot = BuildSectionsSnapshot(mergeResult.PageCounts, mergePlan.CoverMarkers);
 
-        var generatedBlobKey = BlobKeys.GeneratedCatalog(request.CompanyId);
-        using (var mergedStream = new MemoryStream(mergeResult.Bytes))
-        {
-            await _blobStorageService.UploadAsync(generatedBlobKey, mergedStream, "application/pdf", cancellationToken);
-        }
-
-        var user = await _session.GetAsync<User>(request.UserId, cancellationToken);
-        var company = await _session.GetAsync<Company>(request.CompanyId, cancellationToken);
-
-        var now = DateTime.UtcNow;
-        var expiresAt = now.AddDays(_options.ExpirationDays);
-
-        var productsSnapshot = mergePlan.IncludedProducts
-            .Select(p => new CatalogProductSnapshot(p.Id, p.Name, p.Code))
-            .ToList();
-        var snapshot = new CatalogSnapshot(productsSnapshot, sectionsSnapshot);
-
-        var catalog = new GeneratedCatalog
-        {
-            Company = company,
-            User = user,
-            GeneratedAt = now,
-            GeneratedPdfBlobKey = generatedBlobKey,
-            ExpiresAt = expiresAt,
-            Status = CatalogStatus.Active,
-            ProductsSnapshotJson = JsonSerializer.Serialize(snapshot)
-        };
-
-        await _session.SaveInTransactionAsync(catalog, cancellationToken);
+        var generatedBlobKey = await UploadMergedPdfAsync(request.CompanyId, mergeResult.Bytes, cancellationToken);
+        var catalog = await CreateCatalogAsync(request, mergePlan.IncludedProducts, sectionsSnapshot, generatedBlobKey, cancellationToken);
 
         await PruneOldCatalogsAsync(request.CompanyId, cancellationToken);
 
         var url = $"{_options.PublicBaseUrl.TrimEnd('/')}/api/catalogs/{catalog.Id}";
-        return new GenerateCatalogResult(catalog.Id, url, expiresAt);
+        return new GenerateCatalogResult(catalog.Id, url, catalog.ExpiresAt);
+    }
+
+    private async Task<(List<Product> Products, List<Section> Sections)> LoadCatalogDataAsync(
+        Guid companyId,
+        CancellationToken cancellationToken)
+    {
+        var products = await _session.Query<Product>()
+            .Where(p => p.Company.Id == companyId)
+            .ToListAsync(cancellationToken);
+        var sections = await _session.Query<Section>()
+            .Where(s => s.Company.Id == companyId)
+            .ToListAsync(cancellationToken);
+
+        return (products, sections);
     }
 
     private static void ValidateSelection(IReadOnlyList<Product> allProducts, IReadOnlyList<Guid> productIds)
@@ -122,46 +104,77 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             });
     }
 
-    private sealed record MergePlan(List<byte[]> PdfBytes, List<Section?> CoverMarkers, List<Product> IncludedProducts);
+    private abstract record MergeEntry;
+    private sealed record SectionCoverEntry(Section Section) : MergeEntry;
+    private sealed record ProductEntry(Product Product) : MergeEntry;
 
-    private async Task<MergePlan> BuildMergePlanAsync(
+    private static IEnumerable<MergeEntry> BuildMergeEntries(
         IEnumerable<object> topLevel,
         IReadOnlyList<Product> allProducts,
-        HashSet<Guid> selectedIds,
-        CancellationToken cancellationToken)
+        HashSet<Guid> selectedIds)
+    {
+        foreach (var item in topLevel)
+        {
+            switch (item)
+            {
+                case Section section:
+                    foreach (var entry in BuildSectionEntries(section, allProducts, selectedIds))
+                    {
+                        yield return entry;
+                    }
+                    break;
+
+                case Product product when selectedIds.Contains(product.Id):
+                    yield return new ProductEntry(product);
+                    break;
+            }
+        }
+    }
+
+    private static IEnumerable<MergeEntry> BuildSectionEntries(
+        Section section,
+        IReadOnlyList<Product> allProducts,
+        HashSet<Guid> selectedIds)
+    {
+        var members = allProducts
+            .Where(p => p.Section?.Id == section.Id && selectedIds.Contains(p.Id))
+            .OrderBy(p => p.SortOrder)
+            .ToList();
+
+        if (members.Count == 0)
+        {
+            yield break;
+        }
+
+        yield return new SectionCoverEntry(section);
+        foreach (var member in members)
+        {
+            yield return new ProductEntry(member);
+        }
+    }
+
+    private sealed record MergePlan(List<byte[]> PdfBytes, List<Section?> CoverMarkers, List<Product> IncludedProducts);
+
+    private async Task<MergePlan> BuildMergePlanAsync(IEnumerable<MergeEntry> entries, CancellationToken cancellationToken)
     {
         var pdfBytesInOrder = new List<byte[]>();
         var coverMarkers = new List<Section?>();
         var includedProducts = new List<Product>();
 
-        foreach (var item in topLevel)
+        foreach (var entry in entries)
         {
-            if (item is Section section)
+            switch (entry)
             {
-                var members = allProducts
-                    .Where(p => p.Section?.Id == section.Id && selectedIds.Contains(p.Id))
-                    .OrderBy(p => p.SortOrder)
-                    .ToList();
+                case SectionCoverEntry cover:
+                    pdfBytesInOrder.Add(await DownloadBytesAsync(cover.Section.CoverPdfBlobKey!, cancellationToken));
+                    coverMarkers.Add(cover.Section);
+                    break;
 
-                if (members.Count == 0)
-                {
-                    continue;
-                }
-
-                pdfBytesInOrder.Add(await DownloadBytesAsync(section.CoverPdfBlobKey!, cancellationToken));
-                coverMarkers.Add(section);
-                foreach (var member in members)
-                {
-                    pdfBytesInOrder.Add(await DownloadBytesAsync(member.SheetPdfBlobKey!, cancellationToken));
+                case ProductEntry productEntry:
+                    pdfBytesInOrder.Add(await DownloadBytesAsync(productEntry.Product.SheetPdfBlobKey!, cancellationToken));
                     coverMarkers.Add(null);
-                    includedProducts.Add(member);
-                }
-            }
-            else if (item is Product product && selectedIds.Contains(product.Id))
-            {
-                pdfBytesInOrder.Add(await DownloadBytesAsync(product.SheetPdfBlobKey!, cancellationToken));
-                coverMarkers.Add(null);
-                includedProducts.Add(product);
+                    includedProducts.Add(productEntry.Product);
+                    break;
             }
         }
 
@@ -185,6 +198,49 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         }
 
         return sectionsSnapshot;
+    }
+
+    private async Task<string> UploadMergedPdfAsync(Guid companyId, byte[] mergedBytes, CancellationToken cancellationToken)
+    {
+        var blobKey = BlobKeys.GeneratedCatalog(companyId);
+
+        using var mergedStream = new MemoryStream(mergedBytes);
+        await _blobStorageService.UploadAsync(blobKey, mergedStream, "application/pdf", cancellationToken);
+
+        return blobKey;
+    }
+
+    private async Task<GeneratedCatalog> CreateCatalogAsync(
+        GenerateCatalogCommand request,
+        IReadOnlyList<Product> includedProducts,
+        List<CatalogSectionSnapshot> sectionsSnapshot,
+        string generatedBlobKey,
+        CancellationToken cancellationToken)
+    {
+        var user = await _session.GetAsync<User>(request.UserId, cancellationToken);
+        var company = await _session.GetAsync<Company>(request.CompanyId, cancellationToken);
+
+        var now = DateTime.UtcNow;
+        var expiresAt = now.AddDays(_options.ExpirationDays);
+
+        var productsSnapshot = includedProducts
+            .Select(p => new CatalogProductSnapshot(p.Id, p.Name, p.Code))
+            .ToList();
+        var snapshot = new CatalogSnapshot(productsSnapshot, sectionsSnapshot);
+
+        var catalog = new GeneratedCatalog
+        {
+            Company = company,
+            User = user,
+            GeneratedAt = now,
+            GeneratedPdfBlobKey = generatedBlobKey,
+            ExpiresAt = expiresAt,
+            Status = CatalogStatus.Active,
+            ProductsSnapshotJson = JsonSerializer.Serialize(snapshot)
+        };
+
+        await _session.SaveInTransactionAsync(catalog, cancellationToken);
+        return catalog;
     }
 
     private async Task PruneOldCatalogsAsync(Guid companyId, CancellationToken cancellationToken)
