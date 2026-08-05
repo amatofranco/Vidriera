@@ -159,41 +159,83 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
 
     private sealed record MergePlan(List<byte[]> PdfBytes, List<Section?> CoverMarkers, List<Product> IncludedProducts);
 
+    private const int MaxConcurrentDownloads = 4;
+
     private async Task<MergePlan> BuildMergePlanAsync(
         IReadOnlyList<MergeEntry> entries,
         Func<CatalogGenerationProgress, Task>? onProgress,
         CancellationToken cancellationToken)
     {
-        var pdfBytesInOrder = new List<byte[]>();
-        var coverMarkers = new List<Section?>();
+        var pdfBytesInOrder = new byte[entries.Count][];
+        var coverMarkers = new List<Section?>(entries.Count);
         var includedProducts = new List<Product>();
 
-        var current = 0;
         foreach (var entry in entries)
         {
             switch (entry)
             {
                 case SectionCoverEntry cover:
-                    pdfBytesInOrder.Add(await DownloadBytesAsync(cover.Section.CoverPdfBlobKey!, cancellationToken));
                     coverMarkers.Add(cover.Section);
                     break;
 
                 case ProductEntry productEntry:
-                    pdfBytesInOrder.Add(await DownloadBytesAsync(productEntry.Product.SheetPdfBlobKey!, cancellationToken));
                     coverMarkers.Add(null);
                     includedProducts.Add(productEntry.Product);
                     break;
             }
-
-            current++;
-            await ReportProgressAsync(onProgress, "downloading", current, entries.Count);
         }
 
-        return new MergePlan(pdfBytesInOrder, coverMarkers, includedProducts);
+        var downloadedCount = 0;
+        var pendingDownloads = new List<Task>(entries.Count);
+        using var downloadSemaphore = new SemaphoreSlim(MaxConcurrentDownloads);
+        using var progressLock = new SemaphoreSlim(1, 1);
+
+        for (var index = 0; index < entries.Count; index++)
+        {
+            var blobKey = entries[index] switch
+            {
+                SectionCoverEntry cover => cover.Section.CoverPdfBlobKey!,
+                ProductEntry productEntry => productEntry.Product.SheetPdfBlobKey!,
+                _ => throw new InvalidOperationException("Unknown merge entry type.")
+            };
+
+            await downloadSemaphore.WaitAsync(cancellationToken);
+            pendingDownloads.Add(DownloadEntryAndReportAsync(
+                blobKey,
+                index,
+                pdfBytesInOrder,
+                downloadSemaphore,
+                () =>
+                {
+                    var completed = Interlocked.Increment(ref downloadedCount);
+                    return ReportProgressSerializedAsync(progressLock, onProgress, "downloading", completed, entries.Count);
+                },
+                cancellationToken));
+        }
+
+        await Task.WhenAll(pendingDownloads);
+
+        return new MergePlan(pdfBytesInOrder.ToList(), coverMarkers, includedProducts);
     }
 
-    private static Task ReportProgressAsync(Func<CatalogGenerationProgress, Task>? onProgress, string stage, int current, int total)
-        => onProgress is null ? Task.CompletedTask : onProgress(new CatalogGenerationProgress(stage, current, total));
+    private async Task DownloadEntryAndReportAsync(
+        string blobKey,
+        int index,
+        byte[][] results,
+        SemaphoreSlim downloadSemaphore,
+        Func<Task> reportDownloaded,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            results[index] = await DownloadBytesAsync(blobKey, cancellationToken);
+            await reportDownloaded();
+        }
+        finally
+        {
+            downloadSemaphore.Release();
+        }
+    }
 
     private static List<CatalogSectionSnapshot> BuildSectionsSnapshot(
         IReadOnlyList<int> pageCounts,
@@ -284,7 +326,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
                     () =>
                     {
                         var completed = Interlocked.Increment(ref uploadedPageCount);
-                        return ReportProgressSerializedAsync(progressLock, onProgress, completed, totalPages);
+                        return ReportProgressSerializedAsync(progressLock, onProgress, "rasterizing", completed, totalPages);
                     },
                     cancellationToken));
             }
@@ -332,6 +374,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
     private static async Task ReportProgressSerializedAsync(
         SemaphoreSlim progressLock,
         Func<CatalogGenerationProgress, Task>? onProgress,
+        string stage,
         int current,
         int total)
     {
@@ -343,7 +386,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         await progressLock.WaitAsync();
         try
         {
-            await onProgress(new CatalogGenerationProgress("rasterizing", current, total));
+            await onProgress(new CatalogGenerationProgress(stage, current, total));
         }
         finally
         {
