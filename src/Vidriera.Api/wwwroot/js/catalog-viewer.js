@@ -20,7 +20,7 @@ function loadImageDimensions(url) {
     return new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
-        img.onerror = reject;
+        img.onerror = () => reject(new Error("Este catálogo ya no está disponible."));
         img.src = url;
     });
 }
