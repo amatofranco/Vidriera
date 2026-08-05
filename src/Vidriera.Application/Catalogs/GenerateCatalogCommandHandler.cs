@@ -257,8 +257,6 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         return catalog;
     }
 
-    private const int RasterizeConcurrency = 2;
-
     private async Task RasterizePagesAsync(
         GeneratedCatalog catalog,
         byte[] mergedPdfBytes,
@@ -266,40 +264,20 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         Func<CatalogGenerationProgress, Task>? onProgress,
         CancellationToken cancellationToken)
     {
+        var uploadedPageCount = 0;
         try
         {
-            var workerPageIndices = Enumerable.Range(0, totalPages)
-                .GroupBy(pageIndex => pageIndex % RasterizeConcurrency)
-                .Select(g => (IReadOnlyList<int>)g.ToList())
-                .ToList();
-
-            var uploadedPageCount = 0;
-            using var progressGate = new SemaphoreSlim(1, 1);
-
-            async Task RunWorkerAsync(IReadOnlyList<int> pageIndices)
+            var allPageIndices = Enumerable.Range(0, totalPages).ToList();
+            await foreach (var (pageIndex, jpegBytes) in _pdfRasterizerService.RasterizePagesToJpegAsync(mergedPdfBytes, allPageIndices, cancellationToken))
             {
-                await foreach (var (pageIndex, jpegBytes) in _pdfRasterizerService.RasterizePagesToJpegAsync(mergedPdfBytes, pageIndices, cancellationToken))
-                {
-                    var blobKey = BlobKeys.GeneratedCatalogPage(catalog.Company.Id, catalog.Id, pageIndex + 1);
-                    using var stream = new MemoryStream(jpegBytes);
-                    await _blobStorageService.UploadAsync(blobKey, stream, "image/jpeg", cancellationToken);
-
-                    var current = Interlocked.Increment(ref uploadedPageCount);
-                    await progressGate.WaitAsync(cancellationToken);
-                    try
-                    {
-                        await ReportProgressAsync(onProgress, "rasterizing", current, totalPages);
-                    }
-                    finally
-                    {
-                        progressGate.Release();
-                    }
-                }
+                uploadedPageCount++;
+                var blobKey = BlobKeys.GeneratedCatalogPage(catalog.Company.Id, catalog.Id, pageIndex + 1);
+                using var stream = new MemoryStream(jpegBytes);
+                await _blobStorageService.UploadAsync(blobKey, stream, "image/jpeg", cancellationToken);
+                await ReportProgressAsync(onProgress, "rasterizing", uploadedPageCount, totalPages);
             }
 
-            await Task.WhenAll(workerPageIndices.Select(RunWorkerAsync));
-
-            catalog.RasterizedPageCount = totalPages;
+            catalog.RasterizedPageCount = uploadedPageCount;
             await _session.UpdateInTransactionAsync(catalog, cancellationToken);
         }
         catch
