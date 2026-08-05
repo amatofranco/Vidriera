@@ -2,5 +2,8 @@ namespace Vidriera.Application.Abstractions;
 
 public interface IPdfRasterizerService
 {
-    IAsyncEnumerable<byte[]> RasterizePagesToJpegAsync(byte[] pdfBytes, CancellationToken cancellationToken);
+    IAsyncEnumerable<(int PageIndex, byte[] JpegBytes)> RasterizePagesToJpegAsync(
+        byte[] pdfBytes,
+        IReadOnlyList<int> pageIndices,
+        CancellationToken cancellationToken);
 }

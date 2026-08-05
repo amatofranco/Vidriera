@@ -10,18 +10,21 @@ public class PdfiumRasterizerService : IPdfRasterizerService
     private const int Dpi = 150;
     private const int JpegQuality = 85;
 
-    public async IAsyncEnumerable<byte[]> RasterizePagesToJpegAsync(
+    public async IAsyncEnumerable<(int PageIndex, byte[] JpegBytes)> RasterizePagesToJpegAsync(
         byte[] pdfBytes,
+        IReadOnlyList<int> pageIndices,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var options = new RenderOptions(Dpi: Dpi);
-        await foreach (var bitmap in Conversion.ToImagesAsync(pdfBytes, password: null, options: options, cancellationToken: cancellationToken))
+        var i = 0;
+        await foreach (var bitmap in Conversion.ToImagesAsync(pdfBytes, pages: pageIndices, password: null, options: options, cancellationToken: cancellationToken))
         {
             using (bitmap)
             {
                 using var data = bitmap.Encode(SKEncodedImageFormat.Jpeg, JpegQuality);
-                yield return data.ToArray();
+                yield return (pageIndices[i], data.ToArray());
             }
+            i++;
         }
     }
 }
