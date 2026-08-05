@@ -281,13 +281,13 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         }
         catch
         {
-            await _session.DeleteInTransactionAsync(catalog, cancellationToken);
-            await _blobStorageService.DeleteAsync(catalog.GeneratedPdfBlobKey, cancellationToken);
+            await _session.DeleteInTransactionAsync(catalog, CancellationToken.None);
+            await _blobStorageService.DeleteAsync(catalog.GeneratedPdfBlobKey, CancellationToken.None);
             for (var pageNumber = 1; pageNumber <= uploadedPageCount; pageNumber++)
             {
                 await _blobStorageService.DeleteAsync(
                     BlobKeys.GeneratedCatalogPage(catalog.Company.Id, catalog.Id, pageNumber),
-                    cancellationToken);
+                    CancellationToken.None);
             }
             throw;
         }

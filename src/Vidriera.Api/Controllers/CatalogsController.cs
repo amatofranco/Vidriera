@@ -12,6 +12,8 @@ namespace Vidriera.Api.Controllers;
 [Route("api/catalogs")]
 public class CatalogsController : ControllerBase
 {
+    private static readonly JsonSerializerOptions StreamJsonOptions = new(JsonSerializerDefaults.Web);
+
     private readonly IMediator _mediator;
 
     public CatalogsController(IMediator mediator)
@@ -32,7 +34,7 @@ public class CatalogsController : ControllerBase
 
         async Task WriteLineAsync(object payload)
         {
-            await Response.WriteAsync(JsonSerializer.Serialize(payload) + "\n", cancellationToken);
+            await Response.WriteAsync(JsonSerializer.Serialize(payload, StreamJsonOptions) + "\n", cancellationToken);
             await Response.Body.FlushAsync(cancellationToken);
         }
 
