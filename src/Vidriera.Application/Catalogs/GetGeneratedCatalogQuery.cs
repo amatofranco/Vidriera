@@ -6,6 +6,7 @@ public record GetGeneratedCatalogQuery(Guid Id) : IRequest<GeneratedCatalogViewD
 
 public record GeneratedCatalogViewDto(
     Guid Id,
+    Guid CompanyId,
     DateTime GeneratedAt,
     string FileUrl,
     string CompanyName,

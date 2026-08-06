@@ -85,6 +85,19 @@ body { overflow: auto; }
     font-size: 14px; color: #a1a1a6;
 }
 
+.update-banner {
+    position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 12px;
+    background: #232325; color: #f5f5f7; font-size: 13px;
+    padding: 10px 14px; border-radius: 10px; z-index: 30;
+    box-shadow: 0 8px 24px rgba(0,0,0,.4);
+}
+.update-banner button {
+    background: #0a84ff; color: white; border: none; border-radius: 6px;
+    padding: 6px 12px; font-size: 13px; cursor: pointer;
+}
+.update-banner button:hover { background: #3a9dff; }
+
 #brand-logo {
     position: fixed; top: 18px; left: 18px; height: 30px; width: auto;
     z-index: 20; pointer-events: none;

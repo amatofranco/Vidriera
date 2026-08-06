@@ -43,6 +43,7 @@ public class GetGeneratedCatalogQueryHandler : IRequestHandler<GetGeneratedCatal
 
         return new GeneratedCatalogViewDto(
             catalog.Id,
+            catalog.Company.Id,
             catalog.GeneratedAt,
             fileUrl,
             catalog.Company.Name,

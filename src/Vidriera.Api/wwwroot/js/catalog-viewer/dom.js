@@ -21,5 +21,8 @@ export const dom = {
         ? JSON.parse(sectionsDataEl.dataset.sections || "[]")
         : [],
     catalogId: catalogMetaEl ? catalogMetaEl.dataset.catalogId : null,
+    companyId: catalogMetaEl ? catalogMetaEl.dataset.companyId : null,
     pageCount: catalogMetaEl ? parseInt(catalogMetaEl.dataset.pageCount, 10) || 0 : 0,
+    updateBanner: document.getElementById("update-banner"),
+    updateBannerBtn: document.getElementById("update-banner-btn"),
 };

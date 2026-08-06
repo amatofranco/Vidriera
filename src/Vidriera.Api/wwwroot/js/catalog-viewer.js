@@ -3,6 +3,7 @@ import { setupZoom } from "./catalog-viewer/zoom.js";
 import { setupToolbar } from "./catalog-viewer/toolbar.js";
 import { renderSinglePageViewer } from "./catalog-viewer/single-page-viewer.js";
 import { renderFlipbookViewer } from "./catalog-viewer/flipbook-viewer.js";
+import { setupUpdateChecker } from "./catalog-viewer/update-checker.js";
 
 const rebuildRef = { current: () => {} };
 
@@ -15,6 +16,7 @@ if (dom.indexBtn) {
 
 setupZoom(dom);
 setupToolbar(dom);
+setupUpdateChecker(dom);
 
 function loadImageDimensions(url) {
     return new Promise((resolve, reject) => {

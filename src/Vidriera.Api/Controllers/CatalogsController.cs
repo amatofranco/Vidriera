@@ -85,6 +85,14 @@ public class CatalogsController : ControllerBase
         }
     }
 
+    [HttpGet("company/{companyId:guid}/version")]
+    [AllowAnonymous]
+    public async Task<ActionResult<object>> GetCompanyCatalogVersion(Guid companyId, CancellationToken cancellationToken)
+    {
+        var catalogId = await _mediator.Send(new GetCompanyCatalogVersionQuery(companyId), cancellationToken);
+        return Ok(new { catalogId });
+    }
+
     [HttpGet("{id:guid}/file")]
     [AllowAnonymous]
     public async Task<IActionResult> DownloadFile(Guid id, CancellationToken cancellationToken)

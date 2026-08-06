@@ -47,6 +47,7 @@ public static class CatalogHtmlBuilder
             .Replace("{{INDEX_BUTTON}}", indexButtonHtml)
             .Replace("{{INDEX_PANEL}}", indexPanelHtml)
             .Replace("{{CATALOG_ID}}", dto.Id.ToString())
+            .Replace("{{COMPANY_ID}}", dto.CompanyId.ToString())
             .Replace("{{PAGE_COUNT}}", dto.RasterizedPageCount.ToString());
     }
 
