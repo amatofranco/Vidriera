@@ -1,6 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { AuthState } from "@/lib/auth-context";
-import { generateCatalog, type CatalogGenerationProgress, type GenerateCatalogResult, type Product } from "@/lib/api";
+import {
+  generateCatalog,
+  getCurrentCatalog,
+  type CatalogGenerationProgress,
+  type GenerateCatalogResult,
+  type Product,
+} from "@/lib/api";
 import { Messages, apiErrorMessage } from "@/lib/messages";
 
 export function useCatalogGeneration({
@@ -17,6 +23,13 @@ export function useCatalogGeneration({
   const [generationProgress, setGenerationProgress] = useState<CatalogGenerationProgress | null>(null);
 
   const selectableCount = products.filter((p) => p.hasStock && p.hasSheet).length;
+
+  useEffect(() => {
+    if (!auth) return;
+    getCurrentCatalog(auth.token)
+      .then((result) => setCatalogResult(result))
+      .catch(() => {});
+  }, [auth]);
 
   async function handleGenerateCatalog() {
     if (!auth) return;

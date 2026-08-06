@@ -59,6 +59,15 @@ public class CatalogsController : ControllerBase
         }
     }
 
+    [HttpGet("current")]
+    [Authorize]
+    public async Task<ActionResult<GenerateCatalogResult?>> GetCurrent(CancellationToken cancellationToken)
+    {
+        var companyId = User.GetCompanyId();
+        var result = await _mediator.Send(new GetCurrentCatalogQuery(companyId), cancellationToken);
+        return Ok(result);
+    }
+
     [HttpGet("company/{companyId:guid}")]
     [AllowAnonymous]
     public async Task<ContentResult> ViewByCompany(Guid companyId, CancellationToken cancellationToken)

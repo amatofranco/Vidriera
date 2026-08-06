@@ -246,3 +246,7 @@ export async function generateCatalog(
 
   throw new ApiError("La generación del catálogo no devolvió un resultado.", response.status);
 }
+
+export function getCurrentCatalog(token: string) {
+  return request<GenerateCatalogResult | null>("/api/catalogs/current", { token });
+}
