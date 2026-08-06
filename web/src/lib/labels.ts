@@ -63,6 +63,8 @@ export const Labels = {
   uploadSheet: "Subir ficha",
   delete: "Borrar",
   deleteSection: "Borrar carátula",
+  collapseSection: "Colapsar carátula",
+  expandSection: "Expandir carátula",
   selectForBulkAssignTitle: "Seleccionar para asociar a carátula",
   hasStockTitle: "Tiene stock",
   selectAllSectionMembersTitle: "Seleccionar todos los productos de esta carátula",

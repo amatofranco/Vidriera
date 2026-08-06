@@ -16,12 +16,15 @@ export function SectionRow({
   isBulkAssigningSection,
   confirmingDelete,
   isDeletingSection,
+  isCollapsed,
+  memberCount,
   onDragStart,
   onDragEnd,
   onDragOver,
   onDrop,
   onMoveToPosition,
   onToggleCheckbox,
+  onToggleCollapse,
   onRequestDelete,
   onConfirmDelete,
   onCancelDelete,
@@ -37,12 +40,15 @@ export function SectionRow({
   isBulkAssigningSection: boolean;
   confirmingDelete: boolean;
   isDeletingSection: boolean;
+  isCollapsed: boolean;
+  memberCount: number;
   onDragStart: () => void;
   onDragEnd: () => void;
   onDragOver: (e: React.DragEvent) => void;
   onDrop: () => void;
   onMoveToPosition: (rawValue: string) => void;
   onToggleCheckbox: () => void;
+  onToggleCollapse: () => void;
   onRequestDelete: () => void;
   onConfirmDelete: () => void;
   onCancelDelete: () => void;
@@ -90,8 +96,19 @@ export function SectionRow({
         ) : (
           <StockToggle checked={isChecked} onToggle={onToggleCheckbox} title={checkboxTitle} disabled={checkboxDisabled} />
         )}
-        <span className="flex-1 font-semibold text-zinc-900 dark:text-zinc-50">
-          📑 {section.name}
+        <button
+          onClick={onToggleCollapse}
+          title={isCollapsed ? Labels.expandSection : Labels.collapseSection}
+          className="px-1 text-lg leading-none text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+        >
+          {isCollapsed ? "▸" : "▾"}
+        </button>
+        <span
+          onClick={onToggleCollapse}
+          className="flex-1 cursor-pointer font-semibold text-zinc-900 dark:text-zinc-50"
+        >
+          📑 {section.name}{" "}
+          <span className="font-normal text-zinc-500 dark:text-zinc-400">({memberCount})</span>
         </span>
         {confirmingDelete ? (
           <div className="flex items-center gap-2 text-xs">
@@ -120,7 +137,7 @@ export function SectionRow({
           </button>
         )}
       </div>
-      {children && (
+      {children && !isCollapsed && (
         <ul className="divide-y divide-black/5 border-t border-black/10 pl-8 dark:divide-white/5 dark:border-white/10">
           {children}
         </ul>

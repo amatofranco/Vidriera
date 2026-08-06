@@ -36,6 +36,16 @@ export default function ProductsPage() {
   const { auth, isLoading: authLoading, logout } = useAuth();
 
   const [search, setSearch] = useState("");
+  const [collapsedSectionIds, setCollapsedSectionIds] = useState<Set<string>>(new Set());
+
+  function toggleSectionCollapsed(sectionId: string) {
+    setCollapsedSectionIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(sectionId)) next.delete(sectionId);
+      else next.add(sectionId);
+      return next;
+    });
+  }
 
   useEffect(() => {
     if (!authLoading && !auth) {
@@ -326,12 +336,15 @@ export default function ProductsPage() {
                   isBulkAssigningSection={isBulkAssigningSection}
                   confirmingDelete={confirmingDeleteSectionId === row.id}
                   isDeletingSection={isDeletingSection}
+                  isCollapsed={collapsedSectionIds.has(row.section.id) && !search.trim()}
+                  memberCount={sectionMembers(row.section.id).length}
                   onDragStart={() => setDraggedTopLevelId(row.id)}
                   onDragEnd={() => setDraggedTopLevelId(null)}
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={() => handleTopLevelDrop(row.id)}
                   onMoveToPosition={(v) => handleTopLevelMoveToPosition(row.id, v)}
                   onToggleCheckbox={() => handleToggleSectionCheckbox(row.section)}
+                  onToggleCollapse={() => toggleSectionCollapsed(row.section.id)}
                   onRequestDelete={() => setConfirmingDeleteSectionId(row.id)}
                   onConfirmDelete={() => handleDeleteSection(row.section)}
                   onCancelDelete={() => setConfirmingDeleteSectionId(null)}
