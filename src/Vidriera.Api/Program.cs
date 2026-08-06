@@ -1,4 +1,5 @@
 using System.Text;
+using DbUp;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.IdentityModel.Tokens;
@@ -71,6 +72,21 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+var migrationConnectionString = builder.Configuration.GetConnectionString("Postgres")
+    ?? throw new InvalidOperationException("Falta la connection string 'Postgres' en la configuración.");
+
+var migrator = DeployChanges.To
+    .PostgresqlDatabase(migrationConnectionString)
+    .WithScriptsEmbeddedInAssembly(typeof(Program).Assembly, s => s.Contains(".Migrations.") && s.EndsWith(".sql"))
+    .LogToConsole()
+    .Build();
+
+var migrationResult = migrator.PerformUpgrade();
+if (!migrationResult.Successful)
+{
+    throw new InvalidOperationException("La migración de base de datos falló.", migrationResult.Error);
+}
 
 if (app.Environment.IsDevelopment())
 {

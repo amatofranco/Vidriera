@@ -9,6 +9,7 @@ COPY src/Vidriera.Api/Vidriera.Api.csproj src/Vidriera.Api/
 RUN dotnet restore src/Vidriera.Api/Vidriera.Api.csproj
 
 COPY src/ src/
+COPY db/ db/
 RUN dotnet publish src/Vidriera.Api/Vidriera.Api.csproj -c Release -o /app --no-restore
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
