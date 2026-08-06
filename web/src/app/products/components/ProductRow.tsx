@@ -13,6 +13,7 @@ export function ProductRow({
   isChecked,
   checkboxTitle,
   isDeleting,
+  deleteDisabled,
   confirmingDelete,
   onDragStart,
   onDragEnd,
@@ -35,6 +36,7 @@ export function ProductRow({
   isChecked: boolean;
   checkboxTitle: string;
   isDeleting: boolean;
+  deleteDisabled: boolean;
   confirmingDelete: boolean;
   onDragStart: () => void;
   onDragEnd: () => void;
@@ -106,7 +108,7 @@ export function ProductRow({
           <span className="text-zinc-600 dark:text-zinc-400">{Labels.confirmDeleteProductQuestion}</span>
           <button
             onClick={onConfirmDelete}
-            disabled={isDeleting}
+            disabled={isDeleting || deleteDisabled}
             className="rounded bg-red-600 px-2 py-1 font-medium text-white hover:bg-red-500 disabled:opacity-50"
           >
             {Labels.yes}
@@ -139,7 +141,8 @@ export function ProductRow({
           )}
           <button
             onClick={onRequestDelete}
-            className="text-xs text-red-600 underline hover:text-red-500 dark:text-red-400"
+            disabled={deleteDisabled}
+            className="text-xs text-red-600 underline hover:text-red-500 disabled:opacity-40 disabled:no-underline dark:text-red-400"
           >
             {Labels.delete}
           </button>

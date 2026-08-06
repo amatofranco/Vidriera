@@ -195,6 +195,7 @@ export default function ProductsPage() {
         isChecked={isBulkAssigningSection ? bulkAssignSelectedIds.has(product.id) : product.hasStock}
         checkboxTitle={isBulkAssigningSection ? Labels.selectForBulkAssignTitle : Labels.hasStockTitle}
         isDeleting={isDeleting}
+        deleteDisabled={isBulkDeleting}
         confirmingDelete={confirmingDeleteId === product.id}
         onDragStart={() => (sectionId ? setDraggedSectionMemberId(product.id) : setDraggedTopLevelId(product.id))}
         onDragEnd={() => (sectionId ? setDraggedSectionMemberId(null) : setDraggedTopLevelId(null))}

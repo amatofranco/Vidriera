@@ -24,7 +24,14 @@ public class DeleteProductCommandHandler : IRequestHandler<DeleteProductCommand>
             ErrorMessages.ProductNotFound(request.ProductId),
             cancellationToken);
 
-        await _session.DeleteInTransactionAsync(product, cancellationToken);
+        try
+        {
+            await _session.DeleteInTransactionAsync(product, cancellationToken);
+        }
+        catch (StaleStateException)
+        {
+            return;
+        }
 
         if (!string.IsNullOrEmpty(product.SheetPdfBlobKey))
         {
