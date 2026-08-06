@@ -33,10 +33,10 @@ export const Labels = {
   unmarkAll: (isFiltered: boolean) => `Desmarcar ${filteredOrAll(isFiltered)}`,
   deleteSelectedCount: (count: number) => `Borrar seleccionados (${count})`,
   deleteAllOrFiltered: (isFiltered: boolean) => `Borrar ${filteredOrAll(isFiltered)}`,
-  cancelBulkAssignMode: "Cancelar asociación",
-  startBulkAssignMode: "Asociar a carátula",
+  cancelBulkAssignMode: "Cancelar selección",
+  startBulkAssignMode: "Seleccionar productos",
 
-  bulkAssignHint: (count: number) => `Tildá los productos de la lista para asociarlos (${count} seleccionado${plural(count)}).`,
+  bulkAssignHint: (count: number) => `Tildá los productos de la lista para asociarlos a una carátula o borrarlos (${count} seleccionado${plural(count)}).`,
   noSectionOption: "Sin carátula",
   applying: "Aplicando...",
   apply: (count: number) => `Aplicar (${count})`,

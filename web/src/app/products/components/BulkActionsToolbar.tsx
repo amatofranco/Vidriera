@@ -8,10 +8,8 @@ export function BulkActionsToolbar({
   isBulkAssigningSection,
   isApplyingBulkAssign,
   hasSections,
-  checkedCount,
   onMarkAll,
   onUnmarkAll,
-  onRequestDeleteSelected,
   onRequestDeleteAll,
   onToggleBulkAssignMode,
 }: {
@@ -20,10 +18,8 @@ export function BulkActionsToolbar({
   isBulkAssigningSection: boolean;
   isApplyingBulkAssign: boolean;
   hasSections: boolean;
-  checkedCount: number;
   onMarkAll: () => void;
   onUnmarkAll: () => void;
-  onRequestDeleteSelected: () => void;
   onRequestDeleteAll: () => void;
   onToggleBulkAssignMode: () => void;
 }) {
@@ -52,16 +48,6 @@ export function BulkActionsToolbar({
       >
         {Labels.unmarkAll(isFiltered)}
       </button>
-      {!isBulkAssigningSection && (
-        <button
-          type="button"
-          onClick={onRequestDeleteSelected}
-          disabled={checkedCount === 0}
-          className="rounded-md border border-red-400/30 px-3 py-2 text-xs font-medium whitespace-nowrap text-red-300 transition-colors hover:bg-red-500/10 disabled:opacity-40"
-        >
-          {Labels.deleteSelectedCount(checkedCount)}
-        </button>
-      )}
       {!isBulkAssigningSection && (
         <button
           type="button"

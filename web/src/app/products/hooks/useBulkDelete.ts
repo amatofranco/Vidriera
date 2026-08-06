@@ -16,19 +16,20 @@ export function useBulkDelete({
   const [pendingBulkDelete, setPendingBulkDelete] = useState<{
     label: string;
     targets: Product[];
+    onComplete?: () => void;
   } | null>(null);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
-  function requestBulkDelete(targets: Product[], label: string) {
+  function requestBulkDelete(targets: Product[], label: string, onComplete?: () => void) {
     if (targets.length === 0) return;
-    setPendingBulkDelete({ label, targets });
+    setPendingBulkDelete({ label, targets, onComplete });
   }
 
   async function handleConfirmBulkDelete() {
     if (!auth || !pendingBulkDelete) return;
     setIsBulkDeleting(true);
     setError(null);
-    const targets = pendingBulkDelete.targets;
+    const { targets, onComplete } = pendingBulkDelete;
     const failed: string[] = [];
 
     await runWithConcurrency(targets, 4, async (product) => {
@@ -42,6 +43,7 @@ export function useBulkDelete({
 
     setIsBulkDeleting(false);
     setPendingBulkDelete(null);
+    onComplete?.();
     if (failed.length > 0) {
       setError(bulkDeleteFailed(failed));
     }

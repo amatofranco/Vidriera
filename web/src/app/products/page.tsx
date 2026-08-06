@@ -128,11 +128,9 @@ export default function ProductsPage() {
     return null;
   }
 
-  const checkedCount = products.filter((p) => p.hasStock).length;
-
   function requestBulkDeleteSelected() {
-    const targets = products.filter((p) => p.hasStock);
-    requestBulkDelete(targets, Labels.selectedProductsLabel(targets.length));
+    const targets = products.filter((p) => bulkAssignSelectedIds.has(p.id));
+    requestBulkDelete(targets, Labels.selectedProductsLabel(targets.length), toggleBulkAssignMode);
   }
 
   function requestBulkDeleteAll() {
@@ -263,7 +261,6 @@ export default function ProductsPage() {
             isBulkAssigningSection={isBulkAssigningSection}
             isApplyingBulkAssign={isApplyingBulkAssign}
             hasSections={sections.length > 0}
-            checkedCount={checkedCount}
             onMarkAll={() =>
               isBulkAssigningSection
                 ? selectForBulkAssign(filteredProducts.map((p) => p.id), true)
@@ -274,7 +271,6 @@ export default function ProductsPage() {
                 ? selectForBulkAssign(filteredProducts.map((p) => p.id), false)
                 : handleBulkStockToggle(false, search)
             }
-            onRequestDeleteSelected={requestBulkDeleteSelected}
             onRequestDeleteAll={requestBulkDeleteAll}
             onToggleBulkAssignMode={toggleBulkAssignMode}
           />
@@ -288,6 +284,7 @@ export default function ProductsPage() {
             onTargetChange={setBulkAssignTargetId}
             isApplying={isApplyingBulkAssign}
             onApply={handleApplyBulkAssign}
+            onDelete={requestBulkDeleteSelected}
           />
         )}
 
