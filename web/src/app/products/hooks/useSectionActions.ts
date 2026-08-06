@@ -29,6 +29,7 @@ export function useSectionActions({
       await deleteSection(auth.token, section.id);
       setSections((prev) => prev.filter((s) => s.id !== section.id));
       loadProducts(auth.token, { silent: true });
+      loadSections(auth.token);
     } catch (err) {
       setError(apiErrorMessage(err, sectionDeleteFailed(section.name)));
     } finally {
