@@ -18,6 +18,8 @@ export function SectionRow({
   isDeletingSection,
   isCollapsed,
   memberCount,
+  parentOptions,
+  canHaveParent,
   onDragStart,
   onDragEnd,
   onDragOver,
@@ -25,6 +27,7 @@ export function SectionRow({
   onMoveToPosition,
   onToggleCheckbox,
   onToggleCollapse,
+  onChangeParent,
   onRequestDelete,
   onConfirmDelete,
   onCancelDelete,
@@ -42,6 +45,8 @@ export function SectionRow({
   isDeletingSection: boolean;
   isCollapsed: boolean;
   memberCount: number;
+  parentOptions: Section[];
+  canHaveParent: boolean;
   onDragStart: () => void;
   onDragEnd: () => void;
   onDragOver: (e: React.DragEvent) => void;
@@ -49,6 +54,7 @@ export function SectionRow({
   onMoveToPosition: (rawValue: string) => void;
   onToggleCheckbox: () => void;
   onToggleCollapse: () => void;
+  onChangeParent: (parentSectionId: string | null) => void;
   onRequestDelete: () => void;
   onConfirmDelete: () => void;
   onCancelDelete: () => void;
@@ -110,6 +116,21 @@ export function SectionRow({
           📑 {section.name}{" "}
           <span className="font-normal text-zinc-500 dark:text-zinc-400">({memberCount})</span>
         </span>
+        {canHaveParent && (
+          <select
+            value={section.parentSectionId ?? ""}
+            onChange={(e) => onChangeParent(e.target.value || null)}
+            title={Labels.sectionParentSelectTitle}
+            className="rounded border border-zinc-300 bg-white px-1 py-1 text-xs text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+          >
+            <option value="">{Labels.noParentSectionOption}</option>
+            {parentOptions.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        )}
         {confirmingDelete ? (
           <div className="flex items-center gap-2 text-xs">
             <span className="text-zinc-600 dark:text-zinc-400">{Labels.confirmDeleteSectionQuestion}</span>

@@ -30,9 +30,21 @@ public class DeleteSectionCommandHandler : IRequestHandler<DeleteSectionCommand>
             .OrderBy(p => p.SortOrder)
             .ToListAsync(cancellationToken);
 
+        var childSections = await _session.Query<Section>()
+            .Where(s => s.ParentSection != null && s.ParentSection.Id == request.SectionId)
+            .OrderBy(s => s.SortOrder)
+            .ToListAsync(cancellationToken);
+
         var nextTopLevelSortOrder = await TopLevelOrdering.NextTopLevelSortOrderAsync(_session, request.CompanyId, cancellationToken);
 
         using var transaction = _session.BeginTransaction();
+
+        foreach (var child in childSections)
+        {
+            child.ParentSection = null;
+            child.SortOrder = nextTopLevelSortOrder++;
+            await _session.UpdateAsync(child, cancellationToken);
+        }
 
         foreach (var member in members)
         {

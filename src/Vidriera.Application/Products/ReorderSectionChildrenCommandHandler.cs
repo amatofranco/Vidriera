@@ -7,30 +7,34 @@ using Vidriera.Domain.Entities;
 
 namespace Vidriera.Application.Products;
 
-public class ReorderTopLevelCommandHandler : IRequestHandler<ReorderTopLevelCommand>
+public class ReorderSectionChildrenCommandHandler : IRequestHandler<ReorderSectionChildrenCommand>
 {
     private readonly ISession _session;
 
-    public ReorderTopLevelCommandHandler(ISession session)
+    public ReorderSectionChildrenCommandHandler(ISession session)
     {
         _session = session;
     }
 
-    public async Task Handle(ReorderTopLevelCommand request, CancellationToken cancellationToken)
+    public async Task Handle(ReorderSectionChildrenCommand request, CancellationToken cancellationToken)
     {
         var sectionIds = request.OrderedItems.Where(i => i.IsSection).Select(i => i.Id).ToList();
         var productIds = request.OrderedItems.Where(i => !i.IsSection).Select(i => i.Id).ToList();
 
         var sections = await _session.Query<Section>()
-            .Where(s => s.Company.Id == request.CompanyId && s.ParentSection == null && sectionIds.Contains(s.Id))
+            .Where(s => s.Company.Id == request.CompanyId
+                && s.ParentSection != null && s.ParentSection.Id == request.ParentSectionId
+                && sectionIds.Contains(s.Id))
             .ToListAsync(cancellationToken);
         var products = await _session.Query<Product>()
-            .Where(p => p.Company.Id == request.CompanyId && productIds.Contains(p.Id))
+            .Where(p => p.Company.Id == request.CompanyId
+                && p.Section != null && p.Section.Id == request.ParentSectionId
+                && productIds.Contains(p.Id))
             .ToListAsync(cancellationToken);
 
         if (sections.Count != sectionIds.Count || products.Count != productIds.Count)
         {
-            throw new ValidationException(ErrorMessages.InvalidTopLevelReorderItems);
+            throw new ValidationException(ErrorMessages.InvalidSectionReorderItems);
         }
 
         var sectionsById = sections.ToDictionary(s => s.Id);

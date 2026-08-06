@@ -72,16 +72,18 @@ export interface Section {
   id: string;
   name: string;
   sortOrder: number;
+  parentSectionId: string | null;
 }
 
 export function getSections(token: string) {
   return request<Section[]>("/api/sections", { token });
 }
 
-export function createSection(token: string, file: File, name?: string) {
+export function createSection(token: string, file: File, name?: string, parentSectionId?: string) {
   const formData = new FormData();
   formData.append("file", file);
   if (name) formData.append("name", name);
+  if (parentSectionId) formData.append("parentSectionId", parentSectionId);
 
   return request<Section>("/api/sections", {
     method: "POST",
@@ -106,18 +108,27 @@ export function assignProductSection(token: string, productId: string, sectionId
   });
 }
 
-export function reorderSectionProducts(token: string, sectionId: string, productIds: string[]) {
-  return request<void>(`/api/sections/${sectionId}/products/reorder`, {
+export function assignSectionParent(token: string, sectionId: string, parentSectionId: string | null) {
+  return request<void>(`/api/sections/${sectionId}/parent`, {
     method: "PUT",
     token,
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ productIds }),
+    body: JSON.stringify({ parentSectionId }),
   });
 }
 
 export interface TopLevelItem {
   type: "section" | "product";
   id: string;
+}
+
+export function reorderSectionChildren(token: string, sectionId: string, items: TopLevelItem[]) {
+  return request<void>(`/api/sections/${sectionId}/children/reorder`, {
+    method: "PUT",
+    token,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ items }),
+  });
 }
 
 export function updateStock(token: string, productId: string, hasStock: boolean) {

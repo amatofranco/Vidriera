@@ -1,3 +1,3 @@
 namespace Vidriera.Application.Sections;
 
-public record SectionDto(Guid Id, string Name, int SortOrder);
+public record SectionDto(Guid Id, string Name, int SortOrder, Guid? ParentSectionId);

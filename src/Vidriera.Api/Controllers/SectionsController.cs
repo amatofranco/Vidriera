@@ -35,7 +35,7 @@ public class SectionsController : ControllerBase
 
         await using var stream = request.File.OpenReadStream();
         var result = await _mediator.Send(
-            new CreateSectionCommand(companyId, stream, request.File.FileName, request.Name),
+            new CreateSectionCommand(companyId, stream, request.File.FileName, request.Name, request.ParentSectionId),
             cancellationToken);
 
         return CreatedAtAction(nameof(GetSections), null, result);
@@ -49,20 +49,33 @@ public class SectionsController : ControllerBase
         return NoContent();
     }
 
-    [HttpPut("{id:guid}/products/reorder")]
-    public async Task<IActionResult> ReorderSectionProducts(
+    [HttpPut("{id:guid}/parent")]
+    public async Task<IActionResult> AssignParent(Guid id, [FromBody] AssignSectionParentRequest request, CancellationToken cancellationToken)
+    {
+        var companyId = User.GetCompanyId();
+        await _mediator.Send(new AssignSectionParentCommand(companyId, id, request.ParentSectionId), cancellationToken);
+        return NoContent();
+    }
+
+    [HttpPut("{id:guid}/children/reorder")]
+    public async Task<IActionResult> ReorderSectionChildren(
         Guid id,
-        [FromBody] ReorderSectionProductsRequest request,
+        [FromBody] ReorderSectionChildrenRequest request,
         CancellationToken cancellationToken)
     {
         var companyId = User.GetCompanyId();
+        var items = request.Items.Select(i => new SectionChildRef(i.Type == "section", i.Id)).ToList();
         await _mediator.Send(
-            new ReorderSectionProductsCommand(companyId, id, request.ProductIds),
+            new ReorderSectionChildrenCommand(companyId, id, items),
             cancellationToken);
         return NoContent();
     }
 }
 
-public record CreateSectionRequest(IFormFile File, string? Name);
+public record CreateSectionRequest(IFormFile File, string? Name, Guid? ParentSectionId);
 
-public record ReorderSectionProductsRequest(IReadOnlyList<Guid> ProductIds);
+public record AssignSectionParentRequest(Guid? ParentSectionId);
+
+public record ReorderSectionChildrenItem(string Type, Guid Id);
+
+public record ReorderSectionChildrenRequest(IReadOnlyList<ReorderSectionChildrenItem> Items);

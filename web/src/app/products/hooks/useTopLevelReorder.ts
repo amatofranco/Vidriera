@@ -29,9 +29,10 @@ export function useTopLevelReorder({
   const [draggedTopLevelId, setDraggedTopLevelId] = useState<string | null>(null);
 
   function buildTopLevelRows(): TopLevelRow[] {
+    const topLevelSections = sections.filter((s) => s.parentSectionId === null);
     const looseProducts = products.filter((p) => p.sectionId === null);
     return [
-      ...sections.map((s) => ({ type: "section" as const, id: s.id, sortOrder: s.sortOrder, section: s })),
+      ...topLevelSections.map((s) => ({ type: "section" as const, id: s.id, sortOrder: s.sortOrder, section: s })),
       ...looseProducts.map((p) => ({ type: "product" as const, id: p.id, sortOrder: p.sortOrder, product: p })),
     ].sort((a, b) => a.sortOrder - b.sortOrder);
   }

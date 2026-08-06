@@ -2,6 +2,7 @@ using MediatR;
 using NHibernate;
 using Vidriera.Application.Abstractions;
 using Vidriera.Application.Common;
+using Vidriera.Application.Common.Exceptions;
 using Vidriera.Domain.Entities;
 
 namespace Vidriera.Application.Sections;
@@ -28,13 +29,30 @@ public class CreateSectionCommandHandler : IRequestHandler<CreateSectionCommand,
             ? Path.GetFileNameWithoutExtension(request.OriginalFileName)
             : request.Name;
 
-        var nextSortOrder = await TopLevelOrdering.NextTopLevelSortOrderAsync(_session, request.CompanyId, cancellationToken);
+        Section? parent = null;
+        if (request.ParentSectionId.HasValue)
+        {
+            parent = await _session.Query<Section>().GetOrThrowAsync(
+                s => s.Id == request.ParentSectionId.Value && s.Company.Id == request.CompanyId,
+                ErrorMessages.SectionNotFound(request.ParentSectionId.Value),
+                cancellationToken);
+
+            if (parent.ParentSection is not null)
+            {
+                throw new ValidationException(ErrorMessages.SectionCannotNestFurther);
+            }
+        }
+
+        var nextSortOrder = parent is null
+            ? await TopLevelOrdering.NextTopLevelSortOrderAsync(_session, request.CompanyId, cancellationToken)
+            : await TopLevelOrdering.NextSectionSortOrderAsync(_session, parent.Id, cancellationToken);
 
         var section = new Section
         {
             Company = company,
             Name = name,
-            SortOrder = nextSortOrder
+            SortOrder = nextSortOrder,
+            ParentSection = parent
         };
 
         using var transaction = _session.BeginTransaction();
@@ -49,6 +67,6 @@ public class CreateSectionCommandHandler : IRequestHandler<CreateSectionCommand,
 
         await transaction.CommitAsync(cancellationToken);
 
-        return new SectionDto(section.Id, section.Name, section.SortOrder);
+        return new SectionDto(section.Id, section.Name, section.SortOrder, section.ParentSection?.Id);
     }
 }

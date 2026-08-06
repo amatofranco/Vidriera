@@ -74,10 +74,19 @@
     <value>Todavía no se generó un catálogo para esta empresa.</value>
   </data>
   <data name="InvalidSectionReorderItems" xml:space="preserve">
-    <value>Alguno de los productos no existe o no pertenece a esta carátula.</value>
+    <value>Alguno de los ítems no existe o no pertenece a esta carátula.</value>
   </data>
   <data name="InvalidTopLevelReorderItems" xml:space="preserve">
     <value>Alguno de los ítems no existe o no pertenece a esta empresa.</value>
+  </data>
+  <data name="SectionCannotNestFurther" xml:space="preserve">
+    <value>No se puede anidar una subcarátula dentro de otra subcarátula.</value>
+  </data>
+  <data name="SectionHasChildrenCannotNest" xml:space="preserve">
+    <value>Esta carátula tiene subcarátulas propias; no puede ser subcarátula de otra.</value>
+  </data>
+  <data name="SectionCannotBeOwnParent" xml:space="preserve">
+    <value>Una carátula no puede ser su propia carátula padre.</value>
   </data>
   <data name="CompanyNotFound" xml:space="preserve">
     <value>No existe la empresa {0}.</value>

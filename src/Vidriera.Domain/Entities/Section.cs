@@ -8,4 +8,5 @@ public class Section
     public virtual string? CoverPdfBlobKey { get; set; }
     public virtual string? CoverPdfOriginalName { get; set; }
     public virtual int SortOrder { get; set; }
+    public virtual Section? ParentSection { get; set; }
 }

@@ -42,5 +42,11 @@ public class SectionMapping : ClassMapping<Section>
         });
 
         Property(x => x.SortOrder, m => m.Column("sort_order"));
+
+        ManyToOne(x => x.ParentSection, m =>
+        {
+            m.Column("parent_section_id");
+            m.NotNullable(false);
+        });
     }
 }

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { MAX_FILE_SIZE_LABEL } from "@/lib/file-size";
 import { Labels } from "@/lib/labels";
-import type { Product } from "@/lib/api";
+import type { Product, Section } from "@/lib/api";
 
 import { useProductsData } from "./hooks/useProductsData";
 import { useCompanyLogo } from "./hooks/useCompanyLogo";
@@ -78,10 +78,10 @@ export default function ProductsPage() {
   const {
     draggedSectionMemberId,
     setDraggedSectionMemberId,
-    sectionMembers,
+    sectionChildren,
     handleSectionMemberDrop,
     handleSectionMemberMoveToPosition,
-  } = useSectionReorder({ auth, products, setProducts, loadProducts, setError });
+  } = useSectionReorder({ auth, products, setProducts, sections, setSections, loadProducts, loadSections, setError });
 
   const { handleToggleStock, handleBulkStockToggle, handleToggleSectionStock } = useBulkStockToggle({
     auth,
@@ -118,7 +118,8 @@ export default function ProductsPage() {
     isDeletingSection,
     handleDeleteSection,
     handleAssignSection,
-  } = useSectionActions({ auth, setSections, setProducts, loadProducts, setError });
+    handleAssignSectionParent,
+  } = useSectionActions({ auth, setSections, setProducts, loadProducts, loadSections, setError });
 
   const { isGenerating, catalogResult, generationProgress, selectableCount, handleGenerateCatalog } = useCatalogGeneration({
     auth,
@@ -127,11 +128,11 @@ export default function ProductsPage() {
   });
 
   const allTopLevelRows = buildTopLevelRows();
-  const { filteredProducts, filteredTopLevelRows, visibleSectionMembers } = useFilteredRows({
+  const { filteredProducts, filteredTopLevelRows, visibleSectionChildren } = useFilteredRows({
     products,
     search,
     allTopLevelRows,
-    sectionMembers,
+    sectionChildren,
   });
 
   if (authLoading || !auth) {
@@ -152,8 +153,14 @@ export default function ProductsPage() {
     );
   }
 
+  function deepSectionProducts(sectionId: string): Product[] {
+    const direct = products.filter((p) => p.sectionId === sectionId);
+    const childSections = sections.filter((s) => s.parentSectionId === sectionId);
+    return [...direct, ...childSections.flatMap((cs) => deepSectionProducts(cs.id))];
+  }
+
   function sectionCheckboxChecked(sectionId: string) {
-    const members = sectionMembers(sectionId);
+    const members = deepSectionProducts(sectionId);
     if (members.length === 0) return false;
     return isBulkAssigningSection
       ? members.every((p) => bulkAssignSelectedIds.has(p.id))
@@ -161,7 +168,7 @@ export default function ProductsPage() {
   }
 
   async function handleToggleSectionCheckbox(section: { id: string; name: string }) {
-    const members = sectionMembers(section.id);
+    const members = deepSectionProducts(section.id);
     if (members.length === 0) return;
     const nextValue = !sectionCheckboxChecked(section.id);
     if (isBulkAssigningSection) {
@@ -173,9 +180,9 @@ export default function ProductsPage() {
 
   function renderProductRowComponent(product: Product, sectionId: string | null) {
     const isDragged = sectionId ? draggedSectionMemberId === product.id : draggedTopLevelId === product.id;
-    const positionMax = sectionId ? sectionMembers(sectionId).length : allTopLevelRows.length;
+    const positionMax = sectionId ? sectionChildren(sectionId).length : allTopLevelRows.length;
     const positionValue = sectionId
-      ? sectionMembers(sectionId).findIndex((p) => p.id === product.id) + 1
+      ? sectionChildren(sectionId).findIndex((r) => r.id === product.id) + 1
       : allTopLevelRows.findIndex((r) => r.id === product.id) + 1;
 
     return (
@@ -208,6 +215,64 @@ export default function ProductsPage() {
         onConfirmDelete={() => handleDeleteProduct(product)}
         onCancelDelete={() => setConfirmingDeleteId(null)}
       />
+    );
+  }
+
+  function renderSectionRowComponent(section: Section, containerId: string | null) {
+    const isTopLevel = containerId === null;
+    const containerRows = isTopLevel ? allTopLevelRows : sectionChildren(containerId);
+    const positionMax = containerRows.length;
+    const positionValue = containerRows.findIndex((r) => r.id === section.id) + 1;
+    const isDragged = isTopLevel ? draggedTopLevelId === section.id : draggedSectionMemberId === section.id;
+    const parentOptions = sections.filter((s) => s.parentSectionId === null && s.id !== section.id);
+    const canHaveParent = !sections.some((s) => s.parentSectionId === section.id);
+    const children = visibleSectionChildren(section.id, section.name);
+
+    return (
+      <SectionRow
+        key={section.id}
+        section={section}
+        positionValue={positionValue}
+        positionMax={positionMax}
+        isDragged={isDragged}
+        isChecked={sectionCheckboxChecked(section.id)}
+        checkboxTitle={
+          isBulkAssigningSection ? Labels.selectAllSectionMembersTitle : Labels.toggleSectionStockTitle
+        }
+        checkboxDisabled={deepSectionProducts(section.id).length === 0}
+        isBulkAssigningSection={isBulkAssigningSection}
+        confirmingDelete={confirmingDeleteSectionId === section.id}
+        isDeletingSection={isDeletingSection}
+        isCollapsed={collapsedSectionIds.has(section.id) && !search.trim()}
+        memberCount={deepSectionProducts(section.id).length}
+        parentOptions={parentOptions}
+        canHaveParent={canHaveParent}
+        onDragStart={() => (isTopLevel ? setDraggedTopLevelId(section.id) : setDraggedSectionMemberId(section.id))}
+        onDragEnd={() => (isTopLevel ? setDraggedTopLevelId(null) : setDraggedSectionMemberId(null))}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={() =>
+          containerId === null ? handleTopLevelDrop(section.id) : handleSectionMemberDrop(containerId, section.id)
+        }
+        onMoveToPosition={(v) =>
+          containerId === null
+            ? handleTopLevelMoveToPosition(section.id, v)
+            : handleSectionMemberMoveToPosition(containerId, section.id, v)
+        }
+        onToggleCheckbox={() => handleToggleSectionCheckbox(section)}
+        onToggleCollapse={() => toggleSectionCollapsed(section.id)}
+        onChangeParent={(parentSectionId) => handleAssignSectionParent(section, parentSectionId)}
+        onRequestDelete={() => setConfirmingDeleteSectionId(section.id)}
+        onConfirmDelete={() => handleDeleteSection(section)}
+        onCancelDelete={() => setConfirmingDeleteSectionId(null)}
+      >
+        {children.length > 0
+          ? children.map((row) =>
+              row.type === "section"
+                ? renderSectionRowComponent(row.section, section.id)
+                : renderProductRowComponent(row.product, section.id)
+            )
+          : null}
+      </SectionRow>
     );
   }
 
@@ -319,45 +384,9 @@ export default function ProductsPage() {
         ) : (
           <ul className="mb-6 max-h-[520px] divide-y divide-zinc-200 overflow-y-auto rounded-xl border border-black/10 bg-[#ecdcc0] shadow-lg dark:divide-zinc-800 dark:border-white/10 dark:bg-zinc-900">
             {filteredTopLevelRows.map((row) =>
-              row.type === "section" ? (
-                <SectionRow
-                  key={row.id}
-                  section={row.section}
-                  positionValue={allTopLevelRows.findIndex((r) => r.id === row.id) + 1}
-                  positionMax={allTopLevelRows.length}
-                  isDragged={draggedTopLevelId === row.id}
-                  isChecked={sectionCheckboxChecked(row.section.id)}
-                  checkboxTitle={
-                    isBulkAssigningSection
-                      ? Labels.selectAllSectionMembersTitle
-                      : Labels.toggleSectionStockTitle
-                  }
-                  checkboxDisabled={sectionMembers(row.section.id).length === 0}
-                  isBulkAssigningSection={isBulkAssigningSection}
-                  confirmingDelete={confirmingDeleteSectionId === row.id}
-                  isDeletingSection={isDeletingSection}
-                  isCollapsed={collapsedSectionIds.has(row.section.id) && !search.trim()}
-                  memberCount={sectionMembers(row.section.id).length}
-                  onDragStart={() => setDraggedTopLevelId(row.id)}
-                  onDragEnd={() => setDraggedTopLevelId(null)}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={() => handleTopLevelDrop(row.id)}
-                  onMoveToPosition={(v) => handleTopLevelMoveToPosition(row.id, v)}
-                  onToggleCheckbox={() => handleToggleSectionCheckbox(row.section)}
-                  onToggleCollapse={() => toggleSectionCollapsed(row.section.id)}
-                  onRequestDelete={() => setConfirmingDeleteSectionId(row.id)}
-                  onConfirmDelete={() => handleDeleteSection(row.section)}
-                  onCancelDelete={() => setConfirmingDeleteSectionId(null)}
-                >
-                  {visibleSectionMembers(row.section.id, row.section.name).length > 0
-                    ? visibleSectionMembers(row.section.id, row.section.name).map((product) =>
-                        renderProductRowComponent(product, row.section.id)
-                      )
-                    : null}
-                </SectionRow>
-              ) : (
-                renderProductRowComponent(row.product, null)
-              )
+              row.type === "section"
+                ? renderSectionRowComponent(row.section, null)
+                : renderProductRowComponent(row.product, null)
             )}
           </ul>
         )}

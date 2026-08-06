@@ -14,7 +14,7 @@ internal static class TopLevelOrdering
             .MaxAsync(cancellationToken) ?? -1;
 
         var maxSection = await session.Query<Section>()
-            .Where(s => s.Company.Id == companyId)
+            .Where(s => s.Company.Id == companyId && s.ParentSection == null)
             .Select(s => (int?)s.SortOrder)
             .MaxAsync(cancellationToken) ?? -1;
 
@@ -23,11 +23,16 @@ internal static class TopLevelOrdering
 
     public static async Task<int> NextSectionSortOrderAsync(ISession session, Guid sectionId, CancellationToken cancellationToken)
     {
-        var max = await session.Query<Product>()
+        var maxProduct = await session.Query<Product>()
             .Where(p => p.Section != null && p.Section.Id == sectionId)
             .Select(p => (int?)p.SortOrder)
             .MaxAsync(cancellationToken) ?? -1;
 
-        return max + 1;
+        var maxSubSection = await session.Query<Section>()
+            .Where(s => s.ParentSection != null && s.ParentSection.Id == sectionId)
+            .Select(s => (int?)s.SortOrder)
+            .MaxAsync(cancellationToken) ?? -1;
+
+        return Math.Max(maxProduct, maxSubSection) + 1;
     }
 }

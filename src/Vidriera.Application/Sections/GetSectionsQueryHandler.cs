@@ -22,7 +22,7 @@ public class GetSectionsQueryHandler : IRequestHandler<GetSectionsQuery, IReadOn
             .ToListAsync(cancellationToken);
 
         return sections
-            .Select(s => new SectionDto(s.Id, s.Name, s.SortOrder))
+            .Select(s => new SectionDto(s.Id, s.Name, s.SortOrder, s.ParentSection?.Id))
             .ToList();
     }
 }

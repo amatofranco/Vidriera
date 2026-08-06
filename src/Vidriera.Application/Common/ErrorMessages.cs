@@ -20,6 +20,9 @@ public static class ErrorMessages
 
     public static string InvalidSectionReorderItems => Get(nameof(InvalidSectionReorderItems));
     public static string InvalidTopLevelReorderItems => Get(nameof(InvalidTopLevelReorderItems));
+    public static string SectionCannotNestFurther => Get(nameof(SectionCannotNestFurther));
+    public static string SectionHasChildrenCannotNest => Get(nameof(SectionHasChildrenCannotNest));
+    public static string SectionCannotBeOwnParent => Get(nameof(SectionCannotBeOwnParent));
 
     public static string CompanyNotFound(Guid companyId) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(CompanyNotFound)), companyId);
 

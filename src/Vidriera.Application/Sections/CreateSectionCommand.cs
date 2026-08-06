@@ -6,4 +6,5 @@ public record CreateSectionCommand(
     Guid CompanyId,
     Stream FileContent,
     string OriginalFileName,
-    string? Name) : IRequest<SectionDto>;
+    string? Name,
+    Guid? ParentSectionId) : IRequest<SectionDto>;

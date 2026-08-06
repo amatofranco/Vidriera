@@ -37,6 +37,10 @@ export function productMoveFailed(productName: string) {
   return `No se pudo mover "${productName}".`;
 }
 
+export function sectionMoveFailed(sectionName: string) {
+  return `No se pudo mover la carátula "${sectionName}".`;
+}
+
 export function sectionStockUpdateFailed(sectionName: string) {
   return `No se pudo actualizar el stock de todos los productos de "${sectionName}".`;
 }

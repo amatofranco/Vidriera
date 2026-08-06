@@ -1,19 +1,21 @@
 import { useState } from "react";
 import type { AuthState } from "@/lib/auth-context";
-import { assignProductSection, deleteSection, type Product, type Section } from "@/lib/api";
-import { apiErrorMessage, productMoveFailed, sectionDeleteFailed } from "@/lib/messages";
+import { assignProductSection, assignSectionParent, deleteSection, type Product, type Section } from "@/lib/api";
+import { apiErrorMessage, productMoveFailed, sectionDeleteFailed, sectionMoveFailed } from "@/lib/messages";
 
 export function useSectionActions({
   auth,
   setSections,
   setProducts,
   loadProducts,
+  loadSections,
   setError,
 }: {
   auth: AuthState | null;
   setSections: React.Dispatch<React.SetStateAction<Section[]>>;
   setProducts: React.Dispatch<React.SetStateAction<Product[]>>;
   loadProducts: (token: string, options?: { silent?: boolean }) => Promise<void>;
+  loadSections: (token: string) => Promise<void>;
   setError: (message: string | null) => void;
 }) {
   const [confirmingDeleteSectionId, setConfirmingDeleteSectionId] = useState<string | null>(null);
@@ -48,11 +50,25 @@ export function useSectionActions({
     }
   }
 
+  async function handleAssignSectionParent(section: Section, parentSectionId: string | null) {
+    if (!auth) return;
+    const previousParentId = section.parentSectionId;
+    setSections((prev) => prev.map((s) => (s.id === section.id ? { ...s, parentSectionId } : s)));
+    try {
+      await assignSectionParent(auth.token, section.id, parentSectionId);
+      loadSections(auth.token);
+    } catch (err) {
+      setSections((prev) => prev.map((s) => (s.id === section.id ? { ...s, parentSectionId: previousParentId } : s)));
+      setError(apiErrorMessage(err, sectionMoveFailed(section.name)));
+    }
+  }
+
   return {
     confirmingDeleteSectionId,
     setConfirmingDeleteSectionId,
     isDeletingSection,
     handleDeleteSection,
     handleAssignSection,
+    handleAssignSectionParent,
   };
 }

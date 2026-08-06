@@ -56,6 +56,8 @@ export const Labels = {
   dragToReorder: "Arrastrar para reordenar",
   positionInOrder: "Posición en el orden",
   sectionSelectTitle: "Carátula",
+  sectionParentSelectTitle: "Carátula padre",
+  noParentSectionOption: "Sin carátula padre",
   confirmDeleteProductQuestion: "¿Borrar?",
   confirmDeleteSectionQuestion: "¿Borrar carátula?",
   yes: "Sí",
