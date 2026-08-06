@@ -104,7 +104,7 @@ export async function renderFlipbookViewer({ catalogId, pageCount, pageAspect, d
     if (dom.indexList && sectionsData.length > 0) {
         sectionsData.forEach((entry) => {
             const item = document.createElement("button");
-            item.className = "index-item";
+            item.className = entry.isSubsection ? "index-item index-item-sub" : "index-item";
             item.textContent = entry.name;
             item.addEventListener("click", () => {
                 pageFlip.turnToPage(entry.startPage - 1);

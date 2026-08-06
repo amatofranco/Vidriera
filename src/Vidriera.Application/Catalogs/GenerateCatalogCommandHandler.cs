@@ -283,7 +283,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         {
             if (coverMarkers[i] is { } coverSection)
             {
-                sectionsSnapshot.Add(new CatalogSectionSnapshot(coverSection.Name, pageCursor + 1));
+                sectionsSnapshot.Add(new CatalogSectionSnapshot(coverSection.Name, pageCursor + 1, coverSection.ParentSection is not null));
             }
             pageCursor += pageCounts[i];
         }
