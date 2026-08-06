@@ -99,7 +99,7 @@ export function SectionRow({
         <button
           onClick={onToggleCollapse}
           title={isCollapsed ? Labels.expandSection : Labels.collapseSection}
-          className="px-1 text-lg leading-none text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+          className="px-1 text-2xl leading-none font-bold text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
         >
           {isCollapsed ? "▸" : "▾"}
         </button>
