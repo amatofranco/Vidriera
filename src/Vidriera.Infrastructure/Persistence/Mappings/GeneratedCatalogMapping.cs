@@ -37,10 +37,6 @@ public class GeneratedCatalogMapping : ClassMapping<GeneratedCatalog>
             m.Length(500);
         });
 
-        Property(x => x.ExpiresAt, m => m.Column("expires_at"));
-
-        Property(x => x.Status, m => m.Column("status"));
-
         Property(x => x.ProductsSnapshotJson, m =>
         {
             m.Column("products_snapshot");

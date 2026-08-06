@@ -1,15 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { AuthState } from "@/lib/auth-context";
-import {
-  ApiError,
-  getCatalogHistory,
-  getProducts,
-  getSections,
-  type CatalogHistoryItem,
-  type Product,
-  type Section,
-} from "@/lib/api";
+import { ApiError, getProducts, getSections, type Product, type Section } from "@/lib/api";
 import { Messages, apiErrorMessage } from "@/lib/messages";
 
 export function useProductsData(auth: AuthState | null, logout: () => void) {
@@ -19,9 +11,6 @@ export function useProductsData(auth: AuthState | null, logout: () => void) {
   const [sections, setSections] = useState<Section[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const [catalogHistory, setCatalogHistory] = useState<CatalogHistoryItem[]>([]);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
   async function loadProducts(token: string, options?: { silent?: boolean }) {
     const silent = options?.silent ?? false;
@@ -50,17 +39,6 @@ export function useProductsData(auth: AuthState | null, logout: () => void) {
     }
   }
 
-  async function loadCatalogHistory(token: string) {
-    setIsLoadingHistory(true);
-    try {
-      const result = await getCatalogHistory(token);
-      setCatalogHistory(result);
-    } catch {
-    } finally {
-      setIsLoadingHistory(false);
-    }
-  }
-
   useEffect(() => {
     if (!auth) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -76,10 +54,7 @@ export function useProductsData(auth: AuthState | null, logout: () => void) {
     isLoading,
     error,
     setError,
-    catalogHistory,
-    isLoadingHistory,
     loadProducts,
     loadSections,
-    loadCatalogHistory,
   };
 }

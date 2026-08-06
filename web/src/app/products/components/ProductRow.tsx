@@ -2,6 +2,7 @@
 
 import type { Product, Section } from "@/lib/api";
 import { Labels } from "@/lib/labels";
+import { StockToggle } from "./StockToggle";
 
 export function ProductRow({
   product,
@@ -78,17 +79,21 @@ export function ProductRow({
         title={Labels.positionInOrder}
         className="w-12 rounded border border-zinc-300 px-1 py-0.5 text-center text-xs text-zinc-700 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
       />
-      <label className="flex flex-1 items-center gap-3">
-        <input
-          type="checkbox"
-          checked={isChecked}
-          onChange={onToggleCheckbox}
-          title={checkboxTitle}
-          className="h-4 w-4"
-          style={{ accentColor: isBulkAssigningSection ? "#e4c98a" : "#c9a86a" }}
-        />
+      <div className="flex flex-1 items-center gap-3">
+        {isBulkAssigningSection ? (
+          <input
+            type="checkbox"
+            checked={isChecked}
+            onChange={onToggleCheckbox}
+            title={checkboxTitle}
+            className="h-4 w-4"
+            style={{ accentColor: "#e4c98a" }}
+          />
+        ) : (
+          <StockToggle checked={isChecked} onToggle={onToggleCheckbox} title={checkboxTitle} />
+        )}
         <span className="text-zinc-900 dark:text-zinc-50">{product.name}</span>
-      </label>
+      </div>
       <select
         value={product.sectionId ?? ""}
         onChange={(e) => onAssignSection(e.target.value || null)}

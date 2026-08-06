@@ -7,7 +7,6 @@ public record GetGeneratedCatalogQuery(Guid Id) : IRequest<GeneratedCatalogViewD
 public record GeneratedCatalogViewDto(
     Guid Id,
     DateTime GeneratedAt,
-    DateTime? ExpiresAt,
     string FileUrl,
     string CompanyName,
     IReadOnlyList<CatalogSectionSnapshot> Sections,

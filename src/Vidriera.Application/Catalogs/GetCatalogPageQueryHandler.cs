@@ -4,7 +4,6 @@ using Vidriera.Application.Abstractions;
 using Vidriera.Application.Common;
 using Vidriera.Application.Common.Exceptions;
 using Vidriera.Domain.Entities;
-using Vidriera.Domain.Enums;
 
 namespace Vidriera.Application.Catalogs;
 
@@ -26,17 +25,6 @@ public class GetCatalogPageQueryHandler : IRequestHandler<GetCatalogPageQuery, C
         if (catalog is null)
         {
             throw new NotFoundException(ErrorMessages.CatalogNotFound(request.CatalogId));
-        }
-
-        if (catalog.Status == CatalogStatus.Revoked)
-        {
-            throw new CatalogGoneException(ErrorMessages.CatalogRevoked);
-        }
-
-        if (catalog.Status == CatalogStatus.Expired
-            || (catalog.ExpiresAt.HasValue && catalog.ExpiresAt.Value < DateTime.UtcNow))
-        {
-            throw new CatalogGoneException(ErrorMessages.CatalogExpired);
         }
 
         if (request.PageNumber < 1 || request.PageNumber > catalog.RasterizedPageCount)

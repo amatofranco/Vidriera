@@ -38,6 +38,8 @@ public class CompanyMapping : ClassMapping<Company>
             m.Length(100);
         });
 
+        Property(x => x.CurrentCatalogId, m => m.Column("current_catalog_id"));
+
         Bag(x => x.Users, m =>
         {
             m.Key(k => k.Column("company_id"));
@@ -46,13 +48,6 @@ public class CompanyMapping : ClassMapping<Company>
         }, r => r.OneToMany());
 
         Bag(x => x.Products, m =>
-        {
-            m.Key(k => k.Column("company_id"));
-            m.Inverse(true);
-            m.Cascade(Cascade.None);
-        }, r => r.OneToMany());
-
-        Bag(x => x.GeneratedCatalogs, m =>
         {
             m.Key(k => k.Column("company_id"));
             m.Inverse(true);

@@ -16,8 +16,7 @@ public static class ErrorMessages
     public static string MissingUserIdClaim => Get(nameof(MissingUserIdClaim));
 
     public static string MustSelectAtLeastOneProduct => Get(nameof(MustSelectAtLeastOneProduct));
-    public static string CatalogRevoked => Get(nameof(CatalogRevoked));
-    public static string CatalogExpired => Get(nameof(CatalogExpired));
+    public static string CompanyCatalogNotFound => Get(nameof(CompanyCatalogNotFound));
 
     public static string InvalidSectionReorderItems => Get(nameof(InvalidSectionReorderItems));
     public static string InvalidTopLevelReorderItems => Get(nameof(InvalidTopLevelReorderItems));
@@ -29,10 +28,6 @@ public static class ErrorMessages
     public static string EmailAlreadyRegistered(string email) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(EmailAlreadyRegistered)), email);
 
     public static string CatalogNotFound(Guid catalogId) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(CatalogNotFound)), catalogId);
-
-    public static string ProductNotSelectable(Guid productId) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(ProductNotSelectable)), productId);
-
-    public static string ProductSheetMissing(string productName) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(ProductSheetMissing)), productName);
 
     public static string ProductNotFound(Guid productId) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(ProductNotFound)), productId);
 

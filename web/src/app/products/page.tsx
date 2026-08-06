@@ -36,7 +36,6 @@ export default function ProductsPage() {
   const { auth, isLoading: authLoading, logout } = useAuth();
 
   const [search, setSearch] = useState("");
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !auth) {
@@ -52,11 +51,8 @@ export default function ProductsPage() {
     isLoading,
     error,
     setError,
-    catalogHistory,
-    isLoadingHistory,
     loadProducts,
     loadSections,
-    loadCatalogHistory,
   } = useProductsData(auth, logout);
 
   const { logoUrl, setLogoUrl } = useCompanyLogo(auth);
@@ -118,16 +114,7 @@ export default function ProductsPage() {
     auth,
     products,
     setError,
-    isHistoryOpen,
-    loadCatalogHistory,
   });
-
-  function toggleCatalogHistory() {
-    if (!auth) return;
-    const next = !isHistoryOpen;
-    setIsHistoryOpen(next);
-    if (next) loadCatalogHistory(auth.token);
-  }
 
   const allTopLevelRows = buildTopLevelRows();
   const { filteredProducts, filteredTopLevelRows, visibleSectionMembers } = useFilteredRows({
@@ -371,10 +358,6 @@ export default function ProductsPage() {
           generationProgress={generationProgress}
           onGenerate={handleGenerateCatalog}
           catalogResult={catalogResult}
-          isHistoryOpen={isHistoryOpen}
-          onToggleHistory={toggleCatalogHistory}
-          isLoadingHistory={isLoadingHistory}
-          catalogHistory={catalogHistory}
         />
       </div>
     </div>

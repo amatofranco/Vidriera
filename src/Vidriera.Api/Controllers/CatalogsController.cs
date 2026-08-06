@@ -23,9 +23,7 @@ public class CatalogsController : ControllerBase
 
     [HttpPost]
     [Authorize]
-    public async Task Generate(
-        [FromBody] GenerateCatalogRequest request,
-        CancellationToken cancellationToken)
+    public async Task Generate(CancellationToken cancellationToken)
     {
         var companyId = User.GetCompanyId();
         var userId = User.GetUserId();
@@ -44,7 +42,6 @@ public class CatalogsController : ControllerBase
                 new GenerateCatalogCommand(
                     companyId,
                     userId,
-                    request.ProductIds,
                     progress => WriteLineAsync(new { type = "progress", stage = progress.Stage, current = progress.Current, total = progress.Total })),
                 cancellationToken);
 
@@ -56,42 +53,26 @@ public class CatalogsController : ControllerBase
             {
                 NotFoundException => StatusCodes.Status404NotFound,
                 ValidationException => StatusCodes.Status400BadRequest,
-                CatalogGoneException => StatusCodes.Status410Gone,
                 _ => StatusCodes.Status500InternalServerError
             };
             await WriteLineAsync(new { type = "error", status = statusCode, message = ex.Message });
         }
     }
 
-    [HttpGet]
-    [Authorize]
-    public async Task<ActionResult<IReadOnlyList<CatalogHistoryItemDto>>> GetHistory(CancellationToken cancellationToken)
-    {
-        var companyId = User.GetCompanyId();
-        var result = await _mediator.Send(new GetCatalogHistoryQuery(companyId), cancellationToken);
-        return Ok(result);
-    }
-
-    [HttpGet("{id:guid}")]
+    [HttpGet("company/{companyId:guid}")]
     [AllowAnonymous]
-    public async Task<ContentResult> View(Guid id, CancellationToken cancellationToken)
+    public async Task<ContentResult> ViewByCompany(Guid companyId, CancellationToken cancellationToken)
     {
         try
         {
-            var dto = await _mediator.Send(new GetGeneratedCatalogQuery(id), cancellationToken);
+            var dto = await _mediator.Send(new GetCompanyCatalogQuery(companyId), cancellationToken);
             return HtmlPage(CatalogHtmlBuilder.BuildViewerPage(dto), StatusCodes.Status200OK);
         }
         catch (NotFoundException)
         {
             return HtmlPage(
-                CatalogHtmlBuilder.BuildMessagePage("Catálogo no encontrado", "El link no corresponde a ningún catálogo."),
+                CatalogHtmlBuilder.BuildMessagePage("Catálogo no disponible", "Todavía no se generó un catálogo para esta empresa."),
                 StatusCodes.Status404NotFound);
-        }
-        catch (CatalogGoneException ex)
-        {
-            return HtmlPage(
-                CatalogHtmlBuilder.BuildMessagePage("Catálogo no disponible", ex.Message),
-                StatusCodes.Status410Gone);
         }
     }
 
@@ -108,10 +89,6 @@ public class CatalogsController : ControllerBase
         {
             return NotFound();
         }
-        catch (CatalogGoneException)
-        {
-            return StatusCode(StatusCodes.Status410Gone);
-        }
     }
 
     [HttpGet("{id:guid}/pages/{pageNumber:int}")]
@@ -127,14 +104,8 @@ public class CatalogsController : ControllerBase
         {
             return NotFound();
         }
-        catch (CatalogGoneException)
-        {
-            return StatusCode(StatusCodes.Status410Gone);
-        }
     }
 
     private ContentResult HtmlPage(string html, int statusCode)
         => new() { Content = html, ContentType = "text/html; charset=utf-8", StatusCode = statusCode };
 }
-
-public record GenerateCatalogRequest(IReadOnlyList<Guid> ProductIds);

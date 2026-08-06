@@ -70,11 +70,8 @@
   <data name="MustSelectAtLeastOneProduct" xml:space="preserve">
     <value>Hay que seleccionar al menos un producto.</value>
   </data>
-  <data name="CatalogRevoked" xml:space="preserve">
-    <value>Este catálogo fue revocado.</value>
-  </data>
-  <data name="CatalogExpired" xml:space="preserve">
-    <value>Este catálogo ya expiró.</value>
+  <data name="CompanyCatalogNotFound" xml:space="preserve">
+    <value>Todavía no se generó un catálogo para esta empresa.</value>
   </data>
   <data name="InvalidSectionReorderItems" xml:space="preserve">
     <value>Alguno de los productos no existe o no pertenece a esta carátula.</value>
@@ -93,12 +90,6 @@
   </data>
   <data name="CatalogNotFound" xml:space="preserve">
     <value>No existe el catálogo {0}.</value>
-  </data>
-  <data name="ProductNotSelectable" xml:space="preserve">
-    <value>El producto {0} no existe o no pertenece a esta empresa.</value>
-  </data>
-  <data name="ProductSheetMissing" xml:space="preserve">
-    <value>El producto '{0}' todavía no tiene la hoja PDF cargada.</value>
   </data>
   <data name="ProductNotFound" xml:space="preserve">
     <value>No se encontró el producto {0} para esta empresa.</value>

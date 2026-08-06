@@ -5,7 +5,6 @@ using NHibernate;
 using Vidriera.Application.Common;
 using Vidriera.Application.Common.Exceptions;
 using Vidriera.Domain.Entities;
-using Vidriera.Domain.Enums;
 
 namespace Vidriera.Application.Catalogs;
 
@@ -29,17 +28,6 @@ public class GetGeneratedCatalogQueryHandler : IRequestHandler<GetGeneratedCatal
             throw new NotFoundException(ErrorMessages.CatalogNotFound(request.Id));
         }
 
-        if (catalog.Status == CatalogStatus.Revoked)
-        {
-            throw new CatalogGoneException(ErrorMessages.CatalogRevoked);
-        }
-
-        if (catalog.Status == CatalogStatus.Expired
-            || (catalog.ExpiresAt.HasValue && catalog.ExpiresAt.Value < DateTime.UtcNow))
-        {
-            throw new CatalogGoneException(ErrorMessages.CatalogExpired);
-        }
-
         var fileUrl = $"{_options.PublicBaseUrl.TrimEnd('/')}/api/catalogs/{catalog.Id}/file";
 
         CatalogSnapshot snapshot;
@@ -56,7 +44,6 @@ public class GetGeneratedCatalogQueryHandler : IRequestHandler<GetGeneratedCatal
         return new GeneratedCatalogViewDto(
             catalog.Id,
             catalog.GeneratedAt,
-            catalog.ExpiresAt,
             fileUrl,
             catalog.Company.Name,
             snapshot.Sections,

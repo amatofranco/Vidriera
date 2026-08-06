@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import type { Section } from "@/lib/api";
 import { Labels } from "@/lib/labels";
+import { StockToggle } from "./StockToggle";
 
 export function SectionRow({
   section,
@@ -76,15 +77,19 @@ export function SectionRow({
           title={Labels.positionInOrder}
           className="w-12 rounded border border-zinc-300 px-1 py-0.5 text-center text-xs text-zinc-700 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
         />
-        <input
-          type="checkbox"
-          checked={isChecked}
-          onChange={onToggleCheckbox}
-          disabled={checkboxDisabled}
-          title={checkboxTitle}
-          className="h-4 w-4 disabled:opacity-30"
-          style={{ accentColor: isBulkAssigningSection ? "#e4c98a" : "#c9a86a" }}
-        />
+        {isBulkAssigningSection ? (
+          <input
+            type="checkbox"
+            checked={isChecked}
+            onChange={onToggleCheckbox}
+            disabled={checkboxDisabled}
+            title={checkboxTitle}
+            className="h-4 w-4 disabled:opacity-30"
+            style={{ accentColor: "#e4c98a" }}
+          />
+        ) : (
+          <StockToggle checked={isChecked} onToggle={onToggleCheckbox} title={checkboxTitle} disabled={checkboxDisabled} />
+        )}
         <span className="flex-1 font-semibold text-zinc-900 dark:text-zinc-50">
           📑 {section.name}
         </span>

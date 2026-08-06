@@ -7,14 +7,10 @@ export function useCatalogGeneration({
   auth,
   products,
   setError,
-  isHistoryOpen,
-  loadCatalogHistory,
 }: {
   auth: AuthState | null;
   products: Product[];
   setError: (message: string | null) => void;
-  isHistoryOpen: boolean;
-  loadCatalogHistory: (token: string) => Promise<void>;
 }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [catalogResult, setCatalogResult] = useState<GenerateCatalogResult | null>(null);
@@ -24,17 +20,15 @@ export function useCatalogGeneration({
 
   async function handleGenerateCatalog() {
     if (!auth) return;
-    const selected = products.filter((p) => p.hasStock && p.hasSheet);
-    if (selected.length === 0) return;
+    if (selectableCount === 0) return;
 
     setIsGenerating(true);
     setError(null);
     setCatalogResult(null);
     setGenerationProgress(null);
     try {
-      const result = await generateCatalog(auth.token, selected.map((p) => p.id), setGenerationProgress);
+      const result = await generateCatalog(auth.token, setGenerationProgress);
       setCatalogResult(result);
-      if (isHistoryOpen) loadCatalogHistory(auth.token);
     } catch (err) {
       setError(apiErrorMessage(err, Messages.catalogGenerationFailed));
     } finally {

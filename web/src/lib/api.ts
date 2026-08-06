@@ -195,7 +195,6 @@ export async function fetchCompanyLogoUrl(token: string): Promise<string | null>
 export interface GenerateCatalogResult {
   id: string;
   url: string;
-  expiresAt: string | null;
 }
 
 export interface CatalogGenerationProgress {
@@ -206,16 +205,13 @@ export interface CatalogGenerationProgress {
 
 export async function generateCatalog(
   token: string,
-  productIds: string[],
   onProgress?: (progress: CatalogGenerationProgress) => void
 ): Promise<GenerateCatalogResult> {
   const response = await fetch(`${API_URL}/api/catalogs`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
     },
-    body: JSON.stringify({ productIds }),
   });
 
   if (!response.body) {
@@ -249,17 +245,4 @@ export async function generateCatalog(
   }
 
   throw new ApiError("La generación del catálogo no devolvió un resultado.", response.status);
-}
-
-export interface CatalogHistoryItem {
-  id: string;
-  generatedAt: string;
-  expiresAt: string | null;
-  isExpired: boolean;
-  viewUrl: string;
-  productCount: number;
-}
-
-export function getCatalogHistory(token: string) {
-  return request<CatalogHistoryItem[]>("/api/catalogs", { token });
 }

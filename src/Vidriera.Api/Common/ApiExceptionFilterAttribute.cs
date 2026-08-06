@@ -13,7 +13,6 @@ public class ApiExceptionFilterAttribute : ExceptionFilterAttribute
             NotFoundException => (StatusCodes.Status404NotFound, "No encontrado"),
             ValidationException => (StatusCodes.Status400BadRequest, "Solicitud inválida"),
             UnauthorizedException => (StatusCodes.Status401Unauthorized, "No autorizado"),
-            CatalogGoneException => (StatusCodes.Status410Gone, "Recurso expirado o revocado"),
             _ => (StatusCodes.Status500InternalServerError, "Error interno")
         };
 
