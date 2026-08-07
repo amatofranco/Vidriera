@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Vidriera.Api.Common;
+using Vidriera.Application.Common;
 using Vidriera.Application.Products;
 
 namespace Vidriera.Api.Controllers;
@@ -80,7 +81,7 @@ public class ProductsController : ControllerBase
     public async Task<IActionResult> Reorder([FromBody] ReorderTopLevelRequest request, CancellationToken cancellationToken)
     {
         var companyId = User.GetCompanyId();
-        var items = request.Items.Select(i => new TopLevelItemRef(i.Type == "section", i.Id)).ToList();
+        var items = request.Items.Select(i => new OrderedItemRef(i.Type == "section", i.Id)).ToList();
         await _mediator.Send(new ReorderTopLevelCommand(companyId, items), cancellationToken);
         return NoContent();
     }

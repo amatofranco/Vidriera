@@ -1,7 +1,6 @@
 using MediatR;
+using Vidriera.Application.Common;
 
 namespace Vidriera.Application.Products;
 
-public record TopLevelItemRef(bool IsSection, Guid Id);
-
-public record ReorderTopLevelCommand(Guid CompanyId, IReadOnlyList<TopLevelItemRef> OrderedItems) : IRequest;
+public record ReorderTopLevelCommand(Guid CompanyId, IReadOnlyList<OrderedItemRef> OrderedItems) : IRequest;

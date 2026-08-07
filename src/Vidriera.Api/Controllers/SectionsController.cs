@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Vidriera.Api.Common;
+using Vidriera.Application.Common;
 using Vidriera.Application.Products;
 using Vidriera.Application.Sections;
 
@@ -64,7 +65,7 @@ public class SectionsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var companyId = User.GetCompanyId();
-        var items = request.Items.Select(i => new SectionChildRef(i.Type == "section", i.Id)).ToList();
+        var items = request.Items.Select(i => new OrderedItemRef(i.Type == "section", i.Id)).ToList();
         await _mediator.Send(
             new ReorderSectionChildrenCommand(companyId, id, items),
             cancellationToken);

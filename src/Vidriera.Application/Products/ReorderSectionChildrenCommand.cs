@@ -1,7 +1,6 @@
 using MediatR;
+using Vidriera.Application.Common;
 
 namespace Vidriera.Application.Products;
 
-public record SectionChildRef(bool IsSection, Guid Id);
-
-public record ReorderSectionChildrenCommand(Guid CompanyId, Guid ParentSectionId, IReadOnlyList<SectionChildRef> OrderedItems) : IRequest;
+public record ReorderSectionChildrenCommand(Guid CompanyId, Guid ParentSectionId, IReadOnlyList<OrderedItemRef> OrderedItems) : IRequest;
