@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import type { Section } from "@/lib/api";
 import { Labels } from "@/lib/labels";
 import { StockToggle } from "./StockToggle";
+import { DeleteConfirmActions, DragHandle, PositionInput } from "./RowControls";
 
 export function SectionRow({
   section,
@@ -67,27 +68,12 @@ export function SectionRow({
         onDrop={onDrop}
         className={`flex items-center justify-between gap-3 px-4 py-3 ${isDragged ? "opacity-40" : ""}`}
       >
-        <span
-          draggable
-          onDragStart={onDragStart}
-          onDragEnd={onDragEnd}
-          title={Labels.dragToReorder}
-          className="cursor-grab select-none text-zinc-400 dark:text-zinc-600"
-        >
-          ⠿
-        </span>
-        <input
-          key={`${section.id}-${positionValue}`}
-          type="number"
-          min={1}
-          max={positionMax}
-          defaultValue={positionValue}
-          onBlur={(e) => onMoveToPosition(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") e.currentTarget.blur();
-          }}
-          title={Labels.positionInOrder}
-          className="w-12 rounded border border-zinc-300 px-1 py-0.5 text-center text-xs text-zinc-700 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+        <DragHandle onDragStart={onDragStart} onDragEnd={onDragEnd} />
+        <PositionInput
+          itemKey={section.id}
+          positionValue={positionValue}
+          positionMax={positionMax}
+          onMoveToPosition={onMoveToPosition}
         />
         {isBulkAssigningSection ? (
           <input
@@ -132,23 +118,12 @@ export function SectionRow({
           </select>
         )}
         {confirmingDelete ? (
-          <div className="flex items-center gap-2 text-xs">
-            <span className="text-zinc-600 dark:text-zinc-400">{Labels.confirmDeleteSectionQuestion}</span>
-            <button
-              onClick={onConfirmDelete}
-              disabled={isDeletingSection}
-              className="rounded bg-red-600 px-2 py-1 font-medium text-white hover:bg-red-500 disabled:opacity-50"
-            >
-              {Labels.yes}
-            </button>
-            <button
-              onClick={onCancelDelete}
-              disabled={isDeletingSection}
-              className="rounded bg-zinc-200 px-2 py-1 font-medium text-zinc-800 hover:bg-zinc-300 dark:bg-zinc-700 dark:text-zinc-100"
-            >
-              {Labels.cancel}
-            </button>
-          </div>
+          <DeleteConfirmActions
+            question={Labels.confirmDeleteSectionQuestion}
+            isBusy={isDeletingSection}
+            onConfirm={onConfirmDelete}
+            onCancel={onCancelDelete}
+          />
         ) : (
           <button
             onClick={onRequestDelete}
