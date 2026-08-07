@@ -10,8 +10,7 @@ import type { Product, Section } from "@/lib/api";
 
 import { useProductsData } from "./hooks/useProductsData";
 import { useCompanyLogo } from "./hooks/useCompanyLogo";
-import { useTopLevelReorder } from "./hooks/useTopLevelReorder";
-import { useSectionReorder } from "./hooks/useSectionReorder";
+import { useContainerReorder } from "./hooks/useContainerReorder";
 import { useBulkStockToggle } from "./hooks/useBulkStockToggle";
 import { useBulkDelete } from "./hooks/useBulkDelete";
 import { useBulkAssign } from "./hooks/useBulkAssign";
@@ -67,21 +66,16 @@ export default function ProductsPage() {
 
   const { logoUrl, setLogoUrl } = useCompanyLogo(auth);
 
-  const {
-    draggedTopLevelId,
-    setDraggedTopLevelId,
-    buildTopLevelRows,
-    handleTopLevelDrop,
-    handleTopLevelMoveToPosition,
-  } = useTopLevelReorder({ auth, products, setProducts, sections, setSections, loadProducts, loadSections, setError });
-
-  const {
-    draggedSectionMemberId,
-    setDraggedSectionMemberId,
-    sectionChildren,
-    handleSectionMemberDrop,
-    handleSectionMemberMoveToPosition,
-  } = useSectionReorder({ auth, products, setProducts, sections, setSections, loadProducts, loadSections, setError });
+  const { draggedId, setDraggedId, containerRows, handleDrop, handleMoveToPosition } = useContainerReorder({
+    auth,
+    products,
+    setProducts,
+    sections,
+    setSections,
+    loadProducts,
+    loadSections,
+    setError,
+  });
 
   const { handleToggleStock, handleBulkStockToggle, handleToggleSectionStock } = useBulkStockToggle({
     auth,
@@ -127,12 +121,10 @@ export default function ProductsPage() {
     setError,
   });
 
-  const allTopLevelRows = buildTopLevelRows();
   const { filteredProducts, filteredTopLevelRows, visibleSectionChildren } = useFilteredRows({
     products,
     search,
-    allTopLevelRows,
-    sectionChildren,
+    containerRows,
   });
 
   if (authLoading || !auth) {
@@ -179,11 +171,9 @@ export default function ProductsPage() {
   }
 
   function renderProductRowComponent(product: Product, sectionId: string | null) {
-    const isDragged = sectionId ? draggedSectionMemberId === product.id : draggedTopLevelId === product.id;
-    const positionMax = sectionId ? sectionChildren(sectionId).length : allTopLevelRows.length;
-    const positionValue = sectionId
-      ? sectionChildren(sectionId).findIndex((r) => r.id === product.id) + 1
-      : allTopLevelRows.findIndex((r) => r.id === product.id) + 1;
+    const siblingRows = containerRows(sectionId);
+    const positionMax = siblingRows.length;
+    const positionValue = siblingRows.findIndex((r) => r.id === product.id) + 1;
 
     return (
       <ProductRow
@@ -192,20 +182,18 @@ export default function ProductsPage() {
         sections={sections}
         positionValue={positionValue}
         positionMax={positionMax}
-        isDragged={isDragged}
+        isDragged={draggedId === product.id}
         isBulkAssigningSection={isBulkAssigningSection}
         isChecked={isBulkAssigningSection ? bulkAssignSelectedIds.has(product.id) : product.hasStock}
         checkboxTitle={isBulkAssigningSection ? Labels.selectForBulkAssignTitle : Labels.hasStockTitle}
         isDeleting={isDeleting}
         deleteDisabled={isBulkDeleting}
         confirmingDelete={confirmingDeleteId === product.id}
-        onDragStart={() => (sectionId ? setDraggedSectionMemberId(product.id) : setDraggedTopLevelId(product.id))}
-        onDragEnd={() => (sectionId ? setDraggedSectionMemberId(null) : setDraggedTopLevelId(null))}
+        onDragStart={() => setDraggedId(product.id)}
+        onDragEnd={() => setDraggedId(null)}
         onDragOver={(e) => e.preventDefault()}
-        onDrop={() => (sectionId ? handleSectionMemberDrop(sectionId, product.id) : handleTopLevelDrop(product.id))}
-        onMoveToPosition={(v) =>
-          sectionId ? handleSectionMemberMoveToPosition(sectionId, product.id, v) : handleTopLevelMoveToPosition(product.id, v)
-        }
+        onDrop={() => handleDrop(sectionId, product.id)}
+        onMoveToPosition={(v) => handleMoveToPosition(sectionId, product.id, v)}
         onToggleCheckbox={() =>
           isBulkAssigningSection ? toggleBulkAssignSelected(product.id) : handleToggleStock(product)
         }
@@ -219,11 +207,9 @@ export default function ProductsPage() {
   }
 
   function renderSectionRowComponent(section: Section, containerId: string | null) {
-    const isTopLevel = containerId === null;
-    const containerRows = isTopLevel ? allTopLevelRows : sectionChildren(containerId);
-    const positionMax = containerRows.length;
-    const positionValue = containerRows.findIndex((r) => r.id === section.id) + 1;
-    const isDragged = isTopLevel ? draggedTopLevelId === section.id : draggedSectionMemberId === section.id;
+    const siblingRows = containerRows(containerId);
+    const positionMax = siblingRows.length;
+    const positionValue = siblingRows.findIndex((r) => r.id === section.id) + 1;
     const parentOptions = sections.filter((s) => s.parentSectionId === null && s.id !== section.id);
     const canHaveParent = !sections.some((s) => s.parentSectionId === section.id);
     const children = visibleSectionChildren(section.id, section.name);
@@ -234,7 +220,7 @@ export default function ProductsPage() {
         section={section}
         positionValue={positionValue}
         positionMax={positionMax}
-        isDragged={isDragged}
+        isDragged={draggedId === section.id}
         isChecked={sectionCheckboxChecked(section.id)}
         checkboxTitle={
           isBulkAssigningSection ? Labels.selectAllSectionMembersTitle : Labels.toggleSectionStockTitle
@@ -247,17 +233,11 @@ export default function ProductsPage() {
         memberCount={deepSectionProducts(section.id).length}
         parentOptions={parentOptions}
         canHaveParent={canHaveParent}
-        onDragStart={() => (isTopLevel ? setDraggedTopLevelId(section.id) : setDraggedSectionMemberId(section.id))}
-        onDragEnd={() => (isTopLevel ? setDraggedTopLevelId(null) : setDraggedSectionMemberId(null))}
+        onDragStart={() => setDraggedId(section.id)}
+        onDragEnd={() => setDraggedId(null)}
         onDragOver={(e) => e.preventDefault()}
-        onDrop={() =>
-          containerId === null ? handleTopLevelDrop(section.id) : handleSectionMemberDrop(containerId, section.id)
-        }
-        onMoveToPosition={(v) =>
-          containerId === null
-            ? handleTopLevelMoveToPosition(section.id, v)
-            : handleSectionMemberMoveToPosition(containerId, section.id, v)
-        }
+        onDrop={() => handleDrop(containerId, section.id)}
+        onMoveToPosition={(v) => handleMoveToPosition(containerId, section.id, v)}
         onToggleCheckbox={() => handleToggleSectionCheckbox(section)}
         onToggleCollapse={() => toggleSectionCollapsed(section.id)}
         onChangeParent={(parentSectionId) => handleAssignSectionParent(section, parentSectionId)}

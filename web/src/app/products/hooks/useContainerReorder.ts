@@ -1,13 +1,13 @@
 import { useState } from "react";
 import type { AuthState } from "@/lib/auth-context";
-import { reorderSectionChildren, type Product, type Section } from "@/lib/api";
+import { reorderSectionChildren, reorderTopLevel, type Product, type Section } from "@/lib/api";
 import { Messages } from "@/lib/messages";
 
-export type SectionChildRow =
+export type ContainerRow =
   | { type: "section"; id: string; sortOrder: number; section: Section }
   | { type: "product"; id: string; sortOrder: number; product: Product };
 
-export function useSectionReorder({
+export function useContainerReorder({
   auth,
   products,
   setProducts,
@@ -26,34 +26,35 @@ export function useSectionReorder({
   loadSections: (token: string) => Promise<void>;
   setError: (message: string) => void;
 }) {
-  const [draggedSectionMemberId, setDraggedSectionMemberId] = useState<string | null>(null);
+  const [draggedId, setDraggedId] = useState<string | null>(null);
 
-  function sectionChildren(sectionId: string): SectionChildRow[] {
-    const childSections = sections.filter((s) => s.parentSectionId === sectionId);
-    const directProducts = products.filter((p) => p.sectionId === sectionId);
+  function containerRows(containerId: string | null): ContainerRow[] {
+    const childSections = sections.filter((s) => s.parentSectionId === containerId);
+    const directProducts = products.filter((p) => p.sectionId === containerId);
     return [
       ...childSections.map((s) => ({ type: "section" as const, id: s.id, sortOrder: s.sortOrder, section: s })),
       ...directProducts.map((p) => ({ type: "product" as const, id: p.id, sortOrder: p.sortOrder, product: p })),
     ].sort((a, b) => a.sortOrder - b.sortOrder);
   }
 
-  async function persistSectionReorder(sectionId: string, rows: SectionChildRow[]) {
+  async function persistReorder(containerId: string | null, rows: ContainerRow[]) {
     if (!auth) return;
+    const items = rows.map((r) => ({ type: r.type, id: r.id }));
     try {
-      await reorderSectionChildren(
-        auth.token,
-        sectionId,
-        rows.map((r) => ({ type: r.type, id: r.id }))
-      );
+      if (containerId === null) {
+        await reorderTopLevel(auth.token, items);
+      } else {
+        await reorderSectionChildren(auth.token, containerId, items);
+      }
     } catch {
-      setError(Messages.sectionOrderSaveFailed);
+      setError(containerId === null ? Messages.topLevelOrderSaveFailed : Messages.sectionOrderSaveFailed);
       loadProducts(auth.token);
       loadSections(auth.token);
     }
   }
 
-  function moveSectionMember(sectionId: string, id: string, toIndex: number) {
-    const rows = sectionChildren(sectionId);
+  function moveItem(containerId: string | null, id: string, toIndex: number) {
+    const rows = containerRows(containerId);
     const fromIndex = rows.findIndex((r) => r.id === id);
     if (fromIndex === -1) return;
     const clampedToIndex = Math.min(Math.max(toIndex, 0), rows.length - 1);
@@ -71,31 +72,31 @@ export function useSectionReorder({
       prev.map((p) => (sortOrderById.has(p.id) ? { ...p, sortOrder: sortOrderById.get(p.id)! } : p))
     );
 
-    persistSectionReorder(sectionId, next);
+    persistReorder(containerId, next);
   }
 
-  function handleSectionMemberDrop(sectionId: string, targetId: string) {
-    if (!draggedSectionMemberId || draggedSectionMemberId === targetId) {
-      setDraggedSectionMemberId(null);
+  function handleDrop(containerId: string | null, targetId: string) {
+    if (!draggedId || draggedId === targetId) {
+      setDraggedId(null);
       return;
     }
-    const toIndex = sectionChildren(sectionId).findIndex((r) => r.id === targetId);
-    if (toIndex !== -1) moveSectionMember(sectionId, draggedSectionMemberId, toIndex);
-    setDraggedSectionMemberId(null);
+    const toIndex = containerRows(containerId).findIndex((r) => r.id === targetId);
+    if (toIndex !== -1) moveItem(containerId, draggedId, toIndex);
+    setDraggedId(null);
   }
 
-  function handleSectionMemberMoveToPosition(sectionId: string, id: string, rawValue: string) {
+  function handleMoveToPosition(containerId: string | null, id: string, rawValue: string) {
     const position = parseInt(rawValue, 10);
     if (Number.isNaN(position)) return;
-    moveSectionMember(sectionId, id, position - 1);
+    moveItem(containerId, id, position - 1);
   }
 
   return {
-    draggedSectionMemberId,
-    setDraggedSectionMemberId,
-    sectionChildren,
-    moveSectionMember,
-    handleSectionMemberDrop,
-    handleSectionMemberMoveToPosition,
+    draggedId,
+    setDraggedId,
+    containerRows,
+    moveItem,
+    handleDrop,
+    handleMoveToPosition,
   };
 }

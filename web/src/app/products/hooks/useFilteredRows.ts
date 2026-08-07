@@ -1,17 +1,14 @@
 import type { Product } from "@/lib/api";
-import type { TopLevelRow } from "./useTopLevelReorder";
-import type { SectionChildRow } from "./useSectionReorder";
+import type { ContainerRow } from "./useContainerReorder";
 
 export function useFilteredRows({
   products,
   search,
-  allTopLevelRows,
-  sectionChildren,
+  containerRows,
 }: {
   products: Product[];
   search: string;
-  allTopLevelRows: TopLevelRow[];
-  sectionChildren: (sectionId: string) => SectionChildRow[];
+  containerRows: (containerId: string | null) => ContainerRow[];
 }) {
   const searchQuery = search.trim().toLowerCase();
   const matchesSearch = (name: string) => name.toLowerCase().includes(searchQuery);
@@ -20,10 +17,12 @@ export function useFilteredRows({
 
   function sectionMatchesSearch(sectionId: string, sectionName: string): boolean {
     if (matchesSearch(sectionName)) return true;
-    return sectionChildren(sectionId).some((row) =>
+    return containerRows(sectionId).some((row) =>
       row.type === "product" ? matchesSearch(row.product.name) : sectionMatchesSearch(row.id, row.section.name)
     );
   }
+
+  const allTopLevelRows = containerRows(null);
 
   const filteredTopLevelRows = !searchQuery
     ? allTopLevelRows
@@ -32,8 +31,8 @@ export function useFilteredRows({
         return sectionMatchesSearch(row.id, row.section.name);
       });
 
-  function visibleSectionChildren(sectionId: string, sectionName: string): SectionChildRow[] {
-    const children = sectionChildren(sectionId);
+  function visibleSectionChildren(sectionId: string, sectionName: string): ContainerRow[] {
+    const children = containerRows(sectionId);
     if (!searchQuery || matchesSearch(sectionName)) return children;
     return children.filter((row) =>
       row.type === "product" ? matchesSearch(row.product.name) : sectionMatchesSearch(row.id, row.section.name)
