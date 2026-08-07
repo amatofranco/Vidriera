@@ -2,7 +2,6 @@ using MediatR;
 using NHibernate;
 using Vidriera.Application.Abstractions;
 using Vidriera.Application.Common;
-using Vidriera.Application.Common.Exceptions;
 using Vidriera.Domain.Entities;
 
 namespace Vidriera.Application.Sections;
@@ -29,19 +28,7 @@ public class CreateSectionCommandHandler : IRequestHandler<CreateSectionCommand,
             ? Path.GetFileNameWithoutExtension(request.OriginalFileName)
             : request.Name;
 
-        Section? parent = null;
-        if (request.ParentSectionId.HasValue)
-        {
-            parent = await _session.Query<Section>().GetOrThrowAsync(
-                s => s.Id == request.ParentSectionId.Value && s.Company.Id == request.CompanyId,
-                ErrorMessages.SectionNotFound(request.ParentSectionId.Value),
-                cancellationToken);
-
-            if (parent.ParentSection is not null)
-            {
-                throw new ValidationException(ErrorMessages.SectionCannotNestFurther);
-            }
-        }
+        var parent = await SectionNesting.ResolveParentAsync(_session, request.CompanyId, request.ParentSectionId, null, cancellationToken);
 
         var nextSortOrder = parent is null
             ? await TopLevelOrdering.NextTopLevelSortOrderAsync(_session, request.CompanyId, cancellationToken)
