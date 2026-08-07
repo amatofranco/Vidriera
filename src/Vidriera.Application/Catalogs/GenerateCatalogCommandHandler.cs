@@ -43,12 +43,11 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             throw new ValidationException(ErrorMessages.MustSelectAtLeastOneProduct);
         }
 
-        var topLevel = BuildTopLevelSequence(allSections, allProducts);
-        var entries = BuildMergeEntries(topLevel, allProducts, allSections, selectedIds).ToList();
+        var entries = CatalogMergePlanBuilder.BuildEntries(allSections, allProducts, selectedIds);
         var mergePlan = await BuildMergePlanAsync(entries, request.OnProgress, cancellationToken);
 
         var mergeResult = await _pdfMergeService.MergeAsync(mergePlan.PdfBytes, cancellationToken);
-        var sectionsSnapshot = BuildSectionsSnapshot(mergeResult.PageCounts, mergePlan.CoverMarkers);
+        var sectionsSnapshot = CatalogMergePlanBuilder.BuildSectionsSnapshot(mergeResult.PageCounts, mergePlan.CoverMarkers);
 
         var generatedBlobKey = await UploadMergedPdfAsync(request.CompanyId, mergeResult.Bytes, cancellationToken);
         var company = await _session.GetAsync<Company>(request.CompanyId, cancellationToken);
@@ -81,115 +80,6 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             .ToListAsync(cancellationToken);
 
         return (products, sections);
-    }
-
-    private static IEnumerable<object> BuildTopLevelSequence(IReadOnlyList<Section> sections, IReadOnlyList<Product> allProducts)
-    {
-        var topLevelSections = sections.Where(s => s.ParentSection is null);
-        var looseProducts = allProducts.Where(p => p.Section is null);
-        return topLevelSections.Cast<object>()
-            .Concat(looseProducts.Cast<object>())
-            .OrderBy(item => item switch
-            {
-                Section s => s.SortOrder,
-                Product p => p.SortOrder,
-                _ => 0
-            });
-    }
-
-    private abstract record MergeEntry;
-    private sealed record SectionCoverEntry(Section Section) : MergeEntry;
-    private sealed record ProductEntry(Product Product) : MergeEntry;
-
-    private static IEnumerable<MergeEntry> BuildMergeEntries(
-        IEnumerable<object> topLevel,
-        IReadOnlyList<Product> allProducts,
-        IReadOnlyList<Section> allSections,
-        HashSet<Guid> selectedIds)
-    {
-        foreach (var item in topLevel)
-        {
-            switch (item)
-            {
-                case Section section:
-                    foreach (var entry in BuildSectionEntries(section, allProducts, allSections, selectedIds))
-                    {
-                        yield return entry;
-                    }
-                    break;
-
-                case Product product when selectedIds.Contains(product.Id):
-                    yield return new ProductEntry(product);
-                    break;
-            }
-        }
-    }
-
-    private static IEnumerable<MergeEntry> BuildSectionEntries(
-        Section section,
-        IReadOnlyList<Product> allProducts,
-        IReadOnlyList<Section> allSections,
-        HashSet<Guid> selectedIds)
-    {
-        var childSections = allSections.Where(s => s.ParentSection?.Id == section.Id);
-        var directProducts = allProducts.Where(p => p.Section?.Id == section.Id);
-
-        var children = childSections.Cast<object>()
-            .Concat(directProducts.Cast<object>())
-            .OrderBy(item => item switch
-            {
-                Section s => s.SortOrder,
-                Product p => p.SortOrder,
-                _ => 0
-            });
-
-        var entries = new List<MergeEntry>();
-        foreach (var child in children)
-        {
-            switch (child)
-            {
-                case Section subSection:
-                    entries.AddRange(BuildLeafSectionEntries(subSection, allProducts, selectedIds));
-                    break;
-
-                case Product product when selectedIds.Contains(product.Id):
-                    entries.Add(new ProductEntry(product));
-                    break;
-            }
-        }
-
-        if (entries.Count == 0)
-        {
-            yield break;
-        }
-
-        yield return new SectionCoverEntry(section);
-        foreach (var entry in entries)
-        {
-            yield return entry;
-        }
-    }
-
-    private static IEnumerable<MergeEntry> BuildLeafSectionEntries(
-        Section section,
-        IReadOnlyList<Product> allProducts,
-        HashSet<Guid> selectedIds)
-    {
-        var members = allProducts
-            .Where(p => p.Section?.Id == section.Id && selectedIds.Contains(p.Id))
-            .OrderBy(p => p.SortOrder)
-            .ToList();
-
-        if (members.Count == 0)
-        {
-            yield break;
-        }
-
-        yield return new SectionCoverEntry(section);
-        foreach (var member in members)
-        {
-            yield return new ProductEntry(member);
-        }
     }
 
     private sealed record MergePlan(List<byte[]> PdfBytes, List<Section?> CoverMarkers, List<Product> IncludedProducts);
@@ -270,25 +160,6 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         {
             downloadSemaphore.Release();
         }
-    }
-
-    private static List<CatalogSectionSnapshot> BuildSectionsSnapshot(
-        IReadOnlyList<int> pageCounts,
-        IReadOnlyList<Section?> coverMarkers)
-    {
-        var sectionsSnapshot = new List<CatalogSectionSnapshot>();
-        var pageCursor = 0;
-
-        for (var i = 0; i < pageCounts.Count; i++)
-        {
-            if (coverMarkers[i] is { } coverSection)
-            {
-                sectionsSnapshot.Add(new CatalogSectionSnapshot(coverSection.Name, pageCursor + 1, coverSection.ParentSection is not null));
-            }
-            pageCursor += pageCounts[i];
-        }
-
-        return sectionsSnapshot;
     }
 
     private async Task<string> UploadMergedPdfAsync(Guid companyId, byte[] mergedBytes, CancellationToken cancellationToken)
