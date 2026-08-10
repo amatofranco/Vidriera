@@ -13,4 +13,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Ping health endpoint
-        run: curl --fail --silent --show-error --max-time 30 https://vidriera-api.onrender.com/api/health
+        run: |
+          # GitHub can delay a scheduled cron run under load; if that delay pushes us past
+          # Render's ~15 min idle threshold, this ping itself becomes a cold start. A cold
+          # boot (Docker + the DbUp migration check at startup) can take longer than a quick
+          # 30s timeout, so retry a few times with a generous per-attempt timeout before
+          # actually failing the workflow.
+          for attempt in 1 2 3; do
+            if curl --fail --silent --show-error --max-time 60 https://vidriera-api.onrender.com/api/health; then
+              exit 0
+            fi
+            echo "Attempt $attempt failed, retrying in 15s..."
+            sleep 15
+          done
+          exit 1
