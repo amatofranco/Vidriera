@@ -28,7 +28,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
             ? Path.GetFileNameWithoutExtension(request.OriginalFileName)
             : request.Name;
 
-        var nextSortOrder = await TopLevelOrdering.NextTopLevelSortOrderAsync(_session, request.CompanyId, cancellationToken);
+        var nextSortOrder = await TopLevelOrdering.PrependTopLevelSortOrderAsync(_session, request.CompanyId, cancellationToken);
 
         var product = new Product
         {

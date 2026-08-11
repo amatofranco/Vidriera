@@ -40,7 +40,7 @@ export function useCreateProduct({
     await runWithConcurrency(validFiles, 4, async (file) => {
       try {
         const created = await createProduct(auth.token, file, nameOverride);
-        setProducts((prev) => [...prev, created]);
+        setProducts((prev) => [created, ...prev]);
       } catch (err) {
         failed.push({
           name: file.name,

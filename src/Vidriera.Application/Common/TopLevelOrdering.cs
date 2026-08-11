@@ -21,6 +21,21 @@ internal static class TopLevelOrdering
         return Math.Max(maxLooseProduct, maxSection) + 1;
     }
 
+    public static async Task<int> PrependTopLevelSortOrderAsync(ISession session, Guid companyId, CancellationToken cancellationToken)
+    {
+        var minLooseProduct = await session.Query<Product>()
+            .Where(p => p.Company.Id == companyId && p.Section == null)
+            .Select(p => (int?)p.SortOrder)
+            .MinAsync(cancellationToken) ?? 0;
+
+        var minSection = await session.Query<Section>()
+            .Where(s => s.Company.Id == companyId && s.ParentSection == null)
+            .Select(s => (int?)s.SortOrder)
+            .MinAsync(cancellationToken) ?? 0;
+
+        return Math.Min(minLooseProduct, minSection) - 1;
+    }
+
     public static async Task<int> NextSectionSortOrderAsync(ISession session, Guid sectionId, CancellationToken cancellationToken)
     {
         var maxProduct = await session.Query<Product>()
