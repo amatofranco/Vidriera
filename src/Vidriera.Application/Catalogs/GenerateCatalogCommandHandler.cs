@@ -47,13 +47,13 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         var mergePlan = await BuildMergePlanAsync(entries, request.OnProgress, cancellationToken);
 
         var mergeResult = await _pdfMergeService.MergeAsync(mergePlan.PdfBytes, cancellationToken);
-        var sectionsSnapshot = CatalogMergePlanBuilder.BuildSectionsSnapshot(mergeResult.PageCounts, mergePlan.CoverMarkers);
+        var indexSnapshot = CatalogMergePlanBuilder.BuildIndexSnapshot(entries, mergeResult.PageCounts);
 
         var generatedBlobKey = await UploadMergedPdfAsync(request.CompanyId, mergeResult.Bytes, cancellationToken);
         var company = await _session.GetAsync<Company>(request.CompanyId, cancellationToken);
         var previousCatalogId = company.CurrentCatalogId;
 
-        var catalog = await CreateCatalogAsync(request, company, mergePlan.IncludedProducts, sectionsSnapshot, generatedBlobKey, cancellationToken);
+        var catalog = await CreateCatalogAsync(request, company, mergePlan.IncludedProducts, indexSnapshot, generatedBlobKey, cancellationToken);
         await RasterizePagesAsync(catalog, mergeResult.Bytes, mergeResult.PageCounts.Sum(), request.OnProgress, cancellationToken);
 
         company.CurrentCatalogId = catalog.Id;
@@ -82,7 +82,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         return (products, sections);
     }
 
-    private sealed record MergePlan(List<byte[]> PdfBytes, List<Section?> CoverMarkers, List<Product> IncludedProducts);
+    private sealed record MergePlan(List<byte[]> PdfBytes, List<Product> IncludedProducts);
 
     private const int MaxConcurrentDownloads = 4;
 
@@ -92,21 +92,13 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         CancellationToken cancellationToken)
     {
         var pdfBytesInOrder = new byte[entries.Count][];
-        var coverMarkers = new List<Section?>(entries.Count);
         var includedProducts = new List<Product>();
 
         foreach (var entry in entries)
         {
-            switch (entry)
+            if (entry is ProductEntry productEntry)
             {
-                case SectionCoverEntry cover:
-                    coverMarkers.Add(cover.Section);
-                    break;
-
-                case ProductEntry productEntry:
-                    coverMarkers.Add(null);
-                    includedProducts.Add(productEntry.Product);
-                    break;
+                includedProducts.Add(productEntry.Product);
             }
         }
 
@@ -140,7 +132,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
 
         await Task.WhenAll(pendingDownloads);
 
-        return new MergePlan(pdfBytesInOrder.ToList(), coverMarkers, includedProducts);
+        return new MergePlan(pdfBytesInOrder.ToList(), includedProducts);
     }
 
     private async Task DownloadEntryAndReportAsync(
@@ -176,7 +168,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         GenerateCatalogCommand request,
         Company company,
         IReadOnlyList<Product> includedProducts,
-        List<CatalogSectionSnapshot> sectionsSnapshot,
+        List<CatalogIndexEntry> indexSnapshot,
         string generatedBlobKey,
         CancellationToken cancellationToken)
     {
@@ -185,7 +177,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         var productsSnapshot = includedProducts
             .Select(p => new CatalogProductSnapshot(p.Id, p.Name, p.Code))
             .ToList();
-        var snapshot = new CatalogSnapshot(productsSnapshot, sectionsSnapshot);
+        var snapshot = new CatalogSnapshot(productsSnapshot, indexSnapshot);
 
         var catalog = new GeneratedCatalog
         {

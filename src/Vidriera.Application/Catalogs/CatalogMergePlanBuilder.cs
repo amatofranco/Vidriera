@@ -17,23 +17,42 @@ internal static class CatalogMergePlanBuilder
         return BuildMergeEntries(topLevel, allProducts, allSections, selectedIds).ToList();
     }
 
-    public static List<CatalogSectionSnapshot> BuildSectionsSnapshot(
-        IReadOnlyList<int> pageCounts,
-        IReadOnlyList<Section?> coverMarkers)
+    public static List<CatalogIndexEntry> BuildIndexSnapshot(
+        IReadOnlyList<MergeEntry> entries,
+        IReadOnlyList<int> pageCounts)
     {
-        var sectionsSnapshot = new List<CatalogSectionSnapshot>();
+        var indexSnapshot = new List<CatalogIndexEntry>();
         var pageCursor = 0;
 
-        for (var i = 0; i < pageCounts.Count; i++)
+        for (var i = 0; i < entries.Count; i++)
         {
-            if (coverMarkers[i] is { } coverSection)
+            switch (entries[i])
             {
-                sectionsSnapshot.Add(new CatalogSectionSnapshot(coverSection.Name, pageCursor + 1, coverSection.ParentSection is not null));
+                case SectionCoverEntry cover:
+                    indexSnapshot.Add(new CatalogIndexEntry(
+                        cover.Section.Name,
+                        pageCursor + 1,
+                        cover.Section.ParentSection is not null ? 1 : 0,
+                        IsProduct: false));
+                    break;
+
+                case ProductEntry productEntry:
+                    var level = productEntry.Product.Section?.ParentSection is not null
+                        ? 2
+                        : productEntry.Product.Section is not null
+                            ? 1
+                            : 0;
+                    indexSnapshot.Add(new CatalogIndexEntry(
+                        productEntry.Product.Name,
+                        pageCursor + 1,
+                        level,
+                        IsProduct: true));
+                    break;
             }
             pageCursor += pageCounts[i];
         }
 
-        return sectionsSnapshot;
+        return indexSnapshot;
     }
 
     private static IEnumerable<object> BuildTopLevelSequence(IReadOnlyList<Section> sections, IReadOnlyList<Product> allProducts)

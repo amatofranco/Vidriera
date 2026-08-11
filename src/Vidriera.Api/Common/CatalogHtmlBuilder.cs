@@ -29,9 +29,9 @@ public static class CatalogHtmlBuilder
         var companyName = WebUtility.HtmlEncode(dto.CompanyName);
         var generatedAt = WebUtility.HtmlEncode(dto.GeneratedAt.ToString("dd/MM/yyyy"));
 
-        var hasSections = dto.Sections.Count > 0;
+        var hasSections = dto.IndexEntries.Count > 0;
         var sectionsJsonEncoded = hasSections
-            ? WebUtility.HtmlEncode(JsonSerializer.Serialize(dto.Sections, SectionsJsonOptions))
+            ? WebUtility.HtmlEncode(JsonSerializer.Serialize(dto.IndexEntries, SectionsJsonOptions))
             : "";
         var indexButtonHtml = hasSections
             ? "<button id=\"index-btn\" title=\"Índice\">&#128209;</button>"
