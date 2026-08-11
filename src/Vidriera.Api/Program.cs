@@ -106,7 +106,16 @@ if (app.Environment.IsProduction())
     app.UseHttpsRedirection();
 }
 
-app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        // Sin bundler ni hashing de nombres de archivo: si el navegador cachea el JS/CSS
+        // del visor sin revalidar, un deploy nuevo puede quedar invisible hasta un hard
+        // refresh manual. Forzamos revalidación (ETag/Last-Modified) en cada carga.
+        ctx.Context.Response.Headers.CacheControl = "no-cache";
+    }
+});
 
 app.UseCors();
 
