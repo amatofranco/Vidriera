@@ -1,10 +1,14 @@
 "use client";
 
 import { Labels } from "@/lib/labels";
+import { StockFilterControl } from "./StockFilterControl";
+import type { StockFilter } from "../hooks/useFilteredRows";
 
 export function BulkActionsToolbar({
   search,
   onSearchChange,
+  stockFilter,
+  onStockFilterChange,
   isBulkAssigningSection,
   isApplyingBulkAssign,
   hasSections,
@@ -15,6 +19,8 @@ export function BulkActionsToolbar({
 }: {
   search: string;
   onSearchChange: (value: string) => void;
+  stockFilter: StockFilter;
+  onStockFilterChange: (value: StockFilter) => void;
   isBulkAssigningSection: boolean;
   isApplyingBulkAssign: boolean;
   hasSections: boolean;
@@ -34,6 +40,7 @@ export function BulkActionsToolbar({
         placeholder={Labels.searchPlaceholder}
         className="min-w-0 flex-1 rounded-md border border-white/20 bg-black/20 px-3 py-2 text-sm text-white placeholder:text-zinc-300 outline-none focus:border-[#e4c98a]"
       />
+      <StockFilterControl value={stockFilter} onChange={onStockFilterChange} />
       <button
         type="button"
         onClick={onMarkAll}

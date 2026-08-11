@@ -19,7 +19,7 @@ import { useCreateSection } from "./hooks/useCreateSection";
 import { useProductActions } from "./hooks/useProductActions";
 import { useSectionActions } from "./hooks/useSectionActions";
 import { useCatalogGeneration } from "./hooks/useCatalogGeneration";
-import { useFilteredRows } from "./hooks/useFilteredRows";
+import { useFilteredRows, type StockFilter } from "./hooks/useFilteredRows";
 
 import { CompanyHeader } from "./components/CompanyHeader";
 import { UploadCreateForm } from "./components/UploadCreateForm";
@@ -35,6 +35,7 @@ export default function ProductsPage() {
   const { auth, isLoading: authLoading, logout } = useAuth();
 
   const [search, setSearch] = useState("");
+  const [stockFilter, setStockFilter] = useState<StockFilter>("all");
   const [collapsedSectionIds, setCollapsedSectionIds] = useState<Set<string>>(new Set());
 
   function toggleSectionCollapsed(sectionId: string) {
@@ -124,6 +125,7 @@ export default function ProductsPage() {
   const { filteredProducts, filteredTopLevelRows, visibleSectionChildren } = useFilteredRows({
     products,
     search,
+    stockFilter,
     containerRows,
   });
 
@@ -313,6 +315,8 @@ export default function ProductsPage() {
           <BulkActionsToolbar
             search={search}
             onSearchChange={setSearch}
+            stockFilter={stockFilter}
+            onStockFilterChange={setStockFilter}
             isBulkAssigningSection={isBulkAssigningSection}
             isApplyingBulkAssign={isApplyingBulkAssign}
             hasSections={sections.length > 0}

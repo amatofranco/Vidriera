@@ -29,6 +29,9 @@ export const Labels = {
   uploadProductsSubmitTitle: (count: number) => `Cargar ${count} productos`,
 
   searchPlaceholder: "Buscar por nombre...",
+  stockFilterAllLabel: "Todos",
+  stockFilterVisibleLabel: "Visualizados",
+  stockFilterHiddenLabel: "No visualizados",
   markAll: (isFiltered: boolean) => `Marcar ${filteredOrAll(isFiltered)}`,
   unmarkAll: (isFiltered: boolean) => `Desmarcar ${filteredOrAll(isFiltered)}`,
   deleteSelectedCount: (count: number) => `Borrar seleccionados (${count})`,

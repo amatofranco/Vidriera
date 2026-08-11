@@ -1,41 +1,50 @@
 import type { Product } from "@/lib/api";
 import type { ContainerRow } from "./useContainerReorder";
 
+export type StockFilter = "all" | "visible" | "hidden";
+
 export function useFilteredRows({
   products,
   search,
+  stockFilter,
   containerRows,
 }: {
   products: Product[];
   search: string;
+  stockFilter: StockFilter;
   containerRows: (containerId: string | null) => ContainerRow[];
 }) {
   const searchQuery = search.trim().toLowerCase();
+  const hasActiveFilter = searchQuery.length > 0 || stockFilter !== "all";
+
   const matchesSearch = (name: string) => name.toLowerCase().includes(searchQuery);
+  const matchesStock = (p: Product) =>
+    stockFilter === "all" ? true : stockFilter === "visible" ? p.hasStock : !p.hasStock;
+  const matchesProduct = (p: Product) => matchesSearch(p.name) && matchesStock(p);
 
-  const filteredProducts = products.filter((p) => matchesSearch(p.name));
+  const filteredProducts = products.filter(matchesProduct);
 
-  function sectionMatchesSearch(sectionId: string, sectionName: string): boolean {
-    if (matchesSearch(sectionName)) return true;
+  function sectionMatches(sectionId: string, sectionName: string): boolean {
+    if (matchesSearch(sectionName) && stockFilter === "all") return true;
     return containerRows(sectionId).some((row) =>
-      row.type === "product" ? matchesSearch(row.product.name) : sectionMatchesSearch(row.id, row.section.name)
+      row.type === "product" ? matchesProduct(row.product) : sectionMatches(row.id, row.section.name)
     );
   }
 
   const allTopLevelRows = containerRows(null);
 
-  const filteredTopLevelRows = !searchQuery
+  const filteredTopLevelRows = !hasActiveFilter
     ? allTopLevelRows
     : allTopLevelRows.filter((row) => {
-        if (row.type === "product") return matchesSearch(row.product.name);
-        return sectionMatchesSearch(row.id, row.section.name);
+        if (row.type === "product") return matchesProduct(row.product);
+        return sectionMatches(row.id, row.section.name);
       });
 
   function visibleSectionChildren(sectionId: string, sectionName: string): ContainerRow[] {
     const children = containerRows(sectionId);
-    if (!searchQuery || matchesSearch(sectionName)) return children;
+    if (!hasActiveFilter || (matchesSearch(sectionName) && stockFilter === "all")) return children;
     return children.filter((row) =>
-      row.type === "product" ? matchesSearch(row.product.name) : sectionMatchesSearch(row.id, row.section.name)
+      row.type === "product" ? matchesProduct(row.product) : sectionMatches(row.id, row.section.name)
     );
   }
 
