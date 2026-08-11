@@ -1,4 +1,5 @@
 import { computeFitSize, positionSideNav, positionCoverInfo, positionIndexPanel } from "./layout.js";
+import { renderIndexPanel } from "./index-panel.js";
 
 const INITIAL_LOAD_COUNT = 5;
 
@@ -101,17 +102,11 @@ export async function renderFlipbookViewer({ catalogId, pageCount, pageAspect, d
     rebuildRef.current = buildPageFlip;
     buildPageFlip();
 
-    if (dom.indexList && sectionsData.length > 0) {
-        sectionsData.forEach((entry) => {
-            const item = document.createElement("button");
-            item.className = entry.isSubsection ? "index-item index-item-sub" : "index-item";
-            item.textContent = entry.name;
-            item.addEventListener("click", () => {
-                pageFlip.turnToPage(entry.startPage - 1);
-            });
-            dom.indexList.appendChild(item);
-        });
-    }
+    renderIndexPanel({
+        dom,
+        indexEntries: sectionsData,
+        onJumpToPage: (page) => pageFlip.turnToPage(page - 1),
+    });
 
     let lastDpr = window.devicePixelRatio || 1;
     let resizeTimer = null;

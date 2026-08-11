@@ -16,6 +16,7 @@ export const dom = {
     indexBtn: document.getElementById("index-btn"),
     indexPanel: document.getElementById("index-panel"),
     indexList: document.getElementById("index-list"),
+    indexSearchInput: document.getElementById("index-search"),
     fileUrl: document.getElementById("download-btn").href,
     sectionsData: sectionsDataEl
         ? JSON.parse(sectionsDataEl.dataset.sections || "[]")

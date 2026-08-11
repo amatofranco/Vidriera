@@ -1,4 +1,5 @@
 import { computeFitSize, positionSideNav, positionIndexPanel } from "./layout.js";
+import { renderIndexPanel } from "./index-panel.js";
 
 export function renderSinglePageViewer({ dataUrl, pageAspect, dom, flipbookEl, rebuildRef }) {
     if (dom.indexBtn) dom.indexBtn.style.display = "none";
@@ -39,6 +40,7 @@ export function renderSinglePageViewer({ dataUrl, pageAspect, dom, flipbookEl, r
     dom.nextBtn.disabled = true;
     dom.pageInfoEl.textContent = "1 / 1";
     dom.pageInfoEl.style.display = "block";
+    renderIndexPanel({ dom, indexEntries: dom.sectionsData, onJumpToPage: () => {} });
     if (dom.indexPanel) dom.indexPanel.classList.add("visible");
     positionIndexPanel(dom);
 }
