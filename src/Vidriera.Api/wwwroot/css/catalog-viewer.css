@@ -111,11 +111,11 @@ body { overflow: auto; }
 }
 
 .index-panel {
-    position: fixed; left: 84px; top: 50%; transform: translateY(-50%);
+    position: fixed; left: 78px; top: 50%; transform: translateY(-50%);
     box-sizing: border-box;
-    /* left(84) + max-width debe quedar por debajo de la reserva de layout.js (78 + INDEX_PANEL_MAX_WIDTH) */
-    max-height: 70vh; overflow-y: auto; min-width: 180px; max-width: 200px;
-    background: #232325; border-radius: 12px; padding: 12px;
+    /* left(78) + max-width debe quedar por debajo de la reserva de layout.js (78 + INDEX_PANEL_MAX_WIDTH) */
+    max-height: 70vh; overflow-y: auto; min-width: 180px; max-width: 206px;
+    background: #232325; border-radius: 12px; padding: 10px;
     box-shadow: 0 8px 24px rgba(0,0,0,.4);
     z-index: 20; display: none; flex-direction: column; gap: 2px;
 }
@@ -149,7 +149,7 @@ body { overflow: auto; }
 .index-chevron-spacer { cursor: default; }
 .index-item {
     flex: 1; min-width: 0; background: transparent; border: none; color: #f5f5f7; text-align: left;
-    padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 13px;
+    padding: 8px 8px; border-radius: 8px; cursor: pointer; font-size: 13px;
     font-family: inherit; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .index-item:hover { background: #3a3a3c; }
