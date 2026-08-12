@@ -98,10 +98,12 @@ body { overflow: auto; }
 }
 .update-banner button:hover { background: #3a9dff; }
 
-#brand-logo {
-    position: fixed; top: 18px; left: 18px; height: 42px; width: auto;
-    z-index: 20; pointer-events: none;
+#brand-logo-link {
+    position: fixed; top: 18px; left: 18px; height: 42px;
+    z-index: 20; display: block; transition: opacity .15s ease;
 }
+#brand-logo-link:hover { opacity: .85; }
+#brand-logo { height: 100%; width: auto; display: block; }
 
 .stage.zoom-armed { cursor: zoom-in; }
 .stage.zoomed { cursor: zoom-out; }

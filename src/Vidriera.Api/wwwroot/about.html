@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <title>Vidriera — Catálogos digitales para tu negocio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Vidriera convierte tus fichas de producto en PDF en un catálogo digital tipo revista, navegable y siempre actualizado en un mismo link." />
+    <style>
+        :root {
+            --gold: #c9a86a;
+            --gold-light: #e4c98a;
+            --bg: #1c1c1e;
+            --panel: #232325;
+            --text: #f5f5f7;
+            --muted: #a1a1a6;
+        }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: system-ui, sans-serif;
+            line-height: 1.5;
+        }
+
+        .hero {
+            position: relative;
+            min-height: 62vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 32px 20px;
+            background: linear-gradient(rgba(20,16,10,.72), rgba(20,16,10,.82)), url('/images/catalog-bg.jpg') center / cover no-repeat;
+        }
+        .hero img { height: 56px; width: auto; margin-bottom: 24px; }
+        .hero h1 {
+            margin: 0 0 12px;
+            font-size: clamp(28px, 5vw, 44px);
+            font-weight: 700;
+            max-width: 720px;
+        }
+        .hero p {
+            margin: 0 0 28px;
+            font-size: clamp(15px, 2.2vw, 18px);
+            color: var(--muted);
+            max-width: 560px;
+        }
+        .cta {
+            display: inline-block;
+            background: var(--gold);
+            color: #1c1c1e;
+            font-weight: 600;
+            text-decoration: none;
+            padding: 12px 28px;
+            border-radius: 8px;
+            transition: background .15s ease;
+        }
+        .cta:hover { background: var(--gold-light); }
+
+        section { max-width: 880px; margin: 0 auto; padding: 56px 20px; }
+        section h2 {
+            font-size: clamp(22px, 3vw, 28px);
+            margin: 0 0 16px;
+            color: var(--gold-light);
+        }
+        section p { color: var(--muted); font-size: 16px; max-width: 640px; }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-top: 24px;
+        }
+        .feature {
+            background: var(--panel);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 8px 24px rgba(0,0,0,.35);
+        }
+        .feature h3 { margin: 0 0 8px; font-size: 16px; color: var(--text); }
+        .feature p { margin: 0; font-size: 14px; color: var(--muted); }
+
+        .contact {
+            text-align: center;
+            border-top: 1px solid rgba(255,255,255,.08);
+        }
+        .contact p { margin: 0 auto 20px; }
+
+        footer {
+            text-align: center;
+            padding: 24px 20px 40px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        /* TODO(Fran): reemplazar por el texto/datos de contacto reales */
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <img src="/images/vidriera-logo.png" alt="Vidriera" />
+        <h1>Tu catálogo de siempre, ahora una experiencia digital</h1>
+        <p>
+            Vidriera convierte las fichas de tus productos en PDF en un catálogo digital tipo
+            revista: navegable, con índice y buscador, y siempre disponible en un mismo link
+            que se actualiza solo cada vez que publicás una versión nueva.
+        </p>
+        <a class="cta" href="mailto:contacto@vidriera.app">Quiero mi catálogo digital</a>
+    </div>
+
+    <section>
+        <h2>¿Qué es Vidriera?</h2>
+        <p>
+            Subís las fichas PDF de tus productos (y opcionalmente las agrupás por carátulas y
+            subcarátulas), y Vidriera arma automáticamente un catálogo interactivo tipo flipbook:
+            se hojea como un libro, tiene índice navegable y buscador, y funciona igual en
+            computadora, tablet o celular. Cada vez que actualizás tu stock o agregás productos,
+            generás una nueva versión sin cambiar el link que ya compartiste.
+        </p>
+    </section>
+
+    <section>
+        <h2>¿Para quién es?</h2>
+        <p>
+            Pensado para editoriales, distribuidoras, jugueterías y cualquier negocio que hoy
+            arma su catálogo en PDF y quiere una forma más atractiva y práctica de compartirlo
+            con sus clientes, sin depender de un archivo pesado que queda desactualizado.
+        </p>
+    </section>
+
+    <section>
+        <h2>Lo que incluye</h2>
+        <div class="features">
+            <div class="feature">
+                <h3>Índice navegable</h3>
+                <p>Carátulas, subcarátulas y fichas organizadas en un árbol colapsable con buscador.</p>
+            </div>
+            <div class="feature">
+                <h3>Un solo link, siempre vigente</h3>
+                <p>Cada catálogo nuevo reemplaza al anterior en la misma dirección que ya compartiste.</p>
+            </div>
+            <div class="feature">
+                <h3>Carga masiva</h3>
+                <p>Subí decenas de fichas o carátulas de una sola vez, con nombres editables antes de publicar.</p>
+            </div>
+            <div class="feature">
+                <h3>Listo para cualquier pantalla</h3>
+                <p>Se ve bien en celular, tablet, notebook o pantalla completa en una vidriera física.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="contact">
+        <h2>¿Querés tu propio catálogo?</h2>
+        <p>Escribinos y te contamos cómo empezar.</p>
+        <a class="cta" href="mailto:contacto@vidriera.app">contacto@vidriera.app</a>
+    </section>
+
+    <footer>Vidriera — Catálogos digitales</footer>
+</body>
+</html>
