@@ -3,19 +3,38 @@ import { getNicheMaxWidth, getNicheRect } from "./niche.js";
 // Debe coincidir con max-width de .index-panel en catalog-viewer.css.
 const INDEX_PANEL_MAX_WIDTH = 210;
 
+// Debe coincidir con el media query en catalog-viewer.css.
+export const MOBILE_BREAKPOINT = 700;
+
+// Alto reservado para el toolbar-barra-inferior en mobile (catalog-viewer.css).
+const MOBILE_TOOLBAR_HEIGHT = 64;
+
+function isMobileViewport() {
+    return window.innerWidth <= MOBILE_BREAKPOINT;
+}
+
 export function computeFitSize(pageAspect, dom) {
     const inFullscreen = !!document.fullscreenElement;
-    const margin = inFullscreen ? 0 : 32;
-    const indexPanelOpen = dom.indexPanel && !dom.indexPanel.classList.contains("closed");
-    const toolbarSpace = indexPanelOpen ? 90 + INDEX_PANEL_MAX_WIDTH : 90;
+    const mobile = isMobileViewport();
+    const margin = inFullscreen ? 0 : mobile ? 12 : 32;
+
     let availW;
-    if (inFullscreen) {
-        availW = Math.max(window.innerWidth - toolbarSpace - margin * 2, 100);
+    let bottomBarSpace = 0;
+
+    if (mobile) {
+        bottomBarSpace = inFullscreen ? 0 : MOBILE_TOOLBAR_HEIGHT;
+        availW = Math.max(window.innerWidth - margin * 2, 100);
     } else {
-        const nicheW = getNicheMaxWidth() * 0.94;
-        availW = Math.max(Math.min(window.innerWidth - toolbarSpace - margin * 2, nicheW), 100);
+        const indexPanelOpen = dom.indexPanel && !dom.indexPanel.classList.contains("closed");
+        const toolbarSpace = indexPanelOpen ? 90 + INDEX_PANEL_MAX_WIDTH : 90;
+        if (inFullscreen) {
+            availW = Math.max(window.innerWidth - toolbarSpace - margin * 2, 100);
+        } else {
+            const nicheW = getNicheMaxWidth() * 0.94;
+            availW = Math.max(Math.min(window.innerWidth - toolbarSpace - margin * 2, nicheW), 100);
+        }
     }
-    const availH = Math.max(window.innerHeight - margin * 2, 100);
+    const availH = Math.max(window.innerHeight - margin * 2 - bottomBarSpace, 100);
 
     let w = availW;
     let h = w / pageAspect;
@@ -30,8 +49,9 @@ export function positionSideNav(referenceEl, dom) {
     const rect = referenceEl.getBoundingClientRect();
     const gap = 14;
     const btnSize = 40;
-    const indexPanelOpen = dom.indexPanel && !dom.indexPanel.classList.contains("closed");
-    const minLeft = indexPanelOpen ? 78 + INDEX_PANEL_MAX_WIDTH : 78;
+    const mobile = isMobileViewport();
+    const indexPanelOpen = !mobile && dom.indexPanel && !dom.indexPanel.classList.contains("closed");
+    const minLeft = indexPanelOpen ? 78 + INDEX_PANEL_MAX_WIDTH : mobile ? 8 : 78;
     dom.prevBtn.style.left = `${Math.max(rect.left - gap - btnSize, minLeft)}px`;
     dom.nextBtn.style.right = `${Math.max(window.innerWidth - rect.right - gap - btnSize, 8)}px`;
 }
@@ -49,6 +69,8 @@ export function positionCoverInfo(referenceEl, dom) {
 
 export function positionIndexPanel(dom) {
     if (!dom.indexPanel) return;
+    if (isMobileViewport()) return; // el CSS del media query maneja la posición/tamaño a pantalla completa.
+
     const rect = dom.toolbarEl.getBoundingClientRect();
     const top = rect.top;
     dom.indexPanel.style.top = `${top}px`;

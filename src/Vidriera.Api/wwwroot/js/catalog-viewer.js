@@ -4,6 +4,7 @@ import { setupToolbar } from "./catalog-viewer/toolbar.js";
 import { renderSinglePageViewer } from "./catalog-viewer/single-page-viewer.js";
 import { renderFlipbookViewer } from "./catalog-viewer/flipbook-viewer.js";
 import { setupUpdateChecker } from "./catalog-viewer/update-checker.js";
+import { MOBILE_BREAKPOINT } from "./catalog-viewer/layout.js";
 
 const rebuildRef = { current: () => {} };
 
@@ -40,8 +41,21 @@ async function start() {
     const { width, height } = await loadImageDimensions(firstPageUrl);
     const pageAspect = width / height;
 
-    if (dom.pageCount <= 1) {
-        renderSinglePageViewer({ dataUrl: firstPageUrl, pageAspect, dom, flipbookEl, rebuildRef });
+    const isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
+    // En desktop el índice es un sidebar angosto que arranca visible (colapsado por dentro).
+    // En mobile es un overlay a pantalla completa: debe arrancar cerrado del todo.
+    if (isMobile && dom.indexPanel) dom.indexPanel.classList.add("closed");
+
+    if (dom.pageCount <= 1 || isMobile) {
+        renderSinglePageViewer({
+            catalogId: dom.catalogId,
+            pageCount: dom.pageCount,
+            pageAspect,
+            dom,
+            flipbookEl,
+            sectionsData: dom.sectionsData,
+            rebuildRef,
+        });
         return;
     }
 
