@@ -102,7 +102,11 @@ export default function ProductsPage() {
   } = useBulkAssign({ auth, products, loadProducts, setError });
 
   const { isCreating, uploadProgress, handleCreateProduct } = useCreateProduct({ auth, setProducts, setError });
-  const { isCreatingSection, handleCreateSection } = useCreateSection({ auth, setSections, setError });
+  const { isCreatingSection, uploadProgress: sectionUploadProgress, handleCreateSection } = useCreateSection({
+    auth,
+    setSections,
+    setError,
+  });
 
   const { confirmingDeleteId, setConfirmingDeleteId, isDeleting, handleUploadSheet, handleDeleteProduct } =
     useProductActions({ auth, setProducts, setError });
@@ -296,11 +300,12 @@ export default function ProductsPage() {
 
         <UploadCreateForm
           label={Labels.sectionCoverFormLabel}
-          fileButtonLabel={Labels.chooseFileSingular}
-          multiple={false}
+          fileButtonLabel={Labels.chooseFilesPlural}
+          multiple
           maxSizeLabel={MAX_FILE_SIZE_LABEL}
           isSubmitting={isCreatingSection}
-          submitTitle={() => Labels.newSectionSubmitTitle}
+          submitTitle={(count) => (count > 1 ? Labels.uploadSectionsSubmitTitle(count) : Labels.newSectionSubmitTitle)}
+          progress={sectionUploadProgress}
           onSubmit={handleCreateSection}
           marginBottomClassName="mb-6"
         />

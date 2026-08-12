@@ -27,6 +27,7 @@ export const Labels = {
   newProductSubmitTitle: "Nuevo producto",
   newSectionSubmitTitle: "Nueva carátula",
   uploadProductsSubmitTitle: (count: number) => `Cargar ${count} productos`,
+  uploadSectionsSubmitTitle: (count: number) => `Cargar ${count} carátulas`,
 
   searchPlaceholder: "Buscar por nombre...",
   stockFilterAllLabel: "Todos",
