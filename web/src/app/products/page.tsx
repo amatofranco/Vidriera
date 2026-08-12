@@ -137,6 +137,27 @@ export default function ProductsPage() {
     return null;
   }
 
+  if (isLoading) {
+    return (
+      <div
+        className="flex w-full flex-1 items-center justify-center px-4 py-10"
+        style={{
+          backgroundImage:
+            "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(240,220,174,0.55) 0%, rgba(160,110,60,0.55) 45%, rgba(90,55,25,0.75) 100%), url('/login-bg.jpg')",
+          backgroundSize: "100% 100%, 240%",
+          backgroundPosition: "center, center 38%",
+          backgroundRepeat: "no-repeat, no-repeat",
+          backgroundAttachment: "fixed, fixed",
+        }}
+      >
+        <div className="flex flex-col items-center justify-center gap-3 text-zinc-200">
+          <span className="h-8 w-8 animate-spin rounded-full border-4 border-white/20 border-t-[#c9a86a]" />
+          <p>{Labels.loadingProducts}</p>
+        </div>
+      </div>
+    );
+  }
+
   function requestBulkDeleteSelected() {
     const targets = products.filter((p) => bulkAssignSelectedIds.has(p.id));
     requestBulkDelete(targets, Labels.selectedProductsLabel(targets.length), toggleBulkAssignMode);
@@ -361,12 +382,7 @@ export default function ProductsPage() {
           />
         )}
 
-        {isLoading ? (
-          <div className="mb-6 flex flex-col items-center justify-center gap-3 py-10 text-zinc-200">
-            <span className="h-8 w-8 animate-spin rounded-full border-4 border-white/20 border-t-[#c9a86a]" />
-            <p>{Labels.loadingProducts}</p>
-          </div>
-        ) : products.length === 0 && sections.length === 0 ? (
+        {products.length === 0 && sections.length === 0 ? (
           <p className="text-zinc-200">{Labels.noProductsOrSectionsYet}</p>
         ) : filteredTopLevelRows.length === 0 ? (
           <p className="mb-8 text-zinc-200">{Labels.noSearchMatches}</p>
