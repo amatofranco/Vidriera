@@ -1,7 +1,7 @@
 import { getNicheMaxWidth, getNicheRect } from "./niche.js";
 
 // Debe coincidir con max-width de .index-panel en catalog-viewer.css.
-const INDEX_PANEL_MAX_WIDTH = 280;
+const INDEX_PANEL_MAX_WIDTH = 210;
 
 export function computeFitSize(pageAspect, dom) {
     const inFullscreen = !!document.fullscreenElement;
