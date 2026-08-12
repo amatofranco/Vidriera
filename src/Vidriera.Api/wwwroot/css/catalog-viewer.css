@@ -99,7 +99,7 @@ body { overflow: auto; }
 .update-banner button:hover { background: #3a9dff; }
 
 #brand-logo {
-    position: fixed; top: 18px; left: 18px; height: 30px; width: auto;
+    position: fixed; top: 18px; left: 18px; height: 42px; width: auto;
     z-index: 20; pointer-events: none;
 }
 
