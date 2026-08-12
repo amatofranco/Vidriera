@@ -83,14 +83,15 @@ export function UploadCreateForm({
           {customNames ? Labels.renameFilesButtonEdited(customNames.length) : Labels.renameFilesButton}
         </button>
       )}
-      <input
-        type="text"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        disabled={files.length > 1}
-        placeholder={Labels.optionalNamePlaceholder}
-        className="w-48 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
-      />
+      {files.length <= 1 && (
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder={Labels.optionalNamePlaceholder}
+          className="w-48 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+        />
+      )}
       <button
         type="submit"
         title={submitTitle(files.length)}
