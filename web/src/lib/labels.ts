@@ -20,9 +20,9 @@ export const Labels = {
   noProductsOrSectionsYet: "Todavía no hay productos ni carátulas cargadas.",
   noSearchMatches: "Ningún producto coincide con la búsqueda.",
 
-  productSheetFormLabel: "Ficha/s PDF",
+  productSheetFormLabel: "PDF de Fichas",
   chooseFilesPlural: "Elegir archivos",
-  sectionCoverFormLabel: "PDF de carátula",
+  sectionCoverFormLabel: "PDF de Carátulas",
   chooseFileSingular: "Elegir archivo",
   newProductSubmitTitle: "Nuevo producto",
   newSectionSubmitTitle: "Nueva carátula",
