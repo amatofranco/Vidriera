@@ -137,8 +137,8 @@ body { overflow: auto; }
 .index-row {
     display: flex; align-items: center; gap: 2px;
 }
-.index-row[data-level="1"] { padding-left: 12px; }
-.index-row[data-level="2"] { padding-left: 24px; }
+.index-row[data-level="1"] { padding-left: 6px; }
+.index-row[data-level="2"] { padding-left: 14px; }
 .index-chevron, .index-chevron-spacer {
     flex: none; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
     background: transparent; border: none; color: #a1a1a6; font-size: 20px; cursor: pointer;
