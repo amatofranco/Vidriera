@@ -14,6 +14,13 @@ if (dom.indexBtn) {
     });
 }
 
+document.addEventListener("fullscreenchange", () => {
+    if (document.fullscreenElement && dom.indexPanel && !dom.indexPanel.classList.contains("closed")) {
+        dom.indexPanel.classList.add("closed");
+        rebuildRef.current();
+    }
+});
+
 setupZoom(dom);
 setupToolbar(dom);
 setupUpdateChecker(dom);
