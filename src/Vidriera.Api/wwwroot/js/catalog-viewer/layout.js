@@ -47,6 +47,12 @@ export function positionCoverInfo(referenceEl, dom) {
 export function positionIndexPanel(dom) {
     if (!dom.indexPanel) return;
     const rect = dom.toolbarEl.getBoundingClientRect();
-    dom.indexPanel.style.top = `${rect.top}px`;
+    const top = rect.top;
+    dom.indexPanel.style.top = `${top}px`;
     dom.indexPanel.style.transform = "none";
+
+    const bottomMargin = 20;
+    const available = window.innerHeight - top - bottomMargin;
+    const cap = window.innerHeight * 0.7;
+    dom.indexPanel.style.maxHeight = `${Math.max(Math.min(available, cap), 120)}px`;
 }
