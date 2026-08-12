@@ -1,5 +1,8 @@
 import { getNicheMaxWidth, getNicheRect } from "./niche.js";
 
+// Debe coincidir con max-width de .index-panel en catalog-viewer.css.
+const INDEX_PANEL_MAX_WIDTH = 280;
+
 export function computeFitSize(pageAspect, dom) {
     const inFullscreen = !!document.fullscreenElement;
     const margin = inFullscreen ? 0 : 32;
@@ -8,7 +11,7 @@ export function computeFitSize(pageAspect, dom) {
         availW = Math.max(window.innerWidth - margin * 2, 100);
     } else {
         const indexPanelOpen = dom.indexPanel && !dom.indexPanel.classList.contains("closed");
-        const toolbarSpace = indexPanelOpen ? 90 + 210 : 90;
+        const toolbarSpace = indexPanelOpen ? 90 + INDEX_PANEL_MAX_WIDTH : 90;
         const nicheW = getNicheMaxWidth() * 0.94;
         availW = Math.max(Math.min(window.innerWidth - toolbarSpace - margin * 2, nicheW), 100);
     }
@@ -28,7 +31,7 @@ export function positionSideNav(referenceEl, dom) {
     const gap = 14;
     const btnSize = 40;
     const indexPanelOpen = dom.indexPanel && !dom.indexPanel.classList.contains("closed");
-    const minLeft = indexPanelOpen ? 78 + 210 : 78;
+    const minLeft = indexPanelOpen ? 78 + INDEX_PANEL_MAX_WIDTH : 78;
     dom.prevBtn.style.left = `${Math.max(rect.left - gap - btnSize, minLeft)}px`;
     dom.nextBtn.style.right = `${Math.max(window.innerWidth - rect.right - gap - btnSize, 8)}px`;
 }
@@ -38,7 +41,7 @@ export function positionCoverInfo(referenceEl, dom) {
     const niche = getNicheRect();
     const padding = 32;
     const indexPanelOpen = dom.indexPanel && !dom.indexPanel.classList.contains("closed");
-    const minLeft = indexPanelOpen ? 90 + 210 : 90;
+    const minLeft = indexPanelOpen ? 90 + INDEX_PANEL_MAX_WIDTH : 90;
     const left = Math.max(niche.left + padding, minLeft);
     dom.coverInfoEl.style.left = `${left}px`;
     dom.coverInfoEl.style.maxWidth = `${Math.min(Math.max(rect.left - left - 20, 120), 320)}px`;
