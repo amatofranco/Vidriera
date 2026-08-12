@@ -6,12 +6,12 @@ const INDEX_PANEL_MAX_WIDTH = 210;
 export function computeFitSize(pageAspect, dom) {
     const inFullscreen = !!document.fullscreenElement;
     const margin = inFullscreen ? 0 : 32;
+    const indexPanelOpen = dom.indexPanel && !dom.indexPanel.classList.contains("closed");
+    const toolbarSpace = indexPanelOpen ? 90 + INDEX_PANEL_MAX_WIDTH : 90;
     let availW;
     if (inFullscreen) {
-        availW = Math.max(window.innerWidth - margin * 2, 100);
+        availW = Math.max(window.innerWidth - toolbarSpace - margin * 2, 100);
     } else {
-        const indexPanelOpen = dom.indexPanel && !dom.indexPanel.classList.contains("closed");
-        const toolbarSpace = indexPanelOpen ? 90 + INDEX_PANEL_MAX_WIDTH : 90;
         const nicheW = getNicheMaxWidth() * 0.94;
         availW = Math.max(Math.min(window.innerWidth - toolbarSpace - margin * 2, nicheW), 100);
     }
