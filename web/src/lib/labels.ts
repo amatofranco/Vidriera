@@ -28,6 +28,11 @@ export const Labels = {
   newSectionSubmitTitle: "Nueva carátula",
   uploadProductsSubmitTitle: (count: number) => `Cargar ${count} productos`,
   uploadSectionsSubmitTitle: (count: number) => `Cargar ${count} carátulas`,
+  renameFilesButton: "Renombrar archivos",
+  renameFilesButtonEdited: (count: number) => `Nombres editados (${count})`,
+  renameFilesTitle: "Renombrar archivos antes de subir",
+  renameFilesHint: "Estos nombres se van a usar en vez del nombre del archivo.",
+  renameFilesApply: "Aplicar nombres",
 
   searchPlaceholder: "Buscar por nombre...",
   stockFilterAllLabel: "Todos",

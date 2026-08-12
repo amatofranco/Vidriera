@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Labels } from "@/lib/labels";
+import { RenameFilesModal } from "./RenameFilesModal";
 
 export function UploadCreateForm({
   label,
@@ -21,19 +22,22 @@ export function UploadCreateForm({
   isSubmitting: boolean;
   submitTitle: (fileCount: number) => string;
   progress?: { done: number; total: number } | null;
-  onSubmit: (files: File[], name: string) => Promise<void> | void;
+  onSubmit: (files: File[], name: string, customNames?: string[]) => Promise<void> | void;
   marginBottomClassName?: string;
 }) {
   const [files, setFiles] = useState<File[]>([]);
   const [name, setName] = useState("");
+  const [customNames, setCustomNames] = useState<string[] | null>(null);
+  const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (files.length === 0) return;
-    await onSubmit(files, name.trim());
+    await onSubmit(files, name.trim(), customNames ?? undefined);
     setFiles([]);
     setName("");
+    setCustomNames(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
@@ -63,7 +67,10 @@ export function UploadCreateForm({
           accept="application/pdf"
           multiple={multiple}
           required
-          onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
+          onChange={(e) => {
+            setFiles(Array.from(e.target.files ?? []));
+            setCustomNames(null);
+          }}
           className="hidden"
         />
       </label>
@@ -75,6 +82,15 @@ export function UploadCreateForm({
         placeholder={Labels.optionalNamePlaceholder}
         className="w-48 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
       />
+      {files.length > 1 && (
+        <button
+          type="button"
+          onClick={() => setIsRenameModalOpen(true)}
+          className="rounded-md border border-zinc-300 px-3 py-1.5 text-xs font-medium whitespace-nowrap text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+        >
+          {customNames ? Labels.renameFilesButtonEdited(customNames.length) : Labels.renameFilesButton}
+        </button>
+      )}
       <button
         type="submit"
         title={submitTitle(files.length)}
@@ -95,6 +111,18 @@ export function UploadCreateForm({
             style={{ width: `${(progress.done / progress.total) * 100}%` }}
           />
         </div>
+      )}
+
+      {isRenameModalOpen && (
+        <RenameFilesModal
+          files={files}
+          initialNames={customNames}
+          onApply={(names) => {
+            setCustomNames(names);
+            setIsRenameModalOpen(false);
+          }}
+          onClose={() => setIsRenameModalOpen(false)}
+        />
       )}
     </form>
   );

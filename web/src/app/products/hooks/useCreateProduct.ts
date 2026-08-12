@@ -19,12 +19,17 @@ export function useCreateProduct({
     null
   );
 
-  async function handleCreateProduct(files: File[], name: string) {
+  async function handleCreateProduct(files: File[], name: string, customNames?: string[]) {
     if (!auth || files.length === 0) return;
     setIsCreating(true);
     setError(null);
 
-    const nameOverride = files.length === 1 ? name || undefined : undefined;
+    const overrideByFile = new Map<File, string | undefined>(
+      files.map((file, index) => [
+        file,
+        customNames ? customNames[index]?.trim() || undefined : files.length === 1 ? name || undefined : undefined,
+      ])
+    );
     const failed: { name: string; message: string }[] = [];
     const oversized = files.filter((f) => f.size > MAX_FILE_SIZE_BYTES);
     const validFiles = files.filter((f) => f.size <= MAX_FILE_SIZE_BYTES);
@@ -39,7 +44,7 @@ export function useCreateProduct({
 
     await runWithConcurrency(validFiles, 4, async (file) => {
       try {
-        const created = await createProduct(auth.token, file, nameOverride);
+        const created = await createProduct(auth.token, file, overrideByFile.get(file));
         setProducts((prev) => [created, ...prev]);
       } catch (err) {
         failed.push({
