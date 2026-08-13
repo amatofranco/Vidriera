@@ -26,6 +26,22 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
         return `/api/catalogs/${catalogId}/pages/${n}`;
     }
 
+    // Precarga la anterior y la siguiente en cuanto se sabe cuál es la
+    // página actual, para que ya estén en la caché del navegador cuando el
+    // usuario arranque a deslizar — si no, la vecina recién empieza a
+    // pedirse al tocar la pantalla y se ve cargando (o vacía si se desliza
+    // rápido).
+    const preloadedPages = new Set();
+    function preloadPage(n) {
+        if (n < 1 || n > pageCount || preloadedPages.has(n)) return;
+        preloadedPages.add(n);
+        new Image().src = pageUrl(n);
+    }
+    function preloadNeighbors(page) {
+        preloadPage(page - 1);
+        preloadPage(page + 1);
+    }
+
     function updateInfo() {
         dom.pageInfoEl.textContent = `${currentPage} / ${pageCount}`;
         dom.prevBtn.disabled = currentPage <= 1;
@@ -40,6 +56,7 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
         if (target === currentPage || isAnimating) return;
         const direction = target > currentPage ? 1 : -1; // 1 = avanza (entra desde la derecha)
         currentPage = target;
+        preloadNeighbors(currentPage);
         isAnimating = true;
 
         inactiveImg.style.transition = "none";
@@ -77,6 +94,7 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
     rebuildRef.current = fitStatic;
 
     activeImg.src = pageUrl(currentPage);
+    preloadNeighbors(currentPage);
     fitStatic();
 
     // En mobile, justo después de navegar, el navegador a veces todavía está
@@ -140,6 +158,7 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
             activeImg.style.transform = `translateX(${-direction * 100}%)`;
             inactiveImg.style.transform = "translateX(0)";
             currentPage += direction;
+            preloadNeighbors(currentPage);
             updateInfo();
             setTimeout(() => {
                 activeImg.style.transition = "none";
