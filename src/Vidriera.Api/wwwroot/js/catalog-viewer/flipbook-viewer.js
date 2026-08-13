@@ -1,4 +1,4 @@
-import { computeFitSize, positionSideNav, positionCoverInfo, positionIndexPanel } from "./layout.js";
+import { computeFitSize, positionSideNav, positionCoverInfo, positionIndexPanel, MOBILE_BREAKPOINT } from "./layout.js";
 import { renderIndexPanel } from "./index-panel.js";
 
 const INITIAL_LOAD_COUNT = 5;
@@ -47,6 +47,7 @@ function buildPriorityPageList(pageCount, sectionsData) {
 }
 
 export async function renderFlipbookViewer({ catalogId, pageCount, pageAspect, dom, flipbookEl, sectionsData, rebuildRef }) {
+    const isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
     const { divs: pageDivs, imgs: pageImgs } = buildPageDivs(catalogId, pageCount);
     await waitForImagesLoaded(pageImgs, buildPriorityPageList(pageCount, sectionsData));
 
@@ -82,7 +83,13 @@ export async function renderFlipbookViewer({ catalogId, pageCount, pageAspect, d
             size: "fixed",
             showCover: true,
             maxShadowOpacity: 0.6,
-            mobileScrollSupport: false,
+            // usePortrait (default true) hace que el libro pase a mostrar una
+            // sola página con la misma animación de flip cuando no entran dos
+            // lado a lado — es lo que da el modo mobile, sin código aparte.
+            usePortrait: true,
+            // Evita que el navegador scrollee la página mientras se arrastra
+            // una hoja con el dedo; solo importa (y solo se activa) en mobile.
+            mobileScrollSupport: isMobile,
         });
 
         pageDivs.forEach((div) => flipbookEl.appendChild(div));
@@ -101,6 +108,17 @@ export async function renderFlipbookViewer({ catalogId, pageCount, pageAspect, d
 
     rebuildRef.current = buildPageFlip;
     buildPageFlip();
+
+    if (isMobile) {
+        // Mismo fix que en single-page-viewer.js: justo después de navegar,
+        // el navegador mobile a veces reporta un innerWidth/innerHeight que
+        // todavía no es el definitivo (barra de direcciones acomodándose),
+        // dejando el libro con un tamaño/zoom incorrecto hasta el próximo
+        // recálculo. Reconstruimos un par de veces apenas carga.
+        requestAnimationFrame(() => requestAnimationFrame(buildPageFlip));
+        setTimeout(buildPageFlip, 300);
+        setTimeout(buildPageFlip, 800);
+    }
 
     renderIndexPanel({
         dom,
