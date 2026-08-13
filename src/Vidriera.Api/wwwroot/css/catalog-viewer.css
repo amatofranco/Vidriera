@@ -215,11 +215,13 @@ body { overflow: auto; }
        quedan redundantes. */
     .side-nav { display: none !important; }
 
+    #static-page-viewport { margin-top: 18px; }
+
     /* Un poco más grande que en desktop: además de mostrar el número de
        página, acá se puede arrastrar para saltar varias de una. Va apoyado
        cerca del toolbar, en el espacio libre entre el catálogo y el borde
        inferior, en vez de arriba pegado al logo. */
-    #page-info { top: auto; bottom: calc(76px + env(safe-area-inset-bottom) + 14px); padding: 7px 16px; touch-action: none; }
+    #page-info { top: auto; bottom: calc(76px + env(safe-area-inset-bottom) + 4px); padding: 7px 16px; touch-action: none; }
     .page-info-scrubbable::after { content: " \21D4"; opacity: .55; font-size: 16px; }
     .update-banner { bottom: auto; top: 54px; }
 
