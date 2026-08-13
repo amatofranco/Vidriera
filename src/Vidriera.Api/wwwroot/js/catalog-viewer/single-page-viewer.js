@@ -3,6 +3,7 @@ import { renderIndexPanel } from "./index-panel.js";
 
 const SWIPE_THRESHOLD_PX = 40;
 const SLIDE_DURATION_MS = 260;
+const SNAP_DURATION_MS = 200;
 
 export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, flipbookEl, sectionsData, rebuildRef }) {
     let currentPage = 1;
@@ -32,6 +33,8 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
         dom.coverInfoEl.style.display = currentPage === 1 ? "block" : "none";
     }
 
+    // Navegación "de un salto" (botones ‹ ›, índice): anima siempre la
+    // distancia completa, sin depender del dedo.
     function goToPage(n) {
         const target = Math.min(Math.max(n, 1), pageCount);
         if (target === currentPage || isAnimating) return;
@@ -45,11 +48,8 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
         inactiveImg.src = pageUrl(currentPage);
 
         // Fuerza un reflow para que el navegador "asiente" la posición inicial
-        // (transition:none) antes de habilitar la transición y mover a la
-        // posición final — si no, dos requestAnimationFrame seguidos no
-        // garantizan que el navegador llegue a pintar ese frame intermedio
-        // (ej. si la pestaña pierde el foco a mitad de camino), y la imagen
-        // puede quedar trabada fuera de pantalla.
+        // antes de habilitar la transición — evita depender de que se llegue
+        // a pintar un frame intermedio (ej. si la pestaña pierde el foco).
         void inactiveImg.offsetWidth;
 
         activeImg.style.transition = `transform ${SLIDE_DURATION_MS}ms ease`;
@@ -88,17 +88,77 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
     setTimeout(fitStatic, 300);
     setTimeout(fitStatic, 800);
 
-    let touchStartX = null;
+    // --- Arrastre en vivo: la página sigue al dedo, y al soltar completa el
+    // pase (si se arrastró lo suficiente) o vuelve a su lugar. ---
+    let dragStartX = null;
+    let dragDx = 0;
+    let dragDirection = 0; // 1 = hacia la página siguiente, -1 = hacia la anterior, 0 = todavía sin determinar (o sin página de ese lado)
+
     viewport.addEventListener("touchstart", (e) => {
-        touchStartX = e.touches[0].clientX;
+        if (isAnimating) return;
+        dragStartX = e.touches[0].clientX;
+        dragDx = 0;
+        dragDirection = 0;
     }, { passive: true });
-    viewport.addEventListener("touchend", (e) => {
-        if (touchStartX === null) return;
-        const dx = e.changedTouches[0].clientX - touchStartX;
-        touchStartX = null;
-        if (dx > SWIPE_THRESHOLD_PX) goToPage(currentPage - 1);
-        else if (dx < -SWIPE_THRESHOLD_PX) goToPage(currentPage + 1);
+
+    viewport.addEventListener("touchmove", (e) => {
+        if (dragStartX === null) return;
+        dragDx = e.touches[0].clientX - dragStartX;
+
+        if (dragDirection === 0) {
+            if (Math.abs(dragDx) < 5) return;
+            const wantDirection = dragDx < 0 ? 1 : -1;
+            const neighbor = currentPage + wantDirection;
+            if (neighbor < 1 || neighbor > pageCount) return; // no hay página de ese lado
+
+            dragDirection = wantDirection;
+            activeImg.style.transition = "none";
+            inactiveImg.style.transition = "none";
+            inactiveImg.style.transform = `translateX(${dragDirection * 100}%)`;
+            inactiveImg.style.display = "block";
+            inactiveImg.src = pageUrl(neighbor);
+        }
+
+        activeImg.style.transform = `translateX(${dragDx}px)`;
+        inactiveImg.style.transform = `translateX(calc(${dragDirection * 100}% + ${dragDx}px))`;
     }, { passive: true });
+
+    viewport.addEventListener("touchend", () => {
+        if (dragStartX === null) return;
+        const direction = dragDirection;
+        const dx = dragDx;
+        dragStartX = null;
+
+        if (!direction) return; // no llegó a moverse, o no había página de ese lado
+
+        const shouldComplete = Math.abs(dx) > SWIPE_THRESHOLD_PX;
+        isAnimating = true;
+        activeImg.style.transition = `transform ${SNAP_DURATION_MS}ms ease`;
+        inactiveImg.style.transition = `transform ${SNAP_DURATION_MS}ms ease`;
+
+        if (shouldComplete) {
+            activeImg.style.transform = `translateX(${-direction * 100}%)`;
+            inactiveImg.style.transform = "translateX(0)";
+            currentPage += direction;
+            updateInfo();
+            setTimeout(() => {
+                activeImg.style.transition = "none";
+                activeImg.style.transform = "translateX(0)";
+                activeImg.style.display = "none";
+                [activeImg, inactiveImg] = [inactiveImg, activeImg];
+                isAnimating = false;
+            }, SNAP_DURATION_MS + 30);
+        } else {
+            activeImg.style.transform = "translateX(0)";
+            inactiveImg.style.transform = `translateX(${direction * 100}%)`;
+            setTimeout(() => {
+                inactiveImg.style.transition = "none";
+                inactiveImg.style.transform = "translateX(0)";
+                inactiveImg.style.display = "none";
+                isAnimating = false;
+            }, SNAP_DURATION_MS + 30);
+        }
+    });
 
     let lastDpr = window.devicePixelRatio || 1;
     let resizeTimer = null;
