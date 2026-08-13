@@ -165,6 +165,11 @@ body { overflow: auto; }
 
 /* Debe coincidir con MOBILE_BREAKPOINT en layout.js */
 @media (max-width: 700px) {
+    /* Ningún elemento debería desbordar el ancho de la pantalla, pero si algo
+       lo hace por un instante durante la carga, esto evita que el navegador
+       mobile achique el zoom general para acomodarlo. */
+    html, body { overflow-x: hidden; }
+
     /* Espacio reservado abajo para el toolbar-barra (64px, ver MOBILE_TOOLBAR_HEIGHT
        en layout.js) + el margen de 12px que usa computeFitSize en mobile, para que
        el libro quede centrado en el área libre y no se meta debajo del toolbar. */

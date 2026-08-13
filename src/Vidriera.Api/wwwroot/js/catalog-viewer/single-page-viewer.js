@@ -40,6 +40,15 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
     img.src = pageUrl(currentPage);
     fitStatic();
 
+    // En mobile, justo después de navegar, el navegador a veces todavía está
+    // acomodando la barra de direcciones y reporta un innerWidth/innerHeight
+    // que no es el definitivo — el layout queda con un tamaño/zoom incorrecto
+    // hasta que algo fuerza un recálculo (ej. entrar y salir de pantalla
+    // completa). Forzamos ese recálculo un par de veces apenas carga.
+    requestAnimationFrame(() => requestAnimationFrame(fitStatic));
+    setTimeout(fitStatic, 300);
+    setTimeout(fitStatic, 800);
+
     let touchStartX = null;
     img.addEventListener("touchstart", (e) => {
         touchStartX = e.touches[0].clientX;
