@@ -16,7 +16,17 @@ if (dom.indexBtn) {
 }
 
 document.addEventListener("fullscreenchange", () => {
-    if (document.fullscreenElement && dom.indexPanel && !dom.indexPanel.classList.contains("closed")) {
+    const isFullscreen = !!document.fullscreenElement;
+
+    // El ícono/título del botón cambian según el estado, para que quede
+    // claro que tocarlo de nuevo saca de pantalla completa (antes usaba
+    // siempre el mismo ícono, sin importar el estado).
+    if (dom.fullscreenBtn) {
+        dom.fullscreenBtn.textContent = isFullscreen ? "✕" : "⛶";
+        dom.fullscreenBtn.title = isFullscreen ? "Salir de pantalla completa" : "Pantalla completa";
+    }
+
+    if (isFullscreen && dom.indexPanel && !dom.indexPanel.classList.contains("closed")) {
         dom.indexPanel.classList.add("closed");
         rebuildRef.current();
     }
