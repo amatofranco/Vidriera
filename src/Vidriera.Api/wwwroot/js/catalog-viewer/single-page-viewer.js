@@ -26,20 +26,24 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
         return `/api/catalogs/${catalogId}/pages/${n}`;
     }
 
-    // Precarga la anterior y la siguiente en cuanto se sabe cuál es la
-    // página actual, para que ya estén en la caché del navegador cuando el
-    // usuario arranque a deslizar — si no, la vecina recién empieza a
-    // pedirse al tocar la pantalla y se ve cargando (o vacía si se desliza
-    // rápido).
-    const preloadedPages = new Set();
+    // Precarga varias páginas de cada lado en cuanto se sabe cuál es la
+    // actual, para que ya estén en la caché del navegador cuando el usuario
+    // arranque a deslizar — si no, la vecina recién empieza a pedirse al
+    // tocar la pantalla y se ve cargando (o vacía si se desliza rápido, o
+    // si se pasa varias páginas seguidas).
+    const PRELOAD_RADIUS = 3;
+    const preloadedPages = new Map(); // guarda la referencia al Image() para que no lo recolecte el GC antes de terminar de bajarlo
     function preloadPage(n) {
         if (n < 1 || n > pageCount || preloadedPages.has(n)) return;
-        preloadedPages.add(n);
-        new Image().src = pageUrl(n);
+        const img = new Image();
+        img.src = pageUrl(n);
+        preloadedPages.set(n, img);
     }
     function preloadNeighbors(page) {
-        preloadPage(page - 1);
-        preloadPage(page + 1);
+        for (let offset = 1; offset <= PRELOAD_RADIUS; offset++) {
+            preloadPage(page - offset);
+            preloadPage(page + offset);
+        }
     }
 
     function updateInfo() {
