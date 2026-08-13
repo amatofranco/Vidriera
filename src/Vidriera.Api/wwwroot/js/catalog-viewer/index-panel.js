@@ -1,4 +1,6 @@
-export function renderIndexPanel({ dom, indexEntries, onJumpToPage }) {
+import { MOBILE_BREAKPOINT } from "./layout.js";
+
+export function renderIndexPanel({ dom, indexEntries, onJumpToPage, rebuildRef }) {
     if (!dom.indexList || !indexEntries || indexEntries.length === 0) return;
 
     const n = indexEntries.length;
@@ -36,7 +38,17 @@ export function renderIndexPanel({ dom, indexEntries, onJumpToPage }) {
             (entry.level >= 1 ? " index-item-sub" : "") +
             (entry.isProduct ? " index-item-product" : "");
         label.textContent = entry.name;
-        label.addEventListener("click", () => onJumpToPage(entry.startPage));
+        label.addEventListener("click", () => {
+            onJumpToPage(entry.startPage);
+            // En mobile el índice es un overlay a pantalla completa que tapa el
+            // catálogo — a diferencia del sidebar de desktop, acá conviene
+            // cerrarlo solo al elegir un producto en vez de obligar a cerrarlo
+            // a mano para ver a dónde saltó.
+            if (window.innerWidth <= MOBILE_BREAKPOINT && dom.indexPanel) {
+                dom.indexPanel.classList.add("closed");
+                if (rebuildRef) rebuildRef.current();
+            }
+        });
 
         row.appendChild(chevron);
         row.appendChild(label);

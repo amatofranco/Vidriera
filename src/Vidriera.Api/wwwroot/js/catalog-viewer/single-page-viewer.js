@@ -209,7 +209,7 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
 
     if (dom.indexBtn && pageCount <= 1) dom.indexBtn.style.display = "none";
 
-    renderIndexPanel({ dom, indexEntries: sectionsData, onJumpToPage: goToPage });
+    renderIndexPanel({ dom, indexEntries: sectionsData, onJumpToPage: goToPage, rebuildRef });
     if (dom.indexPanel) dom.indexPanel.classList.add("visible");
     positionIndexPanel(dom);
 }
