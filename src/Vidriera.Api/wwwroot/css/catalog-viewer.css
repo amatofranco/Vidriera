@@ -196,7 +196,10 @@ body { overflow: auto; }
        de mobile. */
     #lens-btn, #print-btn { display: none; }
 
-    .side-nav { width: 44px; height: 44px; }
+    /* El swipe ya es la forma natural de pasar de página en mobile — las
+       flechas son una necesidad de desktop (sin gesto táctil) que acá
+       quedan redundantes. */
+    .side-nav { display: none !important; }
 
     #page-info { bottom: auto; top: 10px; }
     .update-banner { bottom: auto; top: 54px; }
