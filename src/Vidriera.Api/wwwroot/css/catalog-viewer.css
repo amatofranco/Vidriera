@@ -187,6 +187,11 @@ body { overflow: auto; }
     }
     .toolbar button, .toolbar a { width: 44px; height: 44px; }
 
+    /* La lupa no tiene sentido: en mobile ya se puede hacer zoom con el
+       dedo (pinch-to-zoom nativo). Imprimir tampoco es un flujo típico
+       de mobile. */
+    #lens-btn, #print-btn { display: none; }
+
     .side-nav { width: 44px; height: 44px; }
 
     #page-info { bottom: auto; top: 10px; }
