@@ -1,4 +1,4 @@
-import { computeFitSize, positionSideNav, positionIndexPanel } from "./layout.js";
+import { computeFitSize, positionSideNav, positionIndexPanel, MOBILE_BREAKPOINT } from "./layout.js";
 import { renderIndexPanel } from "./index-panel.js";
 
 const SWIPE_THRESHOLD_PX = 40;
@@ -66,6 +66,10 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
 
     function updateInfo() {
         dom.pageInfoEl.textContent = `${currentPage} / ${pageCount}`;
+        // El ícono (vía CSS, ver .page-info-scrubbable) es la única pista de que
+        // el contador se puede arrastrar para saltar de página — sin él no hay
+        // forma de darse cuenta de que el gesto existe.
+        dom.pageInfoEl.classList.toggle("page-info-scrubbable", pageCount > 1 && window.innerWidth <= MOBILE_BREAKPOINT);
         dom.prevBtn.disabled = currentPage <= 1;
         dom.nextBtn.disabled = currentPage >= pageCount;
         dom.coverInfoEl.style.display = currentPage === 1 ? "block" : "none";

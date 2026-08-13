@@ -218,6 +218,7 @@ body { overflow: auto; }
     /* Un poco más grande que en desktop: además de mostrar el número de
        página, acá se puede arrastrar para saltar varias de una. */
     #page-info { bottom: auto; top: 10px; padding: 7px 16px; touch-action: none; }
+    .page-info-scrubbable::after { content: " \21D4"; opacity: .55; font-size: 11px; }
     .update-banner { bottom: auto; top: 54px; }
 
     #cover-info { display: none !important; }
