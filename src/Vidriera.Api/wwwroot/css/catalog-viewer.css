@@ -181,10 +181,18 @@ body { overflow: auto; }
     .stage:fullscreen { padding: 0; }
 
     /* En pantalla completa, el navegador puede mostrar un aviso nativo tipo
-       "para salir de pantalla completa..." pegado a un borde (aviso de
-       seguridad que no se puede ocultar desde la página). Se separa un poco
-       el toolbar del borde inferior para que no quede tapado por ese aviso. */
-    .stage:fullscreen .toolbar { bottom: 28px; }
+       "para salir de pantalla completa..." pegado al borde inferior (aviso
+       de seguridad que no se puede ocultar desde la página). El toolbar pasa
+       al margen superior en ese caso para no competir con ese aviso; el logo
+       (que ocupaba esa esquina) se oculta para no chocar con el toolbar. */
+    .stage:fullscreen .toolbar {
+        top: 0; bottom: auto;
+        padding-top: calc(8px + env(safe-area-inset-top));
+        box-shadow: 0 8px 24px rgba(0,0,0,.4);
+    }
+    .stage:fullscreen #brand-logo-link { display: none; }
+    .stage:fullscreen ~ #page-info { top: calc(74px + env(safe-area-inset-top)); }
+    .stage:fullscreen .update-banner { top: calc(118px + env(safe-area-inset-top)); }
 
     #brand-logo-link { height: 32px; top: 10px; left: 10px; }
 
