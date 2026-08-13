@@ -27,6 +27,24 @@ export function setupToolbar(dom) {
         printFrame.src = dom.fileUrl;
     });
 
+    // navigator.share solo existe en navegadores que tienen selector nativo de
+    // "compartir" (mobile, básicamente) — en el resto se oculta el botón en vez
+    // de armar un fallback (copiar al portapapeles, etc.) que complica la UI.
+    if (dom.shareBtn) {
+        if (!navigator.share) {
+            dom.shareBtn.style.display = "none";
+        } else {
+            dom.shareBtn.addEventListener("click", async () => {
+                const companyName = document.querySelector(".cover-info-company")?.textContent || "Catálogo";
+                try {
+                    await navigator.share({ title: companyName, text: `Mirá el catálogo de ${companyName}`, url: location.href });
+                } catch (e) {
+                    // el usuario cerró el selector de compartir sin elegir nada — no es un error
+                }
+            });
+        }
+    }
+
     document.addEventListener("keydown", (e) => {
         if (e.key === "ArrowLeft") dom.prevBtn.click();
         else if (e.key === "ArrowRight") dom.nextBtn.click();

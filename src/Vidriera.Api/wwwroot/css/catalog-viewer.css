@@ -215,7 +215,9 @@ body { overflow: auto; }
        quedan redundantes. */
     .side-nav { display: none !important; }
 
-    #page-info { bottom: auto; top: 10px; }
+    /* Un poco más grande que en desktop: además de mostrar el número de
+       página, acá se puede arrastrar para saltar varias de una. */
+    #page-info { bottom: auto; top: 10px; padding: 7px 16px; touch-action: none; }
     .update-banner { bottom: auto; top: 54px; }
 
     #cover-info { display: none !important; }

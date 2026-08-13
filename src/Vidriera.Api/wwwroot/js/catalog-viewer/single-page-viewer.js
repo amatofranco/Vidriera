@@ -4,9 +4,27 @@ import { renderIndexPanel } from "./index-panel.js";
 const SWIPE_THRESHOLD_PX = 40;
 const SLIDE_DURATION_MS = 260;
 const SNAP_DURATION_MS = 200;
+const SCRUB_RANGE_PX = 220;
 
 export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, flipbookEl, sectionsData, rebuildRef }) {
-    let currentPage = 1;
+    const lastPageStorageKey = `vidriera:lastPage:${catalogId}`;
+
+    // El link de "compartir" y volver a entrar deberían llevar a la página que
+    // se estaba viendo, no siempre a la tapa: primero el número de página de
+    // la URL (si vino de un link compartido) y si no, el último visto en este
+    // dispositivo.
+    function readInitialPage() {
+        const fromUrl = parseInt(new URLSearchParams(location.search).get("page"), 10);
+        if (fromUrl >= 1 && fromUrl <= pageCount) return fromUrl;
+        let fromStorage;
+        try {
+            fromStorage = parseInt(localStorage.getItem(lastPageStorageKey), 10);
+        } catch (e) {}
+        if (fromStorage >= 1 && fromStorage <= pageCount) return fromStorage;
+        return 1;
+    }
+
+    let currentPage = readInitialPage();
     let isAnimating = false;
 
     const viewport = document.createElement("div");
@@ -51,6 +69,13 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
         dom.prevBtn.disabled = currentPage <= 1;
         dom.nextBtn.disabled = currentPage >= pageCount;
         dom.coverInfoEl.style.display = currentPage === 1 ? "block" : "none";
+
+        try {
+            localStorage.setItem(lastPageStorageKey, String(currentPage));
+        } catch (e) {}
+        const url = new URL(location.href);
+        url.searchParams.set("page", String(currentPage));
+        history.replaceState(null, "", url);
     }
 
     // Navegación "de un salto" (botones ‹ ›, índice): anima siempre la
@@ -180,6 +205,41 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
                 inactiveImg.style.display = "none";
                 isAnimating = false;
             }, SNAP_DURATION_MS + 30);
+        }
+    });
+
+    // Arrastrar el contador de página ("12 / 41") permite saltar varias
+    // páginas de una, en vez de tener que deslizar de a una — útil en
+    // catálogos largos.
+    let scrubStartX = null;
+    let scrubStartPage = currentPage;
+
+    dom.pageInfoEl.addEventListener("touchstart", (e) => {
+        if (isAnimating) return;
+        scrubStartX = e.touches[0].clientX;
+        scrubStartPage = currentPage;
+    }, { passive: true });
+
+    dom.pageInfoEl.addEventListener("touchmove", (e) => {
+        if (scrubStartX === null) return;
+        const dx = e.touches[0].clientX - scrubStartX;
+        const delta = Math.round((dx / SCRUB_RANGE_PX) * pageCount);
+        const preview = Math.min(Math.max(scrubStartPage + delta, 1), pageCount);
+        dom.pageInfoEl.textContent = `${preview} / ${pageCount}`;
+    }, { passive: true });
+
+    dom.pageInfoEl.addEventListener("touchend", (e) => {
+        if (scrubStartX === null) return;
+        const lastX = e.changedTouches[0] ? e.changedTouches[0].clientX : scrubStartX;
+        const dx = lastX - scrubStartX;
+        scrubStartX = null;
+
+        const delta = Math.round((dx / SCRUB_RANGE_PX) * pageCount);
+        const target = Math.min(Math.max(scrubStartPage + delta, 1), pageCount);
+        if (target === currentPage) {
+            updateInfo(); // no hubo cambio de página: restaura el texto a lo que estaba
+        } else {
+            goToPage(target);
         }
     });
 

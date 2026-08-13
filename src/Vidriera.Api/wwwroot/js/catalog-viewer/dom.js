@@ -14,6 +14,7 @@ export const dom = {
     printBtn: document.getElementById("print-btn"),
     lensBtn: document.getElementById("lens-btn"),
     indexBtn: document.getElementById("index-btn"),
+    shareBtn: document.getElementById("share-btn"),
     indexPanel: document.getElementById("index-panel"),
     indexList: document.getElementById("index-list"),
     indexSearchInput: document.getElementById("index-search"),
