@@ -180,6 +180,12 @@ body { overflow: auto; }
     .stage:not(:fullscreen) { padding: 12px 0 calc(76px + env(safe-area-inset-bottom)) 0; }
     .stage:fullscreen { padding: 0; }
 
+    /* En pantalla completa, el navegador puede mostrar un aviso nativo tipo
+       "para salir de pantalla completa..." pegado a un borde (aviso de
+       seguridad que no se puede ocultar desde la página). Se separa un poco
+       el toolbar del borde inferior para que no quede tapado por ese aviso. */
+    .stage:fullscreen .toolbar { bottom: 28px; }
+
     #brand-logo-link { height: 32px; top: 10px; left: 10px; }
 
     .toolbar {
