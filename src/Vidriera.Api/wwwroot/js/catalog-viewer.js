@@ -46,7 +46,7 @@ async function start() {
     // En mobile es un overlay a pantalla completa: debe arrancar cerrado del todo.
     if (isMobile && dom.indexPanel) dom.indexPanel.classList.add("closed");
 
-    if (dom.pageCount <= 1) {
+    if (dom.pageCount <= 1 || isMobile) {
         renderSinglePageViewer({
             catalogId: dom.catalogId,
             pageCount: dom.pageCount,

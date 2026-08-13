@@ -2,13 +2,24 @@ import { computeFitSize, positionSideNav, positionIndexPanel } from "./layout.js
 import { renderIndexPanel } from "./index-panel.js";
 
 const SWIPE_THRESHOLD_PX = 40;
+const SLIDE_DURATION_MS = 260;
 
 export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, flipbookEl, sectionsData, rebuildRef }) {
     let currentPage = 1;
+    let isAnimating = false;
 
-    const img = document.createElement("img");
-    img.id = "static-page";
-    flipbookEl.replaceWith(img);
+    const viewport = document.createElement("div");
+    viewport.id = "static-page-viewport";
+
+    let activeImg = document.createElement("img");
+    let inactiveImg = document.createElement("img");
+    activeImg.className = "static-page-img";
+    inactiveImg.className = "static-page-img";
+    inactiveImg.style.display = "none";
+    viewport.appendChild(activeImg);
+    viewport.appendChild(inactiveImg);
+
+    flipbookEl.replaceWith(viewport);
 
     function pageUrl(n) {
         return `/api/catalogs/${catalogId}/pages/${n}`;
@@ -23,21 +34,49 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
 
     function goToPage(n) {
         const target = Math.min(Math.max(n, 1), pageCount);
-        if (target === currentPage) return;
+        if (target === currentPage || isAnimating) return;
+        const direction = target > currentPage ? 1 : -1; // 1 = avanza (entra desde la derecha)
         currentPage = target;
-        img.src = pageUrl(currentPage);
+        isAnimating = true;
+
+        inactiveImg.style.transition = "none";
+        inactiveImg.style.transform = `translateX(${direction * 100}%)`;
+        inactiveImg.style.display = "block";
+        inactiveImg.src = pageUrl(currentPage);
+
+        // Fuerza un reflow para que el navegador "asiente" la posición inicial
+        // (transition:none) antes de habilitar la transición y mover a la
+        // posición final — si no, dos requestAnimationFrame seguidos no
+        // garantizan que el navegador llegue a pintar ese frame intermedio
+        // (ej. si la pestaña pierde el foco a mitad de camino), y la imagen
+        // puede quedar trabada fuera de pantalla.
+        void inactiveImg.offsetWidth;
+
+        activeImg.style.transition = `transform ${SLIDE_DURATION_MS}ms ease`;
+        inactiveImg.style.transition = `transform ${SLIDE_DURATION_MS}ms ease`;
+        activeImg.style.transform = `translateX(${-direction * 100}%)`;
+        inactiveImg.style.transform = "translateX(0)";
+
         updateInfo();
+
+        setTimeout(() => {
+            activeImg.style.transition = "none";
+            activeImg.style.transform = "translateX(0)";
+            activeImg.style.display = "none";
+            [activeImg, inactiveImg] = [inactiveImg, activeImg];
+            isAnimating = false;
+        }, SLIDE_DURATION_MS + 30);
     }
 
     function fitStatic() {
         const { width, height } = computeFitSize(pageAspect, dom);
-        img.style.width = `${width}px`;
-        img.style.height = `${height}px`;
-        positionSideNav(img, dom);
+        viewport.style.width = `${width}px`;
+        viewport.style.height = `${height}px`;
+        positionSideNav(viewport, dom);
     }
     rebuildRef.current = fitStatic;
 
-    img.src = pageUrl(currentPage);
+    activeImg.src = pageUrl(currentPage);
     fitStatic();
 
     // En mobile, justo después de navegar, el navegador a veces todavía está
@@ -50,10 +89,10 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
     setTimeout(fitStatic, 800);
 
     let touchStartX = null;
-    img.addEventListener("touchstart", (e) => {
+    viewport.addEventListener("touchstart", (e) => {
         touchStartX = e.touches[0].clientX;
     }, { passive: true });
-    img.addEventListener("touchend", (e) => {
+    viewport.addEventListener("touchend", (e) => {
         if (touchStartX === null) return;
         const dx = e.changedTouches[0].clientX - touchStartX;
         touchStartX = null;
@@ -77,7 +116,7 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
     dom.prevBtn.addEventListener("click", () => goToPage(currentPage - 1));
     dom.nextBtn.addEventListener("click", () => goToPage(currentPage + 1));
 
-    img.style.visibility = "visible";
+    viewport.style.visibility = "visible";
     dom.loadingEl.style.display = "none";
     dom.toolbarEl.style.display = "flex";
     dom.prevBtn.style.display = "flex";

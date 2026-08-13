@@ -5,7 +5,7 @@ export function setupZoom(dom) {
     let isZoomed = false;
 
     function currentZoomTarget() {
-        return document.getElementById("flipbook") || document.getElementById("static-page");
+        return document.getElementById("flipbook") || document.getElementById("static-page-viewport");
     }
 
     function setZoomed(zoomed, clickEvent) {
