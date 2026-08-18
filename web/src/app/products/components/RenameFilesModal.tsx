@@ -10,20 +10,31 @@ function baseName(fileName: string) {
 export function RenameFilesModal({
   files,
   initialNames,
+  isbnEnabled,
+  initialIsbns,
   onApply,
   onClose,
 }: {
   files: File[];
   initialNames: string[] | null;
-  onApply: (names: string[]) => void;
+  isbnEnabled?: boolean;
+  initialIsbns?: string[] | null;
+  onApply: (names: string[], isbns?: string[]) => void;
   onClose: () => void;
 }) {
   const [names, setNames] = useState<string[]>(
     () => initialNames ?? files.map((f) => baseName(f.name))
   );
+  const [isbns, setIsbns] = useState<string[]>(
+    () => initialIsbns ?? files.map(() => "")
+  );
 
   function setNameAt(index: number, value: string) {
     setNames((prev) => prev.map((n, i) => (i === index ? value : n)));
+  }
+
+  function setIsbnAt(index: number, value: string) {
+    setIsbns((prev) => prev.map((n, i) => (i === index ? value : n)));
   }
 
   return (
@@ -44,6 +55,15 @@ export function RenameFilesModal({
                 onChange={(e) => setNameAt(index, e.target.value)}
                 className="flex-1 rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
               />
+              {isbnEnabled && (
+                <input
+                  type="text"
+                  value={isbns[index]}
+                  onChange={(e) => setIsbnAt(index, e.target.value)}
+                  placeholder={Labels.renameFilesIsbnColumnLabel}
+                  className="w-32 shrink-0 rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+                />
+              )}
             </li>
           ))}
         </ul>
@@ -58,7 +78,7 @@ export function RenameFilesModal({
           </button>
           <button
             type="button"
-            onClick={() => onApply(names)}
+            onClick={() => onApply(names, isbnEnabled ? isbns : undefined)}
             className="rounded bg-[#8a5a35] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#a06b41]"
           >
             {Labels.renameFilesApply}

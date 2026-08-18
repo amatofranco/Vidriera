@@ -12,6 +12,7 @@ public static class CatalogHtmlBuilder
 
     private static readonly string ViewerPageTemplate = LoadTemplate("viewer-page.html");
     private static readonly string IndexPanelTemplate = LoadTemplate("index-panel.html");
+    private static readonly string OrderPanelTemplate = LoadTemplate("order-panel.html");
     private static readonly string MessagePageTemplate = LoadTemplate("message-page.html");
 
     private static string LoadTemplate(string fileName)
@@ -39,6 +40,7 @@ public static class CatalogHtmlBuilder
         var indexPanelHtml = hasSections
             ? IndexPanelTemplate.Replace("{{SECTIONS_JSON}}", sectionsJsonEncoded)
             : "";
+        var orderPanelHtml = hasSections ? OrderPanelTemplate : "";
 
         return ViewerPageTemplate
             .Replace("{{FILE_URL}}", fileUrl)
@@ -46,6 +48,7 @@ public static class CatalogHtmlBuilder
             .Replace("{{GENERATED_AT}}", generatedAt)
             .Replace("{{INDEX_BUTTON}}", indexButtonHtml)
             .Replace("{{INDEX_PANEL}}", indexPanelHtml)
+            .Replace("{{ORDER_PANEL}}", orderPanelHtml)
             .Replace("{{CATALOG_ID}}", dto.Id.ToString())
             .Replace("{{COMPANY_ID}}", dto.CompanyId.ToString())
             .Replace("{{PAGE_COUNT}}", dto.RasterizedPageCount.ToString());

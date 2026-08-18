@@ -35,6 +35,12 @@ public class ProductMapping : ClassMapping<Product>
             m.Length(100);
         });
 
+        Property(x => x.Isbn, m =>
+        {
+            m.Column("isbn");
+            m.Length(50);
+        });
+
         Property(x => x.SheetPdfBlobKey, m =>
         {
             m.Column("sheet_pdf_blob_key");

@@ -1,0 +1,67 @@
+<button id="order-badge" class="order-badge" title="Ver pedido" style="display: none;">
+    &#128203;
+    <span id="order-badge-count" class="order-badge-count">0</span>
+</button>
+
+<div id="order-drawer" class="order-drawer" style="display: none;">
+    <div class="order-drawer-header">
+        <h3>Tu pedido</h3>
+        <button id="order-drawer-close" class="order-drawer-close" title="Cerrar">&times;</button>
+    </div>
+    <div id="order-items-list" class="order-items-list"></div>
+    <div class="order-drawer-footer">
+        <button id="order-checkout-btn" class="order-primary-btn" disabled>Finalizar pedido</button>
+    </div>
+</div>
+
+<div id="order-checkout-modal" class="order-modal" style="display: none;">
+    <div class="order-modal-panel">
+        <div class="order-modal-header">
+            <h3>Datos del pedido</h3>
+            <button id="order-modal-close" class="order-drawer-close" title="Cerrar">&times;</button>
+        </div>
+        <form id="order-checkout-form" class="order-form">
+            <label>Razón Social
+                <input type="text" name="businessName" required autocomplete="off" />
+            </label>
+            <label>Nombre del local
+                <input type="text" name="storeName" required autocomplete="off" />
+            </label>
+            <label>CUIT
+                <input type="text" name="cuit" required autocomplete="off" />
+            </label>
+            <label>Condición frente al IVA
+                <select name="vatCondition" required>
+                    <option value="" disabled selected>Seleccionar...</option>
+                    <option value="Responsable Inscripto">Responsable Inscripto</option>
+                    <option value="Monotributista">Monotributista</option>
+                    <option value="Exento">Exento</option>
+                    <option value="Consumidor Final">Consumidor Final</option>
+                    <option value="No Responsable">No Responsable</option>
+                </select>
+            </label>
+            <label>Teléfono
+                <input type="tel" name="phone" required autocomplete="off" />
+            </label>
+            <label>Email
+                <input type="email" name="email" required autocomplete="off" />
+            </label>
+            <label>Ciudad
+                <input type="text" name="city" required autocomplete="off" />
+            </label>
+            <label>Provincia
+                <input type="text" name="province" required autocomplete="off" />
+            </label>
+            <label>Expreso
+                <input type="text" name="carrier" placeholder="Opcional" autocomplete="off" />
+            </label>
+            <label>Dirección de entrega
+                <input type="text" name="deliveryAddress" required autocomplete="off" />
+            </label>
+            <div class="order-form-actions">
+                <span id="order-form-error" class="order-form-error"></span>
+                <button type="submit" id="order-submit-btn" class="order-primary-btn">Generar pedido</button>
+            </div>
+        </form>
+    </div>
+</div>

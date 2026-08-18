@@ -317,6 +317,7 @@ export default function ProductsPage() {
           progress={uploadProgress}
           onSubmit={handleCreateProduct}
           marginBottomClassName="mb-3"
+          isbnEnabled
         />
 
         <UploadCreateForm

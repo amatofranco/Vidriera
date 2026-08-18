@@ -62,6 +62,7 @@ export interface Product {
   hasSheet: boolean;
   sectionId: string | null;
   sortOrder: number;
+  isbn: string | null;
 }
 
 export function getProducts(token: string) {
@@ -140,10 +141,11 @@ export function updateStock(token: string, productId: string, hasStock: boolean)
   });
 }
 
-export function createProduct(token: string, file: File, name?: string) {
+export function createProduct(token: string, file: File, name?: string, isbn?: string) {
   const formData = new FormData();
   formData.append("file", file);
   if (name) formData.append("name", name);
+  if (isbn) formData.append("isbn", isbn);
 
   return request<Product>("/api/products", {
     method: "POST",

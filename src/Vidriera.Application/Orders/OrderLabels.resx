@@ -58,64 +58,7 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="InvalidCredentials" xml:space="preserve">
-    <value>Email o contraseña incorrectos.</value>
-  </data>
-  <data name="MissingCompanyIdClaim" xml:space="preserve">
-    <value>El token no tiene un companyId válido.</value>
-  </data>
-  <data name="MissingUserIdClaim" xml:space="preserve">
-    <value>El token no tiene un identificador de usuario válido.</value>
-  </data>
-  <data name="MustSelectAtLeastOneProduct" xml:space="preserve">
-    <value>Hay que seleccionar al menos un producto.</value>
-  </data>
-  <data name="CompanyCatalogNotFound" xml:space="preserve">
-    <value>Todavía no se generó un catálogo para esta empresa.</value>
-  </data>
-  <data name="InvalidSectionReorderItems" xml:space="preserve">
-    <value>Alguno de los ítems no existe o no pertenece a esta carátula.</value>
-  </data>
-  <data name="InvalidTopLevelReorderItems" xml:space="preserve">
-    <value>Alguno de los ítems no existe o no pertenece a esta empresa.</value>
-  </data>
-  <data name="SectionCannotNestFurther" xml:space="preserve">
-    <value>No se puede anidar una subcarátula dentro de otra subcarátula.</value>
-  </data>
-  <data name="SectionHasChildrenCannotNest" xml:space="preserve">
-    <value>Esta carátula tiene subcarátulas propias; no puede ser subcarátula de otra.</value>
-  </data>
-  <data name="SectionCannotBeOwnParent" xml:space="preserve">
-    <value>Una carátula no puede ser su propia carátula padre.</value>
-  </data>
-  <data name="CompanyNotFound" xml:space="preserve">
-    <value>No existe la empresa {0}.</value>
-  </data>
-  <data name="CompanyLogoNotFound" xml:space="preserve">
-    <value>La empresa {0} no tiene logo cargado.</value>
-  </data>
-  <data name="EmailAlreadyRegistered" xml:space="preserve">
-    <value>Ya existe un usuario con el email '{0}'.</value>
-  </data>
-  <data name="CatalogNotFound" xml:space="preserve">
-    <value>No existe el catálogo {0}.</value>
-  </data>
-  <data name="ProductNotFound" xml:space="preserve">
-    <value>No se encontró el producto {0} para esta empresa.</value>
-  </data>
-  <data name="SectionNotFound" xml:space="preserve">
-    <value>No se encontró la carátula {0} para esta empresa.</value>
-  </data>
-  <data name="CatalogPageNotFound" xml:space="preserve">
-    <value>El catálogo {0} no tiene la página {1}.</value>
-  </data>
-  <data name="MustSelectAtLeastOneOrderItem" xml:space="preserve">
-    <value>Hay que agregar al menos un producto al pedido.</value>
-  </data>
-  <data name="OrderContainsInvalidProducts" xml:space="preserve">
-    <value>Alguno de los productos del pedido no existe o no pertenece a esta empresa.</value>
-  </data>
-  <data name="OrderCustomerDataIncomplete" xml:space="preserve">
-    <value>Faltan completar datos obligatorios del cliente.</value>
+  <data name="DefaultFileNamePrefix" xml:space="preserve">
+    <value>Pedido</value>
   </data>
 </root>

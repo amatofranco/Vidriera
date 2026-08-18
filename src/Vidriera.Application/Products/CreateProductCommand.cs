@@ -6,4 +6,5 @@ public record CreateProductCommand(
     Guid CompanyId,
     Stream FileContent,
     string OriginalFileName,
-    string? Name) : IRequest<ProductDto>;
+    string? Name,
+    string? Isbn) : IRequest<ProductDto>;

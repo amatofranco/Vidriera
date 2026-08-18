@@ -37,4 +37,8 @@ public static class ErrorMessages
     public static string SectionNotFound(Guid sectionId) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(SectionNotFound)), sectionId);
 
     public static string CatalogPageNotFound(Guid catalogId, int pageNumber) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(CatalogPageNotFound)), catalogId, pageNumber);
+
+    public static string MustSelectAtLeastOneOrderItem => Get(nameof(MustSelectAtLeastOneOrderItem));
+    public static string OrderContainsInvalidProducts => Get(nameof(OrderContainsInvalidProducts));
+    public static string OrderCustomerDataIncomplete => Get(nameof(OrderCustomerDataIncomplete));
 }

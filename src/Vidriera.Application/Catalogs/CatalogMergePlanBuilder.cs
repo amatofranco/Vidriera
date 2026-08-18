@@ -46,7 +46,8 @@ internal static class CatalogMergePlanBuilder
                         productEntry.Product.Name,
                         pageCursor + 1,
                         level,
-                        IsProduct: true));
+                        IsProduct: true,
+                        ProductId: productEntry.Product.Id));
                     break;
             }
             pageCursor += pageCounts[i];

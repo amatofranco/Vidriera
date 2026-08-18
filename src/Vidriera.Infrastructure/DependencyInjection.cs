@@ -6,6 +6,7 @@ using Vidriera.Infrastructure.Persistence;
 using Vidriera.Infrastructure.Storage;
 using Vidriera.Infrastructure.Pdf;
 using Vidriera.Infrastructure.Auth;
+using Vidriera.Infrastructure.Excel;
 
 namespace Vidriera.Infrastructure;
 
@@ -25,6 +26,7 @@ public static class DependencyInjection
 
         services.AddSingleton<IPdfMergeService, PdfSharpMergeService>();
         services.AddSingleton<IPdfRasterizerService, PdfiumRasterizerService>();
+        services.AddSingleton<IExcelOrderService, ClosedXmlOrderService>();
 
         services.Configure<JwtOptions>(configuration.GetSection("Jwt"));
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
