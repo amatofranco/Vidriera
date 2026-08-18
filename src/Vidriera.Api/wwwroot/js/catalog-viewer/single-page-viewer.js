@@ -73,7 +73,10 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
         dom.prevBtn.disabled = currentPage <= 1;
         dom.nextBtn.disabled = currentPage >= pageCount;
         dom.coverInfoEl.style.display = currentPage === 1 ? "block" : "none";
-        if (dom.orderCart) dom.orderCart.setCurrentPages([currentPage]);
+        if (dom.orderCart) {
+            const rect = viewport.getBoundingClientRect();
+            dom.orderCart.setCurrentPages([{ pageNumber: currentPage, centerX: rect.left + rect.width / 2 }]);
+        }
 
         try {
             localStorage.setItem(lastPageStorageKey, String(currentPage));
@@ -256,7 +259,10 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
             const dpr = window.devicePixelRatio || 1;
             const isZoomChange = Math.abs(dpr - lastDpr) > 0.01;
             lastDpr = dpr;
-            if (!isZoomChange) fitStatic();
+            if (!isZoomChange) {
+                fitStatic();
+                updateInfo();
+            }
             positionIndexPanel(dom);
         }, 200);
     });

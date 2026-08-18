@@ -66,10 +66,11 @@ function createCartState(dom) {
     };
 }
 
-// Botón "+" cuando todavía no se agregó nada, o stepper "− n +" una vez que
-// hay cantidad — mismo control visual para el drawer y para el botón
-// flotante de la página actual.
-function createStepperEl(quantity, onMinus, onPlus) {
+// Botón "+" cuando todavía no se agregó nada, o stepper "− [n] +" una vez
+// que hay cantidad — mismo control visual para el drawer y para la barra de
+// la página actual. El campo de cantidad es un input editable: además de
+// +/-, se puede escribir la cantidad directamente.
+function createStepperEl(quantity, onMinus, onPlus, onSetQuantity) {
     if (quantity === 0) {
         const addBtn = document.createElement("button");
         addBtn.type = "button";
@@ -88,9 +89,23 @@ function createStepperEl(quantity, onMinus, onPlus) {
     minusBtn.textContent = "−";
     minusBtn.addEventListener("click", onMinus);
 
-    const qty = document.createElement("span");
-    qty.className = "order-stepper-qty";
-    qty.textContent = String(quantity);
+    const qtyInput = document.createElement("input");
+    qtyInput.type = "number";
+    qtyInput.className = "order-stepper-qty-input";
+    qtyInput.min = "0";
+    qtyInput.inputMode = "numeric";
+    qtyInput.value = String(quantity);
+    qtyInput.addEventListener("click", (e) => e.stopPropagation());
+    qtyInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            qtyInput.blur();
+        }
+    });
+    qtyInput.addEventListener("change", () => {
+        const parsed = parseInt(qtyInput.value, 10);
+        onSetQuantity(Number.isFinite(parsed) && parsed >= 0 ? parsed : quantity);
+    });
 
     const plusBtn = document.createElement("button");
     plusBtn.type = "button";
@@ -98,7 +113,7 @@ function createStepperEl(quantity, onMinus, onPlus) {
     plusBtn.addEventListener("click", onPlus);
 
     stepper.appendChild(minusBtn);
-    stepper.appendChild(qty);
+    stepper.appendChild(qtyInput);
     stepper.appendChild(plusBtn);
     return stepper;
 }
@@ -128,7 +143,8 @@ function renderDrawerItems(dom, cart) {
         const stepperEl = createStepperEl(
             item.quantity,
             () => cart.decrement(item.productId, item.name),
-            () => cart.increment(item.productId, item.name)
+            () => cart.increment(item.productId, item.name),
+            (value) => cart.setQuantity(item.productId, item.name, value)
         );
 
         row.appendChild(name);
@@ -159,52 +175,58 @@ function getProductEntryForPage(dom, pageNumber) {
 }
 
 // Página simple (mobile) o doble página (desktop): junta las entradas de
-// producto de cada página visible en este momento, sin repetir si una ficha
-// ocupa las dos mitades de la misma doble página.
-function getVisibleProductEntries(dom, pageNumbers) {
-    const seen = new Set();
-    const result = [];
-    pageNumbers.forEach((pageNumber) => {
+// producto de cada página visible en este momento, promediando el centerX
+// de las páginas que comparten producto (una ficha que ocupa las dos mitades
+// de la doble página termina centrada en el medio de la doble página).
+function getVisibleProductEntries(dom, pageEntries) {
+    const byProduct = new Map();
+    pageEntries.forEach(({ pageNumber, centerX }) => {
         const entry = getProductEntryForPage(dom, pageNumber);
-        if (entry && !seen.has(entry.productId)) {
-            seen.add(entry.productId);
-            result.push(entry);
+        if (!entry) return;
+        if (!byProduct.has(entry.productId)) {
+            byProduct.set(entry.productId, { entry, centers: [] });
         }
+        byProduct.get(entry.productId).centers.push(centerX);
     });
-    return result;
+    return Array.from(byProduct.values()).map(({ entry, centers }) => ({
+        entry,
+        centerX: centers.reduce((sum, c) => sum + c, 0) / centers.length,
+    }));
 }
 
-function renderPageOrderBar(dom, cart, pageNumbers) {
+function renderPageOrderBar(dom, cart, pageEntries) {
     if (!dom.pageOrderBar) return;
 
-    const entries = getVisibleProductEntries(dom, pageNumbers);
+    const items = getVisibleProductEntries(dom, pageEntries);
     dom.pageOrderBar.innerHTML = "";
 
-    if (entries.length === 0) {
+    if (items.length === 0) {
         dom.pageOrderBar.style.display = "none";
         return;
     }
 
-    dom.pageOrderBar.style.display = "flex";
+    dom.pageOrderBar.style.display = "block";
 
-    entries.forEach((entry) => {
+    items.forEach(({ entry, centerX }) => {
         const chip = document.createElement("div");
         chip.className = "page-order-chip";
+        chip.style.left = `${Math.round(centerX)}px`;
 
-        const name = document.createElement("span");
-        name.className = "page-order-chip-name";
-        name.textContent = entry.name;
+        const label = document.createElement("span");
+        label.className = "page-order-chip-label";
+        label.textContent = "AGREGAR";
 
         const stepperSlot = document.createElement("div");
         stepperSlot.appendChild(
             createStepperEl(
                 cart.getQuantity(entry.productId),
                 () => cart.decrement(entry.productId, entry.name),
-                () => cart.increment(entry.productId, entry.name)
+                () => cart.increment(entry.productId, entry.name),
+                (value) => cart.setQuantity(entry.productId, entry.name, value)
             )
         );
 
-        chip.appendChild(name);
+        chip.appendChild(label);
         chip.appendChild(stepperSlot);
         dom.pageOrderBar.appendChild(chip);
     });
@@ -337,16 +359,18 @@ function setupOrderUi(dom, cart, renderPageBar) {
 
 export function initOrderCart(dom) {
     const cart = createCartState(dom);
-    let currentPageNumbers = [1];
+    let currentPageEntries = [];
 
     function renderPageBar() {
-        renderPageOrderBar(dom, cart, currentPageNumbers);
+        renderPageOrderBar(dom, cart, currentPageEntries);
     }
 
-    // pageNumbers: una página sola (mobile) o las dos de la doble página
-    // actual (desktop) — quien llama decide qué páginas están visibles.
-    cart.setCurrentPages = (pageNumbers) => {
-        currentPageNumbers = pageNumbers;
+    // pageEntries: [{ pageNumber, centerX }], una por cada página visible
+    // (una en mobile, hasta dos en doble página desktop) — el visor calcula
+    // centerX a partir del elemento real de esa página para que el chip
+    // quede centrado horizontalmente debajo de ella.
+    cart.setCurrentPages = (pageEntries) => {
+        currentPageEntries = pageEntries;
         renderPageBar();
     };
 

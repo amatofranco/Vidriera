@@ -183,7 +183,13 @@ body { overflow: auto; }
     display: flex; align-items: center; justify-content: center;
 }
 .order-stepper button:hover { background: #48484a; }
-.order-stepper-qty { min-width: 16px; text-align: center; font-size: 13px; color: #f5f5f7; }
+.order-stepper-qty-input {
+    width: 28px; min-width: 0; text-align: center; font-size: 13px; color: #f5f5f7;
+    background: transparent; border: none; outline: none; font-family: inherit;
+    -moz-appearance: textfield;
+}
+.order-stepper-qty-input::-webkit-outer-spin-button,
+.order-stepper-qty-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
 .order-badge {
     position: fixed; right: 18px; bottom: 18px; z-index: 25;
@@ -200,19 +206,24 @@ body { overflow: auto; }
     display: flex; align-items: center; justify-content: center; box-sizing: border-box;
 }
 
+/* Contenedor de ancho completo sin alto propio — cada chip se ubica con su
+   propio "left" (en píxeles de viewport, calculado por el visor a partir del
+   elemento real de esa página) para quedar centrado bajo esa página puntual,
+   en vez de centrar el grupo entero bajo el libro. */
 .page-order-bar {
-    position: fixed; left: 50%; bottom: 40px; transform: translateX(-50%); z-index: 21;
-    display: none; gap: 6px; max-width: calc(100vw - 100px);
+    position: fixed; left: 0; right: 0; bottom: 40px; height: 0; z-index: 21;
+    display: none;
 }
 .page-order-chip {
-    display: flex; align-items: center; gap: 5px; flex: none;
-    background: #232325; border-radius: 999px; padding: 4px 5px 4px 10px;
+    position: absolute; top: 0; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 6px;
+    background: #232325; border-radius: 999px; padding: 4px 5px 4px 12px;
     box-shadow: 0 8px 24px rgba(0,0,0,.4);
     backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    white-space: nowrap;
 }
-.page-order-chip-name {
-    font-size: 11px; color: #f5f5f7; overflow: hidden; text-overflow: ellipsis;
-    white-space: nowrap; max-width: 96px;
+.page-order-chip-label {
+    font-size: 10px; font-weight: 600; letter-spacing: .04em; color: #a1a1a6;
 }
 /* Versión chica de los botones del stepper compartido, para que entren dos
    chips (doble página con dos productos distintos) sin desbordar. */
@@ -220,8 +231,8 @@ body { overflow: auto; }
 .page-order-chip .order-stepper button {
     width: 20px; height: 20px; font-size: 13px;
 }
-.page-order-chip .order-stepper { gap: 4px; }
-.page-order-chip .order-stepper-qty { font-size: 11px; }
+.page-order-chip .order-stepper { gap: 2px; }
+.page-order-chip .order-stepper-qty-input { width: 22px; font-size: 11px; }
 
 .order-drawer {
     position: fixed; right: 18px; bottom: 80px; z-index: 25;
@@ -352,11 +363,7 @@ body { overflow: auto; }
     .index-item { padding: 11px 8px; font-size: 14px; }
 
     .order-badge { bottom: calc(88px + env(safe-area-inset-bottom)); right: 12px; }
-    .page-order-bar {
-        bottom: calc(108px + env(safe-area-inset-bottom));
-        max-width: calc(100vw - 24px);
-    }
-    .page-order-chip-name { max-width: 50vw; }
+    .page-order-bar { bottom: calc(108px + env(safe-area-inset-bottom)); }
     .order-drawer {
         left: 10px; right: 10px; bottom: calc(88px + env(safe-area-inset-bottom));
         width: auto; max-height: 60vh;

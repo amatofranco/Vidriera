@@ -67,7 +67,15 @@ export async function renderFlipbookViewer({ catalogId, pageCount, pageAspect, d
         dom.prevBtn.disabled = current <= 1;
         dom.nextBtn.disabled = current >= pageCount;
         dom.coverInfoEl.style.display = current === 1 ? "block" : "none";
-        if (dom.orderCart) dom.orderCart.setCurrentPages(getSpreadPages(current, pageCount));
+        if (dom.orderCart) {
+            const pages = getSpreadPages(current, pageCount);
+            const pageEntries = pages.map((pageNumber) => {
+                const rect = pageDivs[pageNumber - 1]?.getBoundingClientRect();
+                const centerX = rect ? rect.left + rect.width / 2 : window.innerWidth / 2;
+                return { pageNumber, centerX };
+            });
+            dom.orderCart.setCurrentPages(pageEntries);
+        }
     }
 
     function buildPageFlip() {
@@ -106,6 +114,10 @@ export async function renderFlipbookViewer({ catalogId, pageCount, pageAspect, d
         requestAnimationFrame(() => {
             positionSideNav(flipbookEl, dom);
             positionCoverInfo(flipbookEl, dom);
+            // Recalcula con el layout ya asentado — la primera pasada (justo
+            // después de loadFromHTML) a veces mide las páginas todavía en su
+            // posición anterior.
+            updateInfo();
         });
     }
 
