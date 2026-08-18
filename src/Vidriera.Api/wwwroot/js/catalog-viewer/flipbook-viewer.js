@@ -60,6 +60,33 @@ export async function renderFlipbookViewer({ catalogId, pageCount, pageAspect, d
     await waitForImagesLoaded(pageImgs, buildPriorityPageList(pageCount, sectionsData));
 
     let pageFlip = null;
+    let pageBarMeasureToken = 0;
+
+    // page-flip alterna display:none/block en los .page-content al pasar de
+    // página, pero ese cambio no está listo todavía en el momento en que
+    // dispara su evento "flip" — si se mide el rect ahí, da 0x0. Reintenta
+    // por unos frames hasta que el elemento realmente tenga tamaño.
+    function measurePageBar(pages, token, attempt = 0) {
+        if (token !== pageBarMeasureToken || !dom.orderCart) return;
+
+        const measured = pages.map((pageNumber) => ({
+            pageNumber,
+            rect: pageDivs[pageNumber - 1]?.getBoundingClientRect(),
+        }));
+
+        const allReady = measured.every(({ rect }) => rect && rect.width > 0);
+        if (!allReady && attempt < 15) {
+            requestAnimationFrame(() => measurePageBar(pages, token, attempt + 1));
+            return;
+        }
+
+        dom.orderCart.setCurrentPages(
+            measured.map(({ pageNumber, rect }) => ({
+                pageNumber,
+                centerX: rect && rect.width > 0 ? rect.left + rect.width / 2 : window.innerWidth / 2,
+            }))
+        );
+    }
 
     function updateInfo() {
         const current = pageFlip.getCurrentPageIndex() + 1;
@@ -67,15 +94,8 @@ export async function renderFlipbookViewer({ catalogId, pageCount, pageAspect, d
         dom.prevBtn.disabled = current <= 1;
         dom.nextBtn.disabled = current >= pageCount;
         dom.coverInfoEl.style.display = current === 1 ? "block" : "none";
-        if (dom.orderCart) {
-            const pages = getSpreadPages(current, pageCount);
-            const pageEntries = pages.map((pageNumber) => {
-                const rect = pageDivs[pageNumber - 1]?.getBoundingClientRect();
-                const centerX = rect ? rect.left + rect.width / 2 : window.innerWidth / 2;
-                return { pageNumber, centerX };
-            });
-            dom.orderCart.setCurrentPages(pageEntries);
-        }
+        pageBarMeasureToken++;
+        measurePageBar(getSpreadPages(current, pageCount), pageBarMeasureToken);
     }
 
     function buildPageFlip() {
