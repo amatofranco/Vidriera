@@ -183,6 +183,8 @@ function setupOrderUi(dom, cart) {
         });
     }
 
+    const orderSubmitBtnLabel = dom.orderSubmitBtn ? dom.orderSubmitBtn.textContent : "";
+
     if (dom.orderCheckoutForm) {
         dom.orderCheckoutForm.addEventListener("submit", async (e) => {
             e.preventDefault();
@@ -192,7 +194,10 @@ function setupOrderUi(dom, cart) {
             const customer = Object.fromEntries(new FormData(form));
             const items = cart.getItems().map((i) => ({ productId: i.productId, quantity: i.quantity }));
 
-            if (dom.orderSubmitBtn) dom.orderSubmitBtn.disabled = true;
+            if (dom.orderSubmitBtn) {
+                dom.orderSubmitBtn.disabled = true;
+                dom.orderSubmitBtn.innerHTML = '<span class="order-btn-spinner"></span>Generando pedido...';
+            }
 
             try {
                 const response = await fetch("/api/orders/excel", {
@@ -225,7 +230,10 @@ function setupOrderUi(dom, cart) {
                     dom.orderFormError.textContent = err && err.message ? err.message : "No se pudo generar el pedido.";
                 }
             } finally {
-                if (dom.orderSubmitBtn) dom.orderSubmitBtn.disabled = false;
+                if (dom.orderSubmitBtn) {
+                    dom.orderSubmitBtn.disabled = false;
+                    dom.orderSubmitBtn.textContent = orderSubmitBtnLabel;
+                }
             }
         });
     }
