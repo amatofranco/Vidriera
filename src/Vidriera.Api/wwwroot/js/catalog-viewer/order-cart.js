@@ -158,26 +158,56 @@ function getProductEntryForPage(dom, pageNumber) {
     return current && current.isProduct && current.productId ? current : null;
 }
 
-function renderCurrentProductControl(dom, cart, currentPage) {
-    if (!dom.currentProductAdd) return;
+// Página simple (mobile) o doble página (desktop): junta las entradas de
+// producto de cada página visible en este momento, sin repetir si una ficha
+// ocupa las dos mitades de la misma doble página.
+function getVisibleProductEntries(dom, pageNumbers) {
+    const seen = new Set();
+    const result = [];
+    pageNumbers.forEach((pageNumber) => {
+        const entry = getProductEntryForPage(dom, pageNumber);
+        if (entry && !seen.has(entry.productId)) {
+            seen.add(entry.productId);
+            result.push(entry);
+        }
+    });
+    return result;
+}
 
-    const entry = getProductEntryForPage(dom, currentPage);
-    if (!entry) {
-        dom.currentProductAdd.style.display = "none";
+function renderPageOrderBar(dom, cart, pageNumbers) {
+    if (!dom.pageOrderBar) return;
+
+    const entries = getVisibleProductEntries(dom, pageNumbers);
+    dom.pageOrderBar.innerHTML = "";
+
+    if (entries.length === 0) {
+        dom.pageOrderBar.style.display = "none";
         return;
     }
 
-    dom.currentProductAdd.style.display = "flex";
-    dom.currentProductName.textContent = entry.name;
+    dom.pageOrderBar.style.display = "flex";
 
-    dom.currentProductStepper.innerHTML = "";
-    dom.currentProductStepper.appendChild(
-        createStepperEl(
-            cart.getQuantity(entry.productId),
-            () => cart.decrement(entry.productId, entry.name),
-            () => cart.increment(entry.productId, entry.name)
-        )
-    );
+    entries.forEach((entry) => {
+        const chip = document.createElement("div");
+        chip.className = "page-order-chip";
+
+        const name = document.createElement("span");
+        name.className = "page-order-chip-name";
+        name.textContent = entry.name;
+
+        const stepperSlot = document.createElement("div");
+        stepperSlot.appendChild(
+            createStepperEl(
+                cart.getQuantity(entry.productId),
+                () => cart.decrement(entry.productId, entry.name),
+                () => cart.increment(entry.productId, entry.name)
+            )
+        );
+
+        chip.appendChild(name);
+        chip.appendChild(stepperSlot);
+        dom.pageOrderBar.appendChild(chip);
+    });
 }
 
 async function shareOrDownload(blob, fileName) {
@@ -214,7 +244,7 @@ function parseFileName(response, fallback) {
     return match ? match[1] : fallback;
 }
 
-function setupOrderUi(dom, cart, renderCurrentProduct) {
+function setupOrderUi(dom, cart, renderPageBar) {
     if (!dom.orderBadge) return;
 
     dom.orderBadge.addEventListener("click", () => {
@@ -298,7 +328,7 @@ function setupOrderUi(dom, cart, renderCurrentProduct) {
     cart.subscribe(() => {
         updateBadge(dom, cart);
         renderDrawerItems(dom, cart);
-        renderCurrentProduct();
+        renderPageBar();
     });
 
     updateBadge(dom, cart);
@@ -307,19 +337,21 @@ function setupOrderUi(dom, cart, renderCurrentProduct) {
 
 export function initOrderCart(dom) {
     const cart = createCartState(dom);
-    let currentPage = 1;
+    let currentPageNumbers = [1];
 
-    function renderCurrentProduct() {
-        renderCurrentProductControl(dom, cart, currentPage);
+    function renderPageBar() {
+        renderPageOrderBar(dom, cart, currentPageNumbers);
     }
 
-    cart.setCurrentPage = (pageNumber) => {
-        currentPage = pageNumber;
-        renderCurrentProduct();
+    // pageNumbers: una página sola (mobile) o las dos de la doble página
+    // actual (desktop) — quien llama decide qué páginas están visibles.
+    cart.setCurrentPages = (pageNumbers) => {
+        currentPageNumbers = pageNumbers;
+        renderPageBar();
     };
 
-    setupOrderUi(dom, cart, renderCurrentProduct);
-    renderCurrentProduct();
+    setupOrderUi(dom, cart, renderPageBar);
+    renderPageBar();
 
     return cart;
 }

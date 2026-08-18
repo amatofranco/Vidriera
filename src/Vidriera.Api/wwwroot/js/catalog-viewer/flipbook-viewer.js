@@ -3,6 +3,15 @@ import { renderIndexPanel } from "./index-panel.js";
 
 const INITIAL_LOAD_COUNT = 5;
 
+// showCover:true hace que la portada (página 1) se muestre siempre sola;
+// de ahí en más las páginas se emparejan de a dos (2-3, 4-5, ...) y
+// getCurrentPageIndex() devuelve la izquierda del par.
+function getSpreadPages(current, pageCount) {
+    if (current <= 1) return [1];
+    const right = current + 1;
+    return right <= pageCount ? [current, right] : [current];
+}
+
 function buildPageDivs(catalogId, pageCount) {
     const divs = [];
     const imgs = [];
@@ -58,7 +67,7 @@ export async function renderFlipbookViewer({ catalogId, pageCount, pageAspect, d
         dom.prevBtn.disabled = current <= 1;
         dom.nextBtn.disabled = current >= pageCount;
         dom.coverInfoEl.style.display = current === 1 ? "block" : "none";
-        if (dom.orderCart) dom.orderCart.setCurrentPage(current);
+        if (dom.orderCart) dom.orderCart.setCurrentPages(getSpreadPages(current, pageCount));
     }
 
     function buildPageFlip() {

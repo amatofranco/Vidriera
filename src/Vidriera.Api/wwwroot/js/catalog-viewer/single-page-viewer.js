@@ -73,7 +73,7 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
         dom.prevBtn.disabled = currentPage <= 1;
         dom.nextBtn.disabled = currentPage >= pageCount;
         dom.coverInfoEl.style.display = currentPage === 1 ? "block" : "none";
-        if (dom.orderCart) dom.orderCart.setCurrentPage(currentPage);
+        if (dom.orderCart) dom.orderCart.setCurrentPages([currentPage]);
 
         try {
             localStorage.setItem(lastPageStorageKey, String(currentPage));
