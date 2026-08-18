@@ -221,7 +221,7 @@ body { overflow: auto; }
    elemento real de esa página) para quedar centrado bajo esa página puntual,
    en vez de centrar el grupo entero bajo el libro. */
 .page-order-bar {
-    position: fixed; left: 0; right: 0; bottom: 40px; height: 0; z-index: 21;
+    position: fixed; left: 0; right: 0; bottom: 56px; height: 0; z-index: 21;
     display: none;
 }
 .page-order-chip {
