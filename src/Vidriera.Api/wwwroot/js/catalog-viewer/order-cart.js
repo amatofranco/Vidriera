@@ -154,10 +154,10 @@ function renderDrawerItems(dom, cart) {
 }
 
 function updateBadge(dom, cart) {
-    if (!dom.orderBadge || !dom.orderBadgeCount) return;
+    if (!dom.orderBadgeWrap || !dom.orderBadgeCount) return;
     const total = cart.getTotalQuantity();
     dom.orderBadgeCount.textContent = String(total);
-    dom.orderBadge.style.display = total > 0 ? "flex" : "none";
+    dom.orderBadgeWrap.style.display = total > 0 ? "flex" : "none";
     if (dom.orderCheckoutBtn) dom.orderCheckoutBtn.disabled = total === 0;
 }
 
@@ -267,9 +267,9 @@ function parseFileName(response, fallback) {
 }
 
 function setupOrderUi(dom, cart, renderPageBar) {
-    if (!dom.orderBadge) return;
+    if (!dom.orderBadgeWrap) return;
 
-    dom.orderBadge.addEventListener("click", () => {
+    dom.orderBadgeWrap.addEventListener("click", () => {
         dom.orderDrawer.style.display = "flex";
     });
 

@@ -27,6 +27,7 @@ export const dom = {
     pageCount: catalogMetaEl ? parseInt(catalogMetaEl.dataset.pageCount, 10) || 0 : 0,
     updateBanner: document.getElementById("update-banner"),
     updateBannerBtn: document.getElementById("update-banner-btn"),
+    orderBadgeWrap: document.getElementById("order-badge-wrap"),
     orderBadge: document.getElementById("order-badge"),
     orderBadgeCount: document.getElementById("order-badge-count"),
     pageOrderBar: document.getElementById("page-order-bar"),

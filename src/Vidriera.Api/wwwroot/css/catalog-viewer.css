@@ -191,15 +191,25 @@ body { overflow: auto; }
 .order-stepper-qty-input::-webkit-outer-spin-button,
 .order-stepper-qty-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
-.order-badge {
+.order-badge-wrap {
     position: fixed; right: 18px; bottom: 18px; z-index: 25;
-    width: 50px; height: 50px; border-radius: 50%; border: none; cursor: pointer;
-    background: #232325; color: #f5f5f7; font-size: 20px; line-height: 1;
-    display: none; align-items: center; justify-content: center;
+    display: none; flex-direction: column; align-items: center; gap: 6px; cursor: pointer;
+}
+.order-badge-label {
+    font-size: 10px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase;
+    color: #f5f5f7; background: #232325; padding: 4px 10px; border-radius: 999px;
     box-shadow: 0 8px 24px rgba(0,0,0,.4);
     backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
 }
-.order-badge:hover { background: #2c2c2e; }
+.order-badge {
+    position: relative;
+    width: 50px; height: 50px; border-radius: 50%; border: none; cursor: pointer;
+    background: #232325; color: #f5f5f7; font-size: 20px; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 24px rgba(0,0,0,.4);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
+.order-badge-wrap:hover .order-badge { background: #2c2c2e; }
 .order-badge-count {
     position: absolute; top: -4px; right: -4px; min-width: 20px; height: 20px; padding: 0 4px;
     border-radius: 10px; background: #0a84ff; color: white; font-size: 11px; font-weight: 600;
@@ -362,8 +372,13 @@ body { overflow: auto; }
     .index-chevron, .index-chevron-spacer { width: 34px; height: 34px; }
     .index-item { padding: 11px 8px; font-size: 14px; }
 
-    .order-badge { bottom: calc(88px + env(safe-area-inset-bottom)); right: 12px; }
-    .page-order-bar { bottom: calc(108px + env(safe-area-inset-bottom)); }
+    .order-badge-wrap { bottom: calc(88px + env(safe-area-inset-bottom)); right: 12px; }
+    /* En mobile el "VER PEDIDO" de arriba del ícono no entra cómodo junto al
+       resto de la UI apretada del toolbar-barra — se deja solo el ícono. */
+    .order-badge-label { display: none; }
+    /* Separado bien por arriba del contador de página (que en mobile mide
+       más alto, con más padding) para que no se solapen. */
+    .page-order-bar { bottom: calc(150px + env(safe-area-inset-bottom)); }
     .order-drawer {
         left: 10px; right: 10px; bottom: calc(88px + env(safe-area-inset-bottom));
         width: auto; max-height: 60vh;
