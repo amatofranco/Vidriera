@@ -9,6 +9,7 @@ export const Messages = {
   stockUpdateFailed: "No se pudo actualizar el stock, intentá de nuevo.",
   bulkStockUpdateFailed: "No se pudo actualizar el stock de todos los productos, revisá la lista.",
   productsLoadFailed: "No se pudieron cargar los productos.",
+  ordersLoadFailed: "No se pudieron cargar los pedidos.",
   sectionCreateFailed: "No se pudo crear la carátula.",
   unknownError: "Error desconocido",
 } as const;

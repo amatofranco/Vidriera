@@ -1,3 +1,4 @@
+using System.Text.Json;
 using MediatR;
 using NHibernate;
 using NHibernate.Linq;
@@ -50,6 +51,24 @@ public class GenerateOrderExcelCommandHandler : IRequestHandler<GenerateOrderExc
                 productsById[i.ProductId].Isbn,
                 i.Quantity))
             .ToList();
+
+        var order = new Order
+        {
+            Company = company,
+            BusinessName = request.Customer.BusinessName,
+            StoreName = request.Customer.StoreName,
+            Cuit = request.Customer.Cuit,
+            VatCondition = request.Customer.VatCondition,
+            Phone = request.Customer.Phone,
+            Email = request.Customer.Email,
+            City = request.Customer.City,
+            Province = request.Customer.Province,
+            Carrier = request.Customer.Carrier,
+            DeliveryAddress = request.Customer.DeliveryAddress,
+            ItemsSnapshotJson = JsonSerializer.Serialize(lines),
+            CreatedAt = DateTime.UtcNow,
+        };
+        await _session.SaveInTransactionAsync(order, cancellationToken);
 
         var content = _excelOrderService.GenerateOrderWorkbook(company.Name, request.Customer, lines);
         var fileName = $"{OrderLabels.DefaultFileNamePrefix}_{Sanitize(request.Customer.StoreName)}_{DateTime.UtcNow:yyyyMMdd_HHmm}.xlsx";

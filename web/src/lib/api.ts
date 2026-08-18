@@ -263,3 +263,29 @@ export async function generateCatalog(
 export function getCurrentCatalog(token: string) {
   return request<GenerateCatalogResult | null>("/api/catalogs/current", { token });
 }
+
+export interface OrderItem {
+  productName: string;
+  isbn: string | null;
+  quantity: number;
+}
+
+export interface Order {
+  id: string;
+  createdAt: string;
+  businessName: string;
+  storeName: string | null;
+  cuit: string;
+  vatCondition: string | null;
+  phone: string | null;
+  email: string;
+  city: string | null;
+  province: string | null;
+  carrier: string | null;
+  deliveryAddress: string | null;
+  items: OrderItem[];
+}
+
+export function getOrders(token: string) {
+  return request<Order[]>("/api/orders", { token });
+}

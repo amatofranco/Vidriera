@@ -1,12 +1,14 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Vidriera.Api.Common;
 using Vidriera.Application.Orders;
 
 namespace Vidriera.Api.Controllers;
 
 [ApiController]
 [Route("api/orders")]
+[Authorize]
 public class OrdersController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -14,6 +16,14 @@ public class OrdersController : ControllerBase
     public OrdersController(IMediator mediator)
     {
         _mediator = mediator;
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<IReadOnlyList<OrderDto>>> GetOrders(CancellationToken cancellationToken)
+    {
+        var companyId = User.GetCompanyId();
+        var result = await _mediator.Send(new GetOrdersQuery(companyId), cancellationToken);
+        return Ok(result);
     }
 
     [HttpPost("excel")]

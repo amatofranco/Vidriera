@@ -1,10 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type { AuthState } from "@/lib/auth-context";
 import { fetchCompanyLogoUrl, uploadCompanyLogo } from "@/lib/api";
 import { Labels } from "@/lib/labels";
 import { Messages, apiErrorMessage } from "@/lib/messages";
+
+const NAV_LINKS = [
+  { href: "/products", label: Labels.productsNavLabel },
+  { href: "/orders", label: Labels.ordersNavLabel },
+];
 
 export function CompanyHeader({
   auth,
@@ -20,6 +27,7 @@ export function CompanyHeader({
   logout: () => void;
 }) {
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const pathname = usePathname();
 
   async function handleLogoChange(file: File) {
     setIsUploadingLogo(true);
@@ -54,6 +62,22 @@ export function CompanyHeader({
             <span className="text-xs text-zinc-300">{auth.companyName}</span>
           </div>
         </div>
+        <nav className="flex items-center gap-1">
+          {NAV_LINKS.map((link) => {
+            const isActive = pathname === link.href;
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                  isActive ? "bg-[#c9a86a] text-zinc-900" : "text-zinc-200 hover:bg-white/10"
+                }`}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
+        </nav>
         <div className="flex items-center gap-2">
           <label className="cursor-pointer rounded-md border border-white/15 px-3 py-1.5 text-xs font-medium text-[#e4c98a] transition-colors hover:bg-white/10">
             {isUploadingLogo ? Labels.uploadingBanner : logoUrl ? Labels.changeBanner : Labels.uploadBanner}
