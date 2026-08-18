@@ -62,14 +62,8 @@ public class GenerateOrderExcelCommandHandler : IRequestHandler<GenerateOrderExc
         var requiredFields = new[]
         {
             customer.BusinessName,
-            customer.StoreName,
             customer.Cuit,
-            customer.VatCondition,
-            customer.Phone,
-            customer.Email,
-            customer.City,
-            customer.Province,
-            customer.DeliveryAddress
+            customer.Email
         };
 
         if (requiredFields.Any(string.IsNullOrWhiteSpace))

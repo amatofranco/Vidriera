@@ -24,15 +24,18 @@
             <label>Razón Social
                 <input type="text" name="businessName" required autocomplete="off" />
             </label>
-            <label>Nombre del local
-                <input type="text" name="storeName" required autocomplete="off" />
-            </label>
             <label>CUIT
                 <input type="text" name="cuit" required autocomplete="off" />
             </label>
+            <label>Email
+                <input type="email" name="email" required autocomplete="off" />
+            </label>
+            <label>Nombre del local
+                <input type="text" name="storeName" placeholder="Opcional" autocomplete="off" />
+            </label>
             <label>Condición frente al IVA
-                <select name="vatCondition" required>
-                    <option value="" disabled selected>Seleccionar...</option>
+                <select name="vatCondition">
+                    <option value="" selected>Seleccionar...</option>
                     <option value="Responsable Inscripto">Responsable Inscripto</option>
                     <option value="Monotributista">Monotributista</option>
                     <option value="Exento">Exento</option>
@@ -41,22 +44,19 @@
                 </select>
             </label>
             <label>Teléfono
-                <input type="tel" name="phone" required autocomplete="off" />
-            </label>
-            <label>Email
-                <input type="email" name="email" required autocomplete="off" />
+                <input type="tel" name="phone" placeholder="Opcional" autocomplete="off" />
             </label>
             <label>Ciudad
-                <input type="text" name="city" required autocomplete="off" />
+                <input type="text" name="city" placeholder="Opcional" autocomplete="off" />
             </label>
             <label>Provincia
-                <input type="text" name="province" required autocomplete="off" />
+                <input type="text" name="province" placeholder="Opcional" autocomplete="off" />
             </label>
             <label>Expreso
                 <input type="text" name="carrier" placeholder="Opcional" autocomplete="off" />
             </label>
             <label>Dirección de entrega
-                <input type="text" name="deliveryAddress" required autocomplete="off" />
+                <input type="text" name="deliveryAddress" placeholder="Opcional" autocomplete="off" />
             </label>
             <div class="order-form-actions">
                 <span id="order-form-error" class="order-form-error"></span>
