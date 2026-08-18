@@ -10,7 +10,6 @@ export function renderIndexPanel({ dom, indexEntries, onJumpToPage, rebuildRef }
     dom.indexList.innerHTML = "";
     const rowEls = [];
     const chevronEls = [];
-    const orderControls = [];
 
     indexEntries.forEach((entry, i) => {
         const row = document.createElement("div");
@@ -53,72 +52,10 @@ export function renderIndexPanel({ dom, indexEntries, onJumpToPage, rebuildRef }
 
         row.appendChild(chevron);
         row.appendChild(label);
-
-        if (entry.isProduct && entry.productId && dom.orderCart) {
-            const controlEl = document.createElement("div");
-            controlEl.className = "order-add-control";
-            row.appendChild(controlEl);
-            orderControls.push({ entry, controlEl });
-        }
-
         dom.indexList.appendChild(row);
         rowEls.push(row);
         chevronEls.push(chevron);
     });
-
-    function renderOrderControls() {
-        orderControls.forEach(({ entry, controlEl }) => {
-            const quantity = dom.orderCart.getQuantity(entry.productId);
-            controlEl.innerHTML = "";
-
-            if (quantity === 0) {
-                const addBtn = document.createElement("button");
-                addBtn.type = "button";
-                addBtn.className = "order-add-btn";
-                addBtn.title = "Agregar al pedido";
-                addBtn.textContent = "+";
-                addBtn.addEventListener("click", (e) => {
-                    e.stopPropagation();
-                    dom.orderCart.increment(entry.productId, entry.name);
-                });
-                controlEl.appendChild(addBtn);
-                return;
-            }
-
-            const stepper = document.createElement("div");
-            stepper.className = "order-stepper order-stepper-compact";
-
-            const minusBtn = document.createElement("button");
-            minusBtn.type = "button";
-            minusBtn.textContent = "−";
-            minusBtn.addEventListener("click", (e) => {
-                e.stopPropagation();
-                dom.orderCart.decrement(entry.productId, entry.name);
-            });
-
-            const qtyEl = document.createElement("span");
-            qtyEl.className = "order-stepper-qty";
-            qtyEl.textContent = String(quantity);
-
-            const plusBtn = document.createElement("button");
-            plusBtn.type = "button";
-            plusBtn.textContent = "+";
-            plusBtn.addEventListener("click", (e) => {
-                e.stopPropagation();
-                dom.orderCart.increment(entry.productId, entry.name);
-            });
-
-            stepper.appendChild(minusBtn);
-            stepper.appendChild(qtyEl);
-            stepper.appendChild(plusBtn);
-            controlEl.appendChild(stepper);
-        });
-    }
-
-    if (orderControls.length > 0) {
-        renderOrderControls();
-        dom.orderCart.subscribe(renderOrderControls);
-    }
 
     function subtreeMatchFor(query) {
         const selfMatch = indexEntries.map((e) => e.name.toLowerCase().includes(query));

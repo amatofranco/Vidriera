@@ -66,6 +66,43 @@ function createCartState(dom) {
     };
 }
 
+// Botón "+" cuando todavía no se agregó nada, o stepper "− n +" una vez que
+// hay cantidad — mismo control visual para el drawer y para el botón
+// flotante de la página actual.
+function createStepperEl(quantity, onMinus, onPlus) {
+    if (quantity === 0) {
+        const addBtn = document.createElement("button");
+        addBtn.type = "button";
+        addBtn.className = "order-add-btn";
+        addBtn.title = "Agregar al pedido";
+        addBtn.textContent = "+";
+        addBtn.addEventListener("click", onPlus);
+        return addBtn;
+    }
+
+    const stepper = document.createElement("div");
+    stepper.className = "order-stepper";
+
+    const minusBtn = document.createElement("button");
+    minusBtn.type = "button";
+    minusBtn.textContent = "−";
+    minusBtn.addEventListener("click", onMinus);
+
+    const qty = document.createElement("span");
+    qty.className = "order-stepper-qty";
+    qty.textContent = String(quantity);
+
+    const plusBtn = document.createElement("button");
+    plusBtn.type = "button";
+    plusBtn.textContent = "+";
+    plusBtn.addEventListener("click", onPlus);
+
+    stepper.appendChild(minusBtn);
+    stepper.appendChild(qty);
+    stepper.appendChild(plusBtn);
+    return stepper;
+}
+
 function renderDrawerItems(dom, cart) {
     if (!dom.orderItemsList) return;
 
@@ -88,29 +125,14 @@ function renderDrawerItems(dom, cart) {
         name.className = "order-item-name";
         name.textContent = item.name;
 
-        const stepper = document.createElement("div");
-        stepper.className = "order-stepper";
-
-        const minusBtn = document.createElement("button");
-        minusBtn.type = "button";
-        minusBtn.textContent = "−";
-        minusBtn.addEventListener("click", () => cart.decrement(item.productId, item.name));
-
-        const qty = document.createElement("span");
-        qty.className = "order-stepper-qty";
-        qty.textContent = String(item.quantity);
-
-        const plusBtn = document.createElement("button");
-        plusBtn.type = "button";
-        plusBtn.textContent = "+";
-        plusBtn.addEventListener("click", () => cart.increment(item.productId, item.name));
-
-        stepper.appendChild(minusBtn);
-        stepper.appendChild(qty);
-        stepper.appendChild(plusBtn);
+        const stepperEl = createStepperEl(
+            item.quantity,
+            () => cart.decrement(item.productId, item.name),
+            () => cart.increment(item.productId, item.name)
+        );
 
         row.appendChild(name);
-        row.appendChild(stepper);
+        row.appendChild(stepperEl);
         dom.orderItemsList.appendChild(row);
     });
 }
@@ -121,6 +143,41 @@ function updateBadge(dom, cart) {
     dom.orderBadgeCount.textContent = String(total);
     dom.orderBadge.style.display = total > 0 ? "flex" : "none";
     if (dom.orderCheckoutBtn) dom.orderCheckoutBtn.disabled = total === 0;
+}
+
+// El índice ya sabe en qué página empieza cada producto (entry.startPage);
+// como las entradas están en orden de página, el producto "activo" en una
+// página dada es la última entrada de producto cuyo startPage no la supera.
+function getProductEntryForPage(dom, pageNumber) {
+    const entries = dom.sectionsData || [];
+    let current = null;
+    for (const entry of entries) {
+        if (entry.startPage <= pageNumber) current = entry;
+        else break;
+    }
+    return current && current.isProduct && current.productId ? current : null;
+}
+
+function renderCurrentProductControl(dom, cart, currentPage) {
+    if (!dom.currentProductAdd) return;
+
+    const entry = getProductEntryForPage(dom, currentPage);
+    if (!entry) {
+        dom.currentProductAdd.style.display = "none";
+        return;
+    }
+
+    dom.currentProductAdd.style.display = "flex";
+    dom.currentProductName.textContent = entry.name;
+
+    dom.currentProductStepper.innerHTML = "";
+    dom.currentProductStepper.appendChild(
+        createStepperEl(
+            cart.getQuantity(entry.productId),
+            () => cart.decrement(entry.productId, entry.name),
+            () => cart.increment(entry.productId, entry.name)
+        )
+    );
 }
 
 async function shareOrDownload(blob, fileName) {
@@ -157,7 +214,7 @@ function parseFileName(response, fallback) {
     return match ? match[1] : fallback;
 }
 
-function setupOrderUi(dom, cart) {
+function setupOrderUi(dom, cart, renderCurrentProduct) {
     if (!dom.orderBadge) return;
 
     dom.orderBadge.addEventListener("click", () => {
@@ -241,6 +298,7 @@ function setupOrderUi(dom, cart) {
     cart.subscribe(() => {
         updateBadge(dom, cart);
         renderDrawerItems(dom, cart);
+        renderCurrentProduct();
     });
 
     updateBadge(dom, cart);
@@ -249,6 +307,19 @@ function setupOrderUi(dom, cart) {
 
 export function initOrderCart(dom) {
     const cart = createCartState(dom);
-    setupOrderUi(dom, cart);
+    let currentPage = 1;
+
+    function renderCurrentProduct() {
+        renderCurrentProductControl(dom, cart, currentPage);
+    }
+
+    cart.setCurrentPage = (pageNumber) => {
+        currentPage = pageNumber;
+        renderCurrentProduct();
+    };
+
+    setupOrderUi(dom, cart, renderCurrentProduct);
+    renderCurrentProduct();
+
     return cart;
 }

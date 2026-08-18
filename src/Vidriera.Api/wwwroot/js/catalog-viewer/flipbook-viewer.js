@@ -58,6 +58,7 @@ export async function renderFlipbookViewer({ catalogId, pageCount, pageAspect, d
         dom.prevBtn.disabled = current <= 1;
         dom.nextBtn.disabled = current >= pageCount;
         dom.coverInfoEl.style.display = current === 1 ? "block" : "none";
+        if (dom.orderCart) dom.orderCart.setCurrentPage(current);
     }
 
     function buildPageFlip() {
