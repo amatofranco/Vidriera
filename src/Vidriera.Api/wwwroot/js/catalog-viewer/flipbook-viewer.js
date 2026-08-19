@@ -60,32 +60,40 @@ export async function renderFlipbookViewer({ catalogId, pageCount, pageAspect, d
     await waitForImagesLoaded(pageImgs, buildPriorityPageList(pageCount, sectionsData));
 
     let pageFlip = null;
-    let pageBarMeasureToken = 0;
 
-    // page-flip alterna display:none/block en los .page-content al pasar de
-    // página, pero ese cambio no está listo todavía en el momento en que
-    // dispara su evento "flip" — si se mide el rect ahí, da 0x0. Reintenta
-    // por unos frames hasta que el elemento realmente tenga tamaño.
-    function measurePageBar(pages, token, attempt = 0) {
-        if (token !== pageBarMeasureToken || !dom.orderCart) return;
+    // El contenedor del libro no se mueve al pasar de página (solo cambia lo
+    // que hay adentro) — medirlo una vez por layout (al construir/redimensionar)
+    // y derivar la posición de cada mitad matemáticamente evita medir en pleno
+    // vuelo de página, que era racy: durante la animación de flip la página
+    // todavía puede no tener tamaño (o tener el de la página anterior), y el
+    // botón de "agregar" quedaba mostrando la posición vieja un instante.
+    let stageRect = null;
 
-        const measured = pages.map((pageNumber) => ({
-            pageNumber,
-            rect: pageDivs[pageNumber - 1]?.getBoundingClientRect(),
-        }));
+    function measureStage() {
+        const rect = flipbookEl.getBoundingClientRect();
+        stageRect = { left: rect.left, width: rect.width };
+    }
 
-        const allReady = measured.every(({ rect }) => rect && rect.width > 0);
-        if (!allReady && attempt < 15) {
-            requestAnimationFrame(() => measurePageBar(pages, token, attempt + 1));
-            return;
-        }
-
-        dom.orderCart.setCurrentPages(
-            measured.map(({ pageNumber, rect }) => ({
-                pageNumber,
-                centerX: rect && rect.width > 0 ? rect.left + rect.width / 2 : window.innerWidth / 2,
-            }))
-        );
+    function updatePageOrderBar(current) {
+        if (!dom.orderCart || !stageRect) return;
+        const pages = getSpreadPages(current, pageCount);
+        const pageEntries =
+            pages.length === 2
+                ? [
+                      { pageNumber: pages[0], centerX: stageRect.left + stageRect.width * 0.25 },
+                      { pageNumber: pages[1], centerX: stageRect.left + stageRect.width * 0.75 },
+                  ]
+                : [
+                      {
+                          pageNumber: pages[0],
+                          // La portada (página 1) se dibuja en la mitad derecha del
+                          // contenedor de doble página; una página suelta al final
+                          // del catálogo (cantidad de páginas impar) no tiene un
+                          // lado fijo conocido, así que se centra.
+                          centerX: stageRect.left + stageRect.width * (current <= 1 ? 0.75 : 0.5),
+                      },
+                  ];
+        dom.orderCart.setCurrentPages(pageEntries);
     }
 
     function updateInfo() {
@@ -94,8 +102,7 @@ export async function renderFlipbookViewer({ catalogId, pageCount, pageAspect, d
         dom.prevBtn.disabled = current <= 1;
         dom.nextBtn.disabled = current >= pageCount;
         dom.coverInfoEl.style.display = current === 1 ? "block" : "none";
-        pageBarMeasureToken++;
-        measurePageBar(getSpreadPages(current, pageCount), pageBarMeasureToken);
+        updatePageOrderBar(current);
     }
 
     function buildPageFlip() {
@@ -135,8 +142,9 @@ export async function renderFlipbookViewer({ catalogId, pageCount, pageAspect, d
             positionSideNav(flipbookEl, dom);
             positionCoverInfo(flipbookEl, dom);
             // Recalcula con el layout ya asentado — la primera pasada (justo
-            // después de loadFromHTML) a veces mide las páginas todavía en su
-            // posición anterior.
+            // después de loadFromHTML) a veces mide el contenedor todavía en su
+            // tamaño/posición anterior.
+            measureStage();
             updateInfo();
         });
     }
