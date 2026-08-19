@@ -121,7 +121,7 @@ export function UploadCreateForm({
             {customNames ? Labels.renameFilesButtonEdited(customNames.length) : Labels.renameFilesButton}
           </button>
         )}
-        {files.length <= 1 && (
+        {files.length === 1 && (
           <>
             {codeEnabled && (
               <input
@@ -129,8 +129,7 @@ export function UploadCreateForm({
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 placeholder={Labels.optionalCodePlaceholder}
-                disabled={files.length === 0}
-                className="w-36 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+                className="w-36 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
               />
             )}
             <input
@@ -138,23 +137,24 @@ export function UploadCreateForm({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder={Labels.optionalNamePlaceholder}
-              disabled={files.length === 0}
-              className="w-48 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+              className="w-48 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
             />
           </>
         )}
-        <button
-          type="submit"
-          title={submitTitle(files.length)}
-          disabled={files.length === 0 || isSubmitting}
-          className="flex items-center justify-center rounded-md bg-[#8a5a35] px-3 py-1.5 text-white transition-colors hover:bg-[#a06b41] disabled:opacity-50"
-        >
-          {isSubmitting ? (
-            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-          ) : (
-            <span className="text-lg leading-none">+</span>
-          )}
-        </button>
+        {files.length > 0 && (
+          <button
+            type="submit"
+            title={submitTitle(files.length)}
+            disabled={isSubmitting}
+            className="flex items-center justify-center rounded-md bg-[#8a5a35] px-3 py-1.5 text-white transition-colors hover:bg-[#a06b41] disabled:opacity-50"
+          >
+            {isSubmitting ? (
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+            ) : (
+              <span className="text-lg leading-none">+</span>
+            )}
+          </button>
+        )}
       </div>
 
       {progress && (
