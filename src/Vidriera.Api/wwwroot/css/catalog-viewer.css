@@ -159,9 +159,10 @@ body { overflow: auto; }
     font-family: inherit; overflow: hidden; text-overflow: ellipsis;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; white-space: normal;
     /* -webkit-line-clamp solo no siempre recorta limpio (queda asomando un
-       borde de la 3ra línea) — el max-height en em (line-height × 2 líneas)
-       fuerza el corte real con overflow:hidden. */
-    max-height: 2.6em;
+       borde de la 3ra línea) — el max-height en em fuerza el corte real con
+       overflow:hidden. Un poco más que line-height × 2 líneas exactas (2.6em)
+       para no cortar descendentes (la "j", "g") de la 2da línea. */
+    max-height: 3em;
 }
 .index-item:hover { background: #3a3a3c; }
 .index-item-sub {
