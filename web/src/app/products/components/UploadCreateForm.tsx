@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Labels } from "@/lib/labels";
+import { parseProductFileName } from "@/lib/parseProductFileName";
 import { RenameFilesModal } from "./RenameFilesModal";
 
 export function UploadCreateForm({
@@ -81,9 +82,19 @@ export function UploadCreateForm({
             multiple={multiple}
             required
             onChange={(e) => {
-              setFiles(Array.from(e.target.files ?? []));
+              const selected = Array.from(e.target.files ?? []);
+              setFiles(selected);
               setCustomNames(null);
               setCustomCodes(null);
+
+              if (codeEnabled && selected.length === 1) {
+                const parsed = parseProductFileName(selected[0].name);
+                setName(parsed.name);
+                setCode(parsed.code);
+              } else {
+                setName("");
+                setCode("");
+              }
             }}
             className="hidden"
           />

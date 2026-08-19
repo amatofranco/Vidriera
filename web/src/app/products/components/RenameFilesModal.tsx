@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Labels } from "@/lib/labels";
+import { parseProductFileName } from "@/lib/parseProductFileName";
 
 function baseName(fileName: string) {
   return fileName.replace(/\.pdf$/i, "");
@@ -23,10 +24,10 @@ export function RenameFilesModal({
   onClose: () => void;
 }) {
   const [names, setNames] = useState<string[]>(
-    () => initialNames ?? files.map((f) => baseName(f.name))
+    () => initialNames ?? files.map((f) => (codeEnabled ? parseProductFileName(f.name).name : baseName(f.name)))
   );
   const [codes, setCodes] = useState<string[]>(
-    () => initialCodes ?? files.map(() => "")
+    () => initialCodes ?? files.map((f) => (codeEnabled ? parseProductFileName(f.name).code : ""))
   );
 
   function setNameAt(index: number, value: string) {
