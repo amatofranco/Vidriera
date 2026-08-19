@@ -44,18 +44,18 @@ export function RenameFilesModal({
         <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">{Labels.renameFilesTitle}</h2>
         <p className="mt-1 mb-3 text-xs text-zinc-600 dark:text-zinc-400">{Labels.renameFilesHint}</p>
 
+        <div className="flex items-center gap-3 px-3 pb-1 text-[11px] font-semibold tracking-wide text-zinc-500 uppercase dark:text-zinc-400">
+          <span className="w-1/3 shrink-0">{Labels.renameFilesFileColumnLabel}</span>
+          {codeEnabled && <span className="w-32 shrink-0">{Labels.renameFilesCodeColumnLabel}</span>}
+          <span className="flex-1">{Labels.renameFilesNameColumnLabel}</span>
+        </div>
+
         <ul className="flex-1 divide-y divide-zinc-300 overflow-y-auto rounded-md border border-zinc-300 dark:divide-zinc-700 dark:border-zinc-700">
           {files.map((file, index) => (
             <li key={index} className="flex items-center gap-3 px-3 py-2">
               <span className="w-1/3 shrink-0 truncate text-xs text-zinc-500 dark:text-zinc-400" title={file.name}>
                 {file.name}
               </span>
-              <input
-                type="text"
-                value={names[index]}
-                onChange={(e) => setNameAt(index, e.target.value)}
-                className="flex-1 rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
-              />
               {codeEnabled && (
                 <input
                   type="text"
@@ -65,6 +65,12 @@ export function RenameFilesModal({
                   className="w-32 shrink-0 rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
                 />
               )}
+              <input
+                type="text"
+                value={names[index]}
+                onChange={(e) => setNameAt(index, e.target.value)}
+                className="flex-1 rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+              />
             </li>
           ))}
         </ul>

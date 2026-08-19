@@ -109,22 +109,32 @@ export function UploadCreateForm({
           </button>
         )}
         {files.length <= 1 && (
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder={Labels.optionalNamePlaceholder}
-            className="w-48 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
-          />
-        )}
-        {files.length <= 1 && codeEnabled && (
-          <input
-            type="text"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            placeholder={Labels.optionalCodePlaceholder}
-            className="w-36 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
-          />
+          <div className="flex flex-col gap-1">
+            {files.length === 1 && (
+              <div className="flex gap-3 text-[10px] font-semibold tracking-wide text-zinc-500 uppercase dark:text-zinc-400">
+                {codeEnabled && <span className="w-36">{Labels.renameFilesCodeColumnLabel}</span>}
+                <span className="w-48">{Labels.renameFilesNameColumnLabel}</span>
+              </div>
+            )}
+            <div className="flex items-center gap-3">
+              {codeEnabled && (
+                <input
+                  type="text"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  placeholder={Labels.optionalCodePlaceholder}
+                  className="w-36 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+                />
+              )}
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder={Labels.optionalNamePlaceholder}
+                className="w-48 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+              />
+            </div>
+          </div>
         )}
         <button
           type="submit"
