@@ -66,10 +66,18 @@ export function UploadCreateForm({
       onSubmit={handleSubmit}
       className={`${marginBottomClassName} flex flex-col gap-2 rounded-xl border border-black/10 bg-[#ecdcc0] px-4 py-3 shadow-lg dark:border-white/10 dark:bg-zinc-900`}
     >
-      <span className="text-xs font-medium whitespace-nowrap text-zinc-600 dark:text-zinc-400">
-        {label} <span className="text-zinc-400 dark:text-zinc-500">{Labels.maxSizeSuffix(maxSizeLabel)}</span>
-      </span>
-      <div className="flex flex-wrap items-end gap-3">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+        <span className="text-xs font-medium whitespace-nowrap text-zinc-600 dark:text-zinc-400">
+          {label} <span className="text-zinc-400 dark:text-zinc-500">{Labels.maxSizeSuffix(maxSizeLabel)}</span>
+        </span>
+        {files.length === 1 && (
+          <span className="flex gap-3 text-xs font-bold text-zinc-600 dark:text-zinc-400">
+            {codeEnabled && <span className="w-36">{Labels.renameFilesCodeColumnLabel}</span>}
+            <span className="w-48">{Labels.renameFilesNameColumnLabel}</span>
+          </span>
+        )}
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
         <label className="flex cursor-pointer items-center gap-2 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800">
           <span className="w-28 shrink-0 rounded bg-[#c9a86a] px-2 py-0.5 text-center text-xs font-medium whitespace-nowrap text-zinc-900">
             {fileButtonLabel}
@@ -114,34 +122,26 @@ export function UploadCreateForm({
           </button>
         )}
         {files.length <= 1 && (
-          <div className="flex flex-col gap-1">
-            {files.length === 1 && (
-              <div className="flex gap-3 text-xs font-bold text-zinc-600 dark:text-zinc-400">
-                {codeEnabled && <span className="w-36">{Labels.renameFilesCodeColumnLabel}</span>}
-                <span className="w-48">{Labels.renameFilesNameColumnLabel}</span>
-              </div>
-            )}
-            <div className="flex items-center gap-3">
-              {codeEnabled && (
-                <input
-                  type="text"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  placeholder={Labels.optionalCodePlaceholder}
-                  disabled={files.length === 0}
-                  className="w-36 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
-                />
-              )}
+          <>
+            {codeEnabled && (
               <input
                 type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder={Labels.optionalNamePlaceholder}
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder={Labels.optionalCodePlaceholder}
                 disabled={files.length === 0}
-                className="w-48 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+                className="w-36 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
               />
-            </div>
-          </div>
+            )}
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder={Labels.optionalNamePlaceholder}
+              disabled={files.length === 0}
+              className="w-48 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+            />
+          </>
         )}
         <button
           type="submit"
