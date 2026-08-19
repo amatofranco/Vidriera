@@ -129,7 +129,7 @@ export function UploadCreateForm({
                   onChange={(e) => setCode(e.target.value)}
                   placeholder={Labels.optionalCodePlaceholder}
                   disabled={files.length === 0}
-                  className="w-36 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 disabled:cursor-not-allowed disabled:bg-zinc-200 disabled:text-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:disabled:bg-zinc-800/50 dark:disabled:text-zinc-600"
+                  className="w-36 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
                 />
               )}
               <input
@@ -138,7 +138,7 @@ export function UploadCreateForm({
                 onChange={(e) => setName(e.target.value)}
                 placeholder={Labels.optionalNamePlaceholder}
                 disabled={files.length === 0}
-                className="w-48 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 disabled:cursor-not-allowed disabled:bg-zinc-200 disabled:text-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:disabled:bg-zinc-800/50 dark:disabled:text-zinc-600"
+                className="w-48 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
               />
             </div>
           </div>
