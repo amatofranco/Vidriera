@@ -93,7 +93,7 @@ export const Labels = {
   filesChosenCount: (count: number) => `${count} archivos elegidos`,
   maxSizeSuffix: (maxLabel: string) => `(máx. ${maxLabel})`,
   optionalNamePlaceholder: "Nombre",
-  optionalCodePlaceholder: "Código",
+  optionalCodePlaceholder: "Código (opcional)",
   renameFilesCodeColumnLabel: "Código",
 
   selectedProductsLabel: (count: number) => `${count} producto${plural(count)} seleccionado${plural(count)}`,
