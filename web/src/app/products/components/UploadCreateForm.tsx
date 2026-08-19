@@ -125,13 +125,27 @@ export function UploadCreateForm({
           />
         </label>
         {files.length > 1 && (
-          <button
-            type="button"
-            onClick={() => setIsRenameModalOpen(true)}
-            className="col-start-2 row-start-2 rounded-md border border-zinc-300 px-3 py-1.5 text-xs font-medium whitespace-nowrap text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
-          >
-            {customNames ? Labels.renameFilesButtonEdited(customNames.length) : Labels.renameFilesButton}
-          </button>
+          <div className="row-start-2 flex items-center gap-3" style={{ gridColumn: "2 / -1" }}>
+            <button
+              type="button"
+              onClick={() => setIsRenameModalOpen(true)}
+              className="rounded-md border border-zinc-300 px-3 py-1.5 text-xs font-medium whitespace-nowrap text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+            >
+              {customNames ? Labels.renameFilesButtonEdited(customNames.length) : Labels.renameFilesButton}
+            </button>
+            <button
+              type="submit"
+              title={submitTitle(files.length)}
+              disabled={isSubmitting}
+              className="flex items-center justify-center rounded-md bg-[#8a5a35] px-3 py-1.5 text-white transition-colors hover:bg-[#a06b41] disabled:opacity-50"
+            >
+              {isSubmitting ? (
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+              ) : (
+                <span className="text-lg leading-none">+</span>
+              )}
+            </button>
+          </div>
         )}
         {codeEnabled && files.length === 1 && (
           <input
@@ -151,7 +165,7 @@ export function UploadCreateForm({
             className={`row-start-2 w-48 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 ${codeEnabled ? "col-start-3" : "col-start-2"}`}
           />
         )}
-        {files.length > 0 && (
+        {files.length === 1 && (
           <button
             type="submit"
             title={submitTitle(files.length)}
