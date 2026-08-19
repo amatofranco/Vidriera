@@ -156,7 +156,7 @@ export function UploadCreateForm({
             type="submit"
             title={submitTitle(files.length)}
             disabled={isSubmitting}
-            className={`row-start-2 flex items-center justify-center rounded-md bg-[#8a5a35] px-3 py-1.5 text-white transition-colors hover:bg-[#a06b41] disabled:opacity-50 ${files.length === 1 && codeEnabled ? "col-start-4" : "col-start-3"}`}
+            className={`row-start-2 flex items-center justify-center rounded-md bg-[#8a5a35] px-3 py-1.5 text-white transition-colors hover:bg-[#a06b41] disabled:opacity-50 ${codeEnabled ? "col-start-4" : "col-start-3"}`}
           >
             {isSubmitting ? (
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
