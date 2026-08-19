@@ -158,6 +158,10 @@ body { overflow: auto; }
     padding: 8px 8px; border-radius: 8px; cursor: pointer; font-size: 13px; line-height: 1.3;
     font-family: inherit; overflow: hidden; text-overflow: ellipsis;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; white-space: normal;
+    /* -webkit-line-clamp solo no siempre recorta limpio (queda asomando un
+       borde de la 3ra línea) — el max-height en em (line-height × 2 líneas)
+       fuerza el corte real con overflow:hidden. */
+    max-height: 2.6em;
 }
 .index-item:hover { background: #3a3a3c; }
 .index-item-sub {
