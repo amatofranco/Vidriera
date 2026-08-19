@@ -4,6 +4,7 @@ import { runWithConcurrency } from "@/lib/concurrency";
 import { MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_LABEL, formatFileSize } from "@/lib/file-size";
 import { ApiError, createProduct, type Product } from "@/lib/api";
 import { Messages, bulkUploadFailed, fileTooLargeReason } from "@/lib/messages";
+import { parseProductFileName } from "@/lib/parseProductFileName";
 
 export function useCreateProduct({
   auth,
@@ -31,16 +32,18 @@ export function useCreateProduct({
     setError(null);
 
     const overrideByFile = new Map<File, string | undefined>(
-      files.map((file, index) => [
-        file,
-        customNames ? customNames[index]?.trim() || undefined : files.length === 1 ? name || undefined : undefined,
-      ])
+      files.map((file, index) => {
+        if (customNames) return [file, customNames[index]?.trim() || undefined];
+        if (files.length === 1) return [file, name || undefined];
+        return [file, parseProductFileName(file.name).name || undefined];
+      })
     );
     const codeByFile = new Map<File, string | undefined>(
-      files.map((file, index) => [
-        file,
-        customCodes ? customCodes[index]?.trim() || undefined : files.length === 1 ? code || undefined : undefined,
-      ])
+      files.map((file, index) => {
+        if (customCodes) return [file, customCodes[index]?.trim() || undefined];
+        if (files.length === 1) return [file, code || undefined];
+        return [file, parseProductFileName(file.name).code || undefined];
+      })
     );
     const failed: { name: string; message: string }[] = [];
     const oversized = files.filter((f) => f.size > MAX_FILE_SIZE_BYTES);
