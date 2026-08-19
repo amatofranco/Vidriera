@@ -66,34 +66,31 @@ export function UploadCreateForm({
       onSubmit={handleSubmit}
       className={`${marginBottomClassName} flex flex-col gap-2 rounded-xl border border-black/10 bg-[#ecdcc0] px-4 py-3 shadow-lg dark:border-white/10 dark:bg-zinc-900`}
     >
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="text-xs font-medium whitespace-nowrap text-zinc-600 dark:text-zinc-400">
+      <div
+        className="grid items-center gap-x-3 gap-y-1"
+        style={{
+          gridTemplateColumns: codeEnabled
+            ? "minmax(0,max-content) 9rem 12rem auto"
+            : "minmax(0,max-content) 12rem auto",
+        }}
+      >
+        <span className="col-start-1 row-start-1 text-xs font-medium whitespace-nowrap text-zinc-600 dark:text-zinc-400">
           {label} <span className="text-zinc-400 dark:text-zinc-500">{Labels.maxSizeSuffix(maxSizeLabel)}</span>
         </span>
-        {files.length === 1 && (
-          <>
-            {/* Espaciador invisible con la misma forma que el botón de elegir
-                archivo, para que Código/Nombre queden alineados con sus
-                inputs de la fila de abajo en vez de pegados al texto de arriba. */}
-            <span aria-hidden className="invisible flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
-              <span className="w-28 shrink-0 px-2 py-0.5 text-center text-xs font-medium whitespace-nowrap">
-                {fileButtonLabel}
-              </span>
-              <span className="max-w-[160px] truncate">{fileLabelText}</span>
-            </span>
-            {codeEnabled && (
-              <span className="w-36 text-xs font-bold text-zinc-600 dark:text-zinc-400">
-                {Labels.renameFilesCodeColumnLabel}
-              </span>
-            )}
-            <span className="w-48 text-xs font-bold text-zinc-600 dark:text-zinc-400">
-              {Labels.renameFilesNameColumnLabel}
-            </span>
-          </>
+        {codeEnabled && files.length === 1 && (
+          <span className="col-start-2 row-start-1 text-xs font-bold text-zinc-600 dark:text-zinc-400">
+            {Labels.renameFilesCodeColumnLabel}
+          </span>
         )}
-      </div>
-      <div className="flex flex-wrap items-center gap-3">
-        <label className="flex cursor-pointer items-center gap-2 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800">
+        {files.length === 1 && (
+          <span
+            className={`row-start-1 text-xs font-bold text-zinc-600 dark:text-zinc-400 ${codeEnabled ? "col-start-3" : "col-start-2"}`}
+          >
+            {Labels.renameFilesNameColumnLabel}
+          </span>
+        )}
+
+        <label className="col-start-1 row-start-2 flex cursor-pointer items-center gap-2 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800">
           <span className="w-28 shrink-0 rounded bg-[#c9a86a] px-2 py-0.5 text-center text-xs font-medium whitespace-nowrap text-zinc-900">
             {fileButtonLabel}
           </span>
@@ -131,37 +128,35 @@ export function UploadCreateForm({
           <button
             type="button"
             onClick={() => setIsRenameModalOpen(true)}
-            className="rounded-md border border-zinc-300 px-3 py-1.5 text-xs font-medium whitespace-nowrap text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+            className="col-start-2 row-start-2 rounded-md border border-zinc-300 px-3 py-1.5 text-xs font-medium whitespace-nowrap text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
           >
             {customNames ? Labels.renameFilesButtonEdited(customNames.length) : Labels.renameFilesButton}
           </button>
         )}
+        {codeEnabled && files.length === 1 && (
+          <input
+            type="text"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            placeholder={Labels.optionalCodePlaceholder}
+            className="col-start-2 row-start-2 w-36 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+          />
+        )}
         {files.length === 1 && (
-          <>
-            {codeEnabled && (
-              <input
-                type="text"
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                placeholder={Labels.optionalCodePlaceholder}
-                className="w-36 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
-              />
-            )}
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={Labels.optionalNamePlaceholder}
-              className="w-48 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
-            />
-          </>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={Labels.optionalNamePlaceholder}
+            className={`row-start-2 w-48 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 ${codeEnabled ? "col-start-3" : "col-start-2"}`}
+          />
         )}
         {files.length > 0 && (
           <button
             type="submit"
             title={submitTitle(files.length)}
             disabled={isSubmitting}
-            className="flex items-center justify-center rounded-md bg-[#8a5a35] px-3 py-1.5 text-white transition-colors hover:bg-[#a06b41] disabled:opacity-50"
+            className={`row-start-2 flex items-center justify-center rounded-md bg-[#8a5a35] px-3 py-1.5 text-white transition-colors hover:bg-[#a06b41] disabled:opacity-50 ${files.length === 1 && codeEnabled ? "col-start-4" : "col-start-3"}`}
           >
             {isSubmitting ? (
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
