@@ -162,7 +162,7 @@ body { overflow: auto; }
        borde de la 3ra línea) — el max-height en em fuerza el corte real con
        overflow:hidden. Un poco más que line-height × 2 líneas exactas (2.6em)
        para no cortar descendentes (la "j", "g") de la 2da línea. */
-    max-height: 3em;
+    max-height: 3.3em;
 }
 .index-item:hover { background: #3a3a3c; }
 .index-item-sub {
