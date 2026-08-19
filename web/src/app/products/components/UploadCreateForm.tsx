@@ -66,6 +66,12 @@ export function UploadCreateForm({
       onSubmit={handleSubmit}
       className={`${marginBottomClassName} flex flex-col gap-2 rounded-xl border border-black/10 bg-[#ecdcc0] px-4 py-3 shadow-lg dark:border-white/10 dark:bg-zinc-900`}
     >
+      <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+        {label} <span className="text-zinc-400 dark:text-zinc-500">{Labels.maxSizeSuffix(maxSizeLabel)}</span>
+        {codeEnabled && (
+          <span className="ml-1 font-normal text-zinc-400 dark:text-zinc-500">{Labels.fileNameConventionHint}</span>
+        )}
+      </span>
       <div
         className="grid items-center gap-x-3 gap-y-1"
         style={{
@@ -74,14 +80,6 @@ export function UploadCreateForm({
             : "minmax(0,max-content) 12rem max-content",
         }}
       >
-        <span className="col-start-1 row-start-1 text-xs font-medium whitespace-nowrap text-zinc-600 dark:text-zinc-400">
-          {label} <span className="text-zinc-400 dark:text-zinc-500">{Labels.maxSizeSuffix(maxSizeLabel)}</span>
-          {codeEnabled && (
-            <span className="ml-1 font-normal whitespace-normal text-zinc-400 dark:text-zinc-500">
-              {Labels.fileNameConventionHint}
-            </span>
-          )}
-        </span>
         {codeEnabled && files.length === 1 && (
           <span className="col-start-2 row-start-1 text-xs font-bold text-zinc-600 dark:text-zinc-400">
             {Labels.renameFilesCodeColumnLabel}
