@@ -57,7 +57,7 @@ export function RenameFilesModal({
                   type="text"
                   value={codes[index]}
                   onChange={(e) => setCodeAt(index, e.target.value)}
-                  placeholder={Labels.renameFilesCodeColumnLabel}
+                  placeholder={Labels.optionalCodePlaceholder}
                   className="w-32 shrink-0 rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
                 />
               )}
