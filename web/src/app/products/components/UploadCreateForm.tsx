@@ -76,6 +76,11 @@ export function UploadCreateForm({
       >
         <span className="col-start-1 row-start-1 text-xs font-medium whitespace-nowrap text-zinc-600 dark:text-zinc-400">
           {label} <span className="text-zinc-400 dark:text-zinc-500">{Labels.maxSizeSuffix(maxSizeLabel)}</span>
+          {codeEnabled && (
+            <span className="ml-1 font-normal whitespace-normal text-zinc-400 dark:text-zinc-500">
+              {Labels.fileNameConventionHint}
+            </span>
+          )}
         </span>
         {codeEnabled && files.length === 1 && (
           <span className="col-start-2 row-start-1 text-xs font-bold text-zinc-600 dark:text-zinc-400">

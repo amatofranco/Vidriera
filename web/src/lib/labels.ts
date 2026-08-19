@@ -95,6 +95,7 @@ export const Labels = {
   optionalNamePlaceholder: "Nombre",
   optionalCodePlaceholder: "Código (opcional)",
   renameFilesCodeColumnLabel: "Código",
+  fileNameConventionHint: '— nombrá el archivo "código-producto.pdf" para autocompletar',
 
   selectedProductsLabel: (count: number) => `${count} producto${plural(count)} seleccionado${plural(count)}`,
   filteredProductsLabel: (count: number) => `${count} producto${plural(count)} filtrado${plural(count)}`,
