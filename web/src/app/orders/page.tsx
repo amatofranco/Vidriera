@@ -20,7 +20,7 @@ export default function OrdersPage() {
     }
   }, [auth, authLoading, router]);
 
-  const { logoUrl, setLogoUrl } = useCompanyLogo(auth);
+  const { logoUrl, setLogoUrl, isLoading: isLogoLoading } = useCompanyLogo(auth);
   const { orders, isLoading, error } = useOrdersData(auth, logout);
   const [logoError, setLogoError] = useState<string | null>(null);
 
@@ -28,7 +28,7 @@ export default function OrdersPage() {
     return null;
   }
 
-  if (isLoading) {
+  if (isLoading || isLogoLoading) {
     return (
       <div
         className="flex w-full flex-1 items-center justify-center px-4 py-10"

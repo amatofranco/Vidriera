@@ -65,7 +65,7 @@ export default function ProductsPage() {
     loadSections,
   } = useProductsData(auth, logout);
 
-  const { logoUrl, setLogoUrl } = useCompanyLogo(auth);
+  const { logoUrl, setLogoUrl, isLoading: isLogoLoading } = useCompanyLogo(auth);
 
   const { draggedId, setDraggedId, containerRows, handleDrop, handleMoveToPosition } = useContainerReorder({
     auth,
@@ -137,7 +137,7 @@ export default function ProductsPage() {
     return null;
   }
 
-  if (isLoading) {
+  if (isLoading || isLogoLoading) {
     return (
       <div
         className="flex w-full flex-1 items-center justify-center px-4 py-10"

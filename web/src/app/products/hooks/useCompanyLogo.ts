@@ -4,6 +4,7 @@ import { fetchCompanyLogoUrl } from "@/lib/api";
 
 export function useCompanyLogo(auth: AuthState | null) {
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!auth) return;
@@ -14,6 +15,7 @@ export function useCompanyLogo(auth: AuthState | null) {
       if (cancelled) return;
       objectUrl = url;
       setLogoUrl(url);
+      setIsLoading(false);
     });
 
     return () => {
@@ -22,5 +24,5 @@ export function useCompanyLogo(auth: AuthState | null) {
     };
   }, [auth]);
 
-  return { logoUrl, setLogoUrl };
+  return { logoUrl, setLogoUrl, isLoading };
 }
