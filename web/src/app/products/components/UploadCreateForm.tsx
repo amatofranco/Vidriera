@@ -66,15 +66,30 @@ export function UploadCreateForm({
       onSubmit={handleSubmit}
       className={`${marginBottomClassName} flex flex-col gap-2 rounded-xl border border-black/10 bg-[#ecdcc0] px-4 py-3 shadow-lg dark:border-white/10 dark:bg-zinc-900`}
     >
-      <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+      <div className="flex flex-wrap items-center gap-3">
         <span className="text-xs font-medium whitespace-nowrap text-zinc-600 dark:text-zinc-400">
           {label} <span className="text-zinc-400 dark:text-zinc-500">{Labels.maxSizeSuffix(maxSizeLabel)}</span>
         </span>
         {files.length === 1 && (
-          <span className="flex gap-3 text-xs font-bold text-zinc-600 dark:text-zinc-400">
-            {codeEnabled && <span className="w-36">{Labels.renameFilesCodeColumnLabel}</span>}
-            <span className="w-48">{Labels.renameFilesNameColumnLabel}</span>
-          </span>
+          <>
+            {/* Espaciador invisible con la misma forma que el botón de elegir
+                archivo, para que Código/Nombre queden alineados con sus
+                inputs de la fila de abajo en vez de pegados al texto de arriba. */}
+            <span aria-hidden className="invisible flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
+              <span className="w-28 shrink-0 px-2 py-0.5 text-center text-xs font-medium whitespace-nowrap">
+                {fileButtonLabel}
+              </span>
+              <span className="max-w-[160px] truncate">{fileLabelText}</span>
+            </span>
+            {codeEnabled && (
+              <span className="w-36 text-xs font-bold text-zinc-600 dark:text-zinc-400">
+                {Labels.renameFilesCodeColumnLabel}
+              </span>
+            )}
+            <span className="w-48 text-xs font-bold text-zinc-600 dark:text-zinc-400">
+              {Labels.renameFilesNameColumnLabel}
+            </span>
+          </>
         )}
       </div>
       <div className="flex flex-wrap items-center gap-3">
