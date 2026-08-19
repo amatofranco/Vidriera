@@ -2,11 +2,7 @@
 
 import { useState } from "react";
 import { Labels } from "@/lib/labels";
-import { parseProductFileName } from "@/lib/parseProductFileName";
-
-function baseName(fileName: string) {
-  return fileName.replace(/\.pdf$/i, "");
-}
+import { baseName, parseProductFileName } from "@/lib/parseProductFileName";
 
 export function RenameFilesModal({
   files,

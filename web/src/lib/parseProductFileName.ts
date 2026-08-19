@@ -1,3 +1,7 @@
+export function baseName(fileName: string): string {
+  return fileName.replace(/\.pdf$/i, "").trim();
+}
+
 // Convención del cliente para nombrar los PDF: "<código>-<nombre del producto>.pdf".
 // Solo el primer guion separa código de nombre — el nombre del producto puede
 // tener sus propios guiones sin romper el parseo (ej. "9788419714930-Piezas 3D - Dinosaurios.pdf").
