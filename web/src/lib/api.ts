@@ -57,12 +57,11 @@ export function login(email: string, password: string) {
 export interface Product {
   id: string;
   name: string;
-  code: string | null;
   hasStock: boolean;
   hasSheet: boolean;
   sectionId: string | null;
   sortOrder: number;
-  isbn: string | null;
+  code: string | null;
 }
 
 export function getProducts(token: string) {
@@ -141,11 +140,11 @@ export function updateStock(token: string, productId: string, hasStock: boolean)
   });
 }
 
-export function createProduct(token: string, file: File, name?: string, isbn?: string) {
+export function createProduct(token: string, file: File, name?: string, code?: string) {
   const formData = new FormData();
   formData.append("file", file);
   if (name) formData.append("name", name);
-  if (isbn) formData.append("isbn", isbn);
+  if (code) formData.append("code", code);
 
   return request<Product>("/api/products", {
     method: "POST",
@@ -266,7 +265,7 @@ export function getCurrentCatalog(token: string) {
 
 export interface OrderItem {
   productName: string;
-  isbn: string | null;
+  code: string | null;
   quantity: number;
 }
 

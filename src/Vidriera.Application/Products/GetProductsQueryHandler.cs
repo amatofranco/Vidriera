@@ -22,7 +22,7 @@ public class GetProductsQueryHandler : IRequestHandler<GetProductsQuery, IReadOn
             .ToListAsync(cancellationToken);
 
         return products
-            .Select(p => new ProductDto(p.Id, p.Name, p.Code, p.HasStock, !string.IsNullOrEmpty(p.SheetPdfBlobKey), p.Section?.Id, p.SortOrder, p.Isbn))
+            .Select(p => new ProductDto(p.Id, p.Name, p.HasStock, !string.IsNullOrEmpty(p.SheetPdfBlobKey), p.Section?.Id, p.SortOrder, p.Code))
             .ToList();
     }
 }

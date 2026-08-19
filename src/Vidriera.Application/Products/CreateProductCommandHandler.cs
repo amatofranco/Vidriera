@@ -30,13 +30,13 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
 
         var nextSortOrder = await TopLevelOrdering.PrependTopLevelSortOrderAsync(_session, request.CompanyId, cancellationToken);
 
-        var isbn = string.IsNullOrWhiteSpace(request.Isbn) ? null : request.Isbn.Trim();
+        var code = string.IsNullOrWhiteSpace(request.Code) ? null : request.Code.Trim();
 
         var product = new Product
         {
             Company = company,
             Name = name,
-            Isbn = isbn,
+            Code = code,
             HasStock = false,
             IsActive = true,
             SortOrder = nextSortOrder
@@ -54,6 +54,6 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
 
         await transaction.CommitAsync(cancellationToken);
 
-        return new ProductDto(product.Id, product.Name, product.Code, product.HasStock, HasSheet: true, SectionId: null, product.SortOrder, product.Isbn);
+        return new ProductDto(product.Id, product.Name, product.HasStock, HasSheet: true, SectionId: null, product.SortOrder, product.Code);
     }
 }

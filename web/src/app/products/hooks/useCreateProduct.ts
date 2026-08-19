@@ -23,8 +23,8 @@ export function useCreateProduct({
     files: File[],
     name: string,
     customNames?: string[],
-    isbn?: string,
-    customIsbns?: string[]
+    code?: string,
+    customCodes?: string[]
   ) {
     if (!auth || files.length === 0) return;
     setIsCreating(true);
@@ -36,10 +36,10 @@ export function useCreateProduct({
         customNames ? customNames[index]?.trim() || undefined : files.length === 1 ? name || undefined : undefined,
       ])
     );
-    const isbnByFile = new Map<File, string | undefined>(
+    const codeByFile = new Map<File, string | undefined>(
       files.map((file, index) => [
         file,
-        customIsbns ? customIsbns[index]?.trim() || undefined : files.length === 1 ? isbn || undefined : undefined,
+        customCodes ? customCodes[index]?.trim() || undefined : files.length === 1 ? code || undefined : undefined,
       ])
     );
     const failed: { name: string; message: string }[] = [];
@@ -56,7 +56,7 @@ export function useCreateProduct({
 
     await runWithConcurrency(validFiles, 4, async (file) => {
       try {
-        const created = await createProduct(auth.token, file, overrideByFile.get(file), isbnByFile.get(file));
+        const created = await createProduct(auth.token, file, overrideByFile.get(file), codeByFile.get(file));
         setProducts((prev) => [created, ...prev]);
       } catch (err) {
         failed.push({

@@ -47,7 +47,7 @@ public class ClosedXmlOrderService : IExcelOrderService
 
         var headerRow = row;
         sheet.Cell(headerRow, 1).Value = "Producto";
-        sheet.Cell(headerRow, 2).Value = "ISBN";
+        sheet.Cell(headerRow, 2).Value = "Código";
         sheet.Cell(headerRow, 3).Value = "Cantidad";
         sheet.Range(headerRow, 1, headerRow, 3).Style.Font.Bold = true;
         row++;
@@ -55,7 +55,7 @@ public class ClosedXmlOrderService : IExcelOrderService
         foreach (var line in lines)
         {
             sheet.Cell(row, 1).Value = line.ProductName;
-            sheet.Cell(row, 2).Value = line.Isbn ?? "";
+            sheet.Cell(row, 2).Value = line.Code ?? "";
             sheet.Cell(row, 3).Value = line.Quantity;
             row++;
         }

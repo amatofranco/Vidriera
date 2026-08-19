@@ -6,7 +6,6 @@ public class Product
     public virtual Company Company { get; set; } = null!;
     public virtual string Name { get; set; } = null!;
     public virtual string? Code { get; set; }
-    public virtual string? Isbn { get; set; }
     public virtual string? SheetPdfBlobKey { get; set; }
     public virtual string? SheetPdfOriginalName { get; set; }
     public virtual bool HasStock { get; set; }

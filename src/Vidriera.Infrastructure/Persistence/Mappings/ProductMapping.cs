@@ -32,12 +32,6 @@ public class ProductMapping : ClassMapping<Product>
         Property(x => x.Code, m =>
         {
             m.Column("code");
-            m.Length(100);
-        });
-
-        Property(x => x.Isbn, m =>
-        {
-            m.Column("isbn");
             m.Length(50);
         });
 

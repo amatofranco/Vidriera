@@ -14,7 +14,7 @@ export function UploadCreateForm({
   progress,
   onSubmit,
   marginBottomClassName = "mb-3",
-  isbnEnabled = false,
+  codeEnabled = false,
 }: {
   label: string;
   fileButtonLabel: string;
@@ -27,29 +27,29 @@ export function UploadCreateForm({
     files: File[],
     name: string,
     customNames?: string[],
-    isbn?: string,
-    customIsbns?: string[]
+    code?: string,
+    customCodes?: string[]
   ) => Promise<void> | void;
   marginBottomClassName?: string;
-  isbnEnabled?: boolean;
+  codeEnabled?: boolean;
 }) {
   const [files, setFiles] = useState<File[]>([]);
   const [name, setName] = useState("");
-  const [isbn, setIsbn] = useState("");
+  const [code, setCode] = useState("");
   const [customNames, setCustomNames] = useState<string[] | null>(null);
-  const [customIsbns, setCustomIsbns] = useState<string[] | null>(null);
+  const [customCodes, setCustomCodes] = useState<string[] | null>(null);
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (files.length === 0) return;
-    await onSubmit(files, name.trim(), customNames ?? undefined, isbn.trim() || undefined, customIsbns ?? undefined);
+    await onSubmit(files, name.trim(), customNames ?? undefined, code.trim() || undefined, customCodes ?? undefined);
     setFiles([]);
     setName("");
-    setIsbn("");
+    setCode("");
     setCustomNames(null);
-    setCustomIsbns(null);
+    setCustomCodes(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
@@ -83,7 +83,7 @@ export function UploadCreateForm({
             onChange={(e) => {
               setFiles(Array.from(e.target.files ?? []));
               setCustomNames(null);
-              setCustomIsbns(null);
+              setCustomCodes(null);
             }}
             className="hidden"
           />
@@ -106,12 +106,12 @@ export function UploadCreateForm({
             className="w-48 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
           />
         )}
-        {files.length <= 1 && isbnEnabled && (
+        {files.length <= 1 && codeEnabled && (
           <input
             type="text"
-            value={isbn}
-            onChange={(e) => setIsbn(e.target.value)}
-            placeholder={Labels.optionalIsbnPlaceholder}
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            placeholder={Labels.optionalCodePlaceholder}
             className="w-36 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
           />
         )}
@@ -142,11 +142,11 @@ export function UploadCreateForm({
         <RenameFilesModal
           files={files}
           initialNames={customNames}
-          isbnEnabled={isbnEnabled}
-          initialIsbns={customIsbns}
-          onApply={(names, isbns) => {
+          codeEnabled={codeEnabled}
+          initialCodes={customCodes}
+          onApply={(names, codes) => {
             setCustomNames(names);
-            setCustomIsbns(isbns ?? null);
+            setCustomCodes(codes ?? null);
             setIsRenameModalOpen(false);
           }}
           onClose={() => setIsRenameModalOpen(false)}

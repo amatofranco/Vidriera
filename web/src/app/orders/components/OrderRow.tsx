@@ -73,7 +73,7 @@ export function OrderRow({ order }: { order: Order }) {
                     {Labels.orderProductColumn}
                   </th>
                   <th className="px-3 py-2 text-xs font-medium text-zinc-600 dark:text-zinc-400">
-                    {Labels.orderIsbnColumn}
+                    {Labels.orderCodeColumn}
                   </th>
                   <th className="px-3 py-2 text-right text-xs font-medium text-zinc-600 dark:text-zinc-400">
                     {Labels.orderQuantityColumn}
@@ -84,7 +84,7 @@ export function OrderRow({ order }: { order: Order }) {
                 {order.items.map((item, index) => (
                   <tr key={index}>
                     <td className="px-3 py-2 text-zinc-900 dark:text-zinc-50">{item.productName}</td>
-                    <td className="px-3 py-2 text-zinc-600 dark:text-zinc-400">{item.isbn || Labels.notProvided}</td>
+                    <td className="px-3 py-2 text-zinc-600 dark:text-zinc-400">{item.code || Labels.notProvided}</td>
                     <td className="px-3 py-2 text-right text-zinc-900 dark:text-zinc-50">{item.quantity}</td>
                   </tr>
                 ))}

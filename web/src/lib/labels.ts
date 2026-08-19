@@ -91,8 +91,8 @@ export const Labels = {
   filesChosenCount: (count: number) => `${count} archivos elegidos`,
   maxSizeSuffix: (maxLabel: string) => `(máx. ${maxLabel})`,
   optionalNamePlaceholder: "Nombre (opcional)",
-  optionalIsbnPlaceholder: "ISBN (opcional)",
-  renameFilesIsbnColumnLabel: "ISBN",
+  optionalCodePlaceholder: "Código (opcional)",
+  renameFilesCodeColumnLabel: "Código",
 
   selectedProductsLabel: (count: number) => `${count} producto${plural(count)} seleccionado${plural(count)}`,
   filteredProductsLabel: (count: number) => `${count} producto${plural(count)} filtrado${plural(count)}`,
@@ -116,7 +116,7 @@ export const Labels = {
   orderCarrierLabel: "Expreso",
   orderDeliveryAddressLabel: "Dirección de entrega",
   orderProductColumn: "Producto",
-  orderIsbnColumn: "ISBN",
+  orderCodeColumn: "Código",
   orderQuantityColumn: "Cantidad",
   notProvided: "—",
 } as const;

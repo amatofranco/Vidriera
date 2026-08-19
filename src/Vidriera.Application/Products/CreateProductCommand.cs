@@ -7,4 +7,4 @@ public record CreateProductCommand(
     Stream FileContent,
     string OriginalFileName,
     string? Name,
-    string? Isbn) : IRequest<ProductDto>;
+    string? Code) : IRequest<ProductDto>;

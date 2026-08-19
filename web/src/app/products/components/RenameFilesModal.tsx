@@ -10,31 +10,31 @@ function baseName(fileName: string) {
 export function RenameFilesModal({
   files,
   initialNames,
-  isbnEnabled,
-  initialIsbns,
+  codeEnabled,
+  initialCodes,
   onApply,
   onClose,
 }: {
   files: File[];
   initialNames: string[] | null;
-  isbnEnabled?: boolean;
-  initialIsbns?: string[] | null;
-  onApply: (names: string[], isbns?: string[]) => void;
+  codeEnabled?: boolean;
+  initialCodes?: string[] | null;
+  onApply: (names: string[], codes?: string[]) => void;
   onClose: () => void;
 }) {
   const [names, setNames] = useState<string[]>(
     () => initialNames ?? files.map((f) => baseName(f.name))
   );
-  const [isbns, setIsbns] = useState<string[]>(
-    () => initialIsbns ?? files.map(() => "")
+  const [codes, setCodes] = useState<string[]>(
+    () => initialCodes ?? files.map(() => "")
   );
 
   function setNameAt(index: number, value: string) {
     setNames((prev) => prev.map((n, i) => (i === index ? value : n)));
   }
 
-  function setIsbnAt(index: number, value: string) {
-    setIsbns((prev) => prev.map((n, i) => (i === index ? value : n)));
+  function setCodeAt(index: number, value: string) {
+    setCodes((prev) => prev.map((n, i) => (i === index ? value : n)));
   }
 
   return (
@@ -55,12 +55,12 @@ export function RenameFilesModal({
                 onChange={(e) => setNameAt(index, e.target.value)}
                 className="flex-1 rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
               />
-              {isbnEnabled && (
+              {codeEnabled && (
                 <input
                   type="text"
-                  value={isbns[index]}
-                  onChange={(e) => setIsbnAt(index, e.target.value)}
-                  placeholder={Labels.renameFilesIsbnColumnLabel}
+                  value={codes[index]}
+                  onChange={(e) => setCodeAt(index, e.target.value)}
+                  placeholder={Labels.renameFilesCodeColumnLabel}
                   className="w-32 shrink-0 rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
                 />
               )}
@@ -78,7 +78,7 @@ export function RenameFilesModal({
           </button>
           <button
             type="button"
-            onClick={() => onApply(names, isbnEnabled ? isbns : undefined)}
+            onClick={() => onApply(names, codeEnabled ? codes : undefined)}
             className="rounded bg-[#8a5a35] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#a06b41]"
           >
             {Labels.renameFilesApply}
