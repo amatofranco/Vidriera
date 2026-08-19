@@ -116,7 +116,7 @@ export function UploadCreateForm({
         {files.length <= 1 && (
           <div className="flex flex-col gap-1">
             {files.length === 1 && (
-              <div className="flex gap-3 text-[10px] font-semibold tracking-wide text-zinc-500 dark:text-zinc-400">
+              <div className="flex gap-3 text-xs font-bold text-zinc-600 dark:text-zinc-400">
                 {codeEnabled && <span className="w-36">{Labels.renameFilesCodeColumnLabel}</span>}
                 <span className="w-48">{Labels.renameFilesNameColumnLabel}</span>
               </div>

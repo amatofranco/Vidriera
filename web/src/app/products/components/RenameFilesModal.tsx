@@ -40,7 +40,7 @@ export function RenameFilesModal({
         <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">{Labels.renameFilesTitle}</h2>
         <p className="mt-1 mb-3 text-xs text-zinc-600 dark:text-zinc-400">{Labels.renameFilesHint}</p>
 
-        <div className="flex items-center gap-3 px-3 pb-1 text-[11px] font-semibold tracking-wide text-zinc-500 dark:text-zinc-400">
+        <div className="flex items-center gap-3 px-3 pb-1 text-xs font-bold text-zinc-600 dark:text-zinc-400">
           <span className="w-1/3 shrink-0">{Labels.renameFilesFileColumnLabel}</span>
           {codeEnabled && <span className="w-32 shrink-0">{Labels.renameFilesCodeColumnLabel}</span>}
           <span className="flex-1">{Labels.renameFilesNameColumnLabel}</span>
