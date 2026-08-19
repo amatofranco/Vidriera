@@ -70,8 +70,8 @@ export function UploadCreateForm({
         className="grid items-center gap-x-3 gap-y-1"
         style={{
           gridTemplateColumns: codeEnabled
-            ? "minmax(0,max-content) 9rem 12rem auto"
-            : "minmax(0,max-content) 12rem auto",
+            ? "minmax(0,max-content) 9rem 12rem max-content"
+            : "minmax(0,max-content) 12rem max-content",
         }}
       >
         <span className="col-start-1 row-start-1 text-xs font-medium whitespace-nowrap text-zinc-600 dark:text-zinc-400">
