@@ -44,5 +44,11 @@ public class GeneratedCatalogMapping : ClassMapping<GeneratedCatalog>
         });
 
         Property(x => x.RasterizedPageCount, m => m.Column("rasterized_page_count"));
+
+        Property(x => x.ContentFingerprint, m =>
+        {
+            m.Column("content_fingerprint");
+            m.NotNullable(true);
+        });
     }
 }

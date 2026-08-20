@@ -10,4 +10,5 @@ public class GeneratedCatalog
 
     public virtual string ProductsSnapshotJson { get; set; } = "[]";
     public virtual int RasterizedPageCount { get; set; }
+    public virtual string ContentFingerprint { get; set; } = "";
 }

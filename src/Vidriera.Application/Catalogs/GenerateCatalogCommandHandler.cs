@@ -53,16 +53,27 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         }
 
         var entries = CatalogMergePlanBuilder.BuildEntries(allSections, allProducts, selectedIds);
+        var fingerprint = CatalogMergePlanBuilder.ComputeContentFingerprint(entries);
+
+        var company = await _session.GetAsync<Company>(request.CompanyId, cancellationToken);
+        var existingCatalog = company.CurrentCatalogId.HasValue
+            ? await _session.GetAsync<GeneratedCatalog>(company.CurrentCatalogId.Value, cancellationToken)
+            : null;
+
+        if (existingCatalog is not null && existingCatalog.ContentFingerprint == fingerprint)
+        {
+            return await RefreshSnapshotOnlyAsync(request, existingCatalog, entries, cancellationToken);
+        }
+
         var mergePlan = await BuildMergePlanAsync(entries, request.OnProgress, cancellationToken);
 
         var mergeResult = await _pdfMergeService.MergeAsync(mergePlan.PdfBytes, cancellationToken);
         var indexSnapshot = CatalogMergePlanBuilder.BuildIndexSnapshot(entries, mergeResult.PageCounts, request.ShowPrices);
 
         var generatedBlobKey = await UploadMergedPdfAsync(request.CompanyId, mergeResult.Bytes, cancellationToken);
-        var company = await _session.GetAsync<Company>(request.CompanyId, cancellationToken);
         var previousCatalogId = company.CurrentCatalogId;
 
-        var catalog = await CreateCatalogAsync(request, company, mergePlan.IncludedProducts, indexSnapshot, generatedBlobKey, cancellationToken);
+        var catalog = await CreateCatalogAsync(request, company, mergePlan.IncludedProducts, indexSnapshot, generatedBlobKey, fingerprint, cancellationToken);
         await RasterizePagesAsync(catalog, mergeResult.Bytes, mergeResult.PageCounts.Sum(), request.OnProgress, cancellationToken);
 
         company.CurrentCatalogId = catalog.Id;
@@ -179,6 +190,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         IReadOnlyList<Product> includedProducts,
         List<CatalogIndexEntry> indexSnapshot,
         string generatedBlobKey,
+        string fingerprint,
         CancellationToken cancellationToken)
     {
         var user = await _session.GetAsync<User>(request.UserId, cancellationToken);
@@ -194,11 +206,50 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             User = user,
             GeneratedAt = DateTime.UtcNow,
             GeneratedPdfBlobKey = generatedBlobKey,
-            ProductsSnapshotJson = JsonSerializer.Serialize(snapshot)
+            ProductsSnapshotJson = JsonSerializer.Serialize(snapshot),
+            ContentFingerprint = fingerprint
         };
 
         await _session.SaveInTransactionAsync(catalog, cancellationToken);
         return catalog;
+    }
+
+    // Camino rápido: si el fingerprint de contenido no cambió, las páginas ya
+    // rasterizadas siguen siendo válidas — solo hace falta refrescar el
+    // snapshot de texto (nombre/precio) sin volver a descargar/mergear/rasterizar.
+    private async Task<GenerateCatalogResult> RefreshSnapshotOnlyAsync(
+        GenerateCatalogCommand request,
+        GeneratedCatalog existingCatalog,
+        IReadOnlyList<MergeEntry> entries,
+        CancellationToken cancellationToken)
+    {
+        var existingSnapshot = JsonSerializer.Deserialize<CatalogSnapshot>(existingCatalog.ProductsSnapshotJson)
+            ?? new CatalogSnapshot([], []);
+        var pageCounts = ReconstructPageCounts(existingSnapshot.IndexEntries, existingCatalog.RasterizedPageCount);
+
+        var indexSnapshot = CatalogMergePlanBuilder.BuildIndexSnapshot(entries, pageCounts, request.ShowPrices);
+        var productsSnapshot = entries.OfType<ProductEntry>()
+            .Select(e => new CatalogProductSnapshot(e.Product.Id, e.Product.Name, e.Product.Code))
+            .ToList();
+
+        existingCatalog.ProductsSnapshotJson = JsonSerializer.Serialize(new CatalogSnapshot(productsSnapshot, indexSnapshot));
+        existingCatalog.GeneratedAt = DateTime.UtcNow;
+        existingCatalog.User = await _session.GetAsync<User>(request.UserId, cancellationToken);
+        await _session.UpdateInTransactionAsync(existingCatalog, cancellationToken);
+
+        var url = $"{_options.PublicBaseUrl.TrimEnd('/')}/api/catalogs/company/{request.CompanyId}";
+        return new GenerateCatalogResult(existingCatalog.Id, url);
+    }
+
+    private static List<int> ReconstructPageCounts(IReadOnlyList<CatalogIndexEntry> cachedEntries, int totalPages)
+    {
+        var pageCounts = new List<int>(cachedEntries.Count);
+        for (var i = 0; i < cachedEntries.Count; i++)
+        {
+            var end = i + 1 < cachedEntries.Count ? cachedEntries[i + 1].StartPage : totalPages + 1;
+            pageCounts.Add(end - cachedEntries[i].StartPage);
+        }
+        return pageCounts;
     }
 
     private const int MaxConcurrentPageUploads = 4;

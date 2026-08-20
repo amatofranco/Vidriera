@@ -17,6 +17,14 @@ internal static class CatalogMergePlanBuilder
         return BuildMergeEntries(topLevel, allProducts, allSections, selectedIds).ToList();
     }
 
+    public static string ComputeContentFingerprint(IReadOnlyList<MergeEntry> entries) =>
+        string.Join("|", entries.Select(entry => entry switch
+        {
+            SectionCoverEntry cover => "S:" + cover.Section.CoverPdfBlobKey,
+            ProductEntry productEntry => "P:" + productEntry.Product.SheetPdfBlobKey,
+            _ => throw new InvalidOperationException("Unknown merge entry type.")
+        }));
+
     public static List<CatalogIndexEntry> BuildIndexSnapshot(
         IReadOnlyList<MergeEntry> entries,
         IReadOnlyList<int> pageCounts,
