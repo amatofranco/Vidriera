@@ -102,7 +102,7 @@ export function PriceInput({
         if (e.key === "Enter") e.currentTarget.blur();
       }}
       title={Labels.priceFieldTitle}
-      className="no-spinner w-20 rounded border border-zinc-300 px-1 py-0.5 text-right text-xs text-zinc-700 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+      className="no-spinner w-20 rounded border border-transparent bg-transparent px-1 py-0.5 text-right text-xs text-zinc-700 outline-none hover:border-zinc-300 focus:border-zinc-500 focus:bg-white dark:text-zinc-300 dark:hover:border-zinc-700 dark:focus:bg-zinc-800"
     />
   );
 }
