@@ -9,10 +9,6 @@ const SCRUB_RANGE_PX = 220;
 export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, flipbookEl, sectionsData, rebuildRef }) {
     const lastPageStorageKey = `vidriera:lastPage:${catalogId}`;
 
-    // El link de "compartir" y volver a entrar deberían llevar a la página que
-    // se estaba viendo, no siempre a la tapa: primero el número de página de
-    // la URL (si vino de un link compartido) y si no, el último visto en este
-    // dispositivo.
     function readInitialPage() {
         const fromUrl = parseInt(new URLSearchParams(location.search).get("page"), 10);
         if (fromUrl >= 1 && fromUrl <= pageCount) return fromUrl;
@@ -44,13 +40,8 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
         return `/api/catalogs/${catalogId}/pages/${n}`;
     }
 
-    // Precarga varias páginas de cada lado en cuanto se sabe cuál es la
-    // actual, para que ya estén en la caché del navegador cuando el usuario
-    // arranque a deslizar — si no, la vecina recién empieza a pedirse al
-    // tocar la pantalla y se ve cargando (o vacía si se desliza rápido, o
-    // si se pasa varias páginas seguidas).
     const PRELOAD_RADIUS = 3;
-    const preloadedPages = new Map(); // guarda la referencia al Image() para que no lo recolecte el GC antes de terminar de bajarlo
+    const preloadedPages = new Map();
     function preloadPage(n) {
         if (n < 1 || n > pageCount || preloadedPages.has(n)) return;
         const img = new Image();
@@ -66,9 +57,6 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
 
     function updateInfo() {
         dom.pageInfoEl.textContent = `${currentPage} / ${pageCount}`;
-        // El ícono (vía CSS, ver .page-info-scrubbable) es la única pista de que
-        // el contador se puede arrastrar para saltar de página — sin él no hay
-        // forma de darse cuenta de que el gesto existe.
         dom.pageInfoEl.classList.toggle("page-info-scrubbable", pageCount > 1 && window.innerWidth <= MOBILE_BREAKPOINT);
         dom.prevBtn.disabled = currentPage <= 1;
         dom.nextBtn.disabled = currentPage >= pageCount;
@@ -86,12 +74,10 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
         history.replaceState(null, "", url);
     }
 
-    // Navegación "de un salto" (botones ‹ ›, índice): anima siempre la
-    // distancia completa, sin depender del dedo.
     function goToPage(n) {
         const target = Math.min(Math.max(n, 1), pageCount);
         if (target === currentPage || isAnimating) return;
-        const direction = target > currentPage ? 1 : -1; // 1 = avanza (entra desde la derecha)
+        const direction = target > currentPage ? 1 : -1;
         currentPage = target;
         preloadNeighbors(currentPage);
         isAnimating = true;
@@ -101,9 +87,6 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
         inactiveImg.style.display = "block";
         inactiveImg.src = pageUrl(currentPage);
 
-        // Fuerza un reflow para que el navegador "asiente" la posición inicial
-        // antes de habilitar la transición — evita depender de que se llegue
-        // a pintar un frame intermedio (ej. si la pestaña pierde el foco).
         void inactiveImg.offsetWidth;
 
         activeImg.style.transition = `transform ${SLIDE_DURATION_MS}ms ease`;
@@ -134,20 +117,13 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
     preloadNeighbors(currentPage);
     fitStatic();
 
-    // En mobile, justo después de navegar, el navegador a veces todavía está
-    // acomodando la barra de direcciones y reporta un innerWidth/innerHeight
-    // que no es el definitivo — el layout queda con un tamaño/zoom incorrecto
-    // hasta que algo fuerza un recálculo (ej. entrar y salir de pantalla
-    // completa). Forzamos ese recálculo un par de veces apenas carga.
     requestAnimationFrame(() => requestAnimationFrame(fitStatic));
     setTimeout(fitStatic, 300);
     setTimeout(fitStatic, 800);
 
-    // --- Arrastre en vivo: la página sigue al dedo, y al soltar completa el
-    // pase (si se arrastró lo suficiente) o vuelve a su lugar. ---
     let dragStartX = null;
     let dragDx = 0;
-    let dragDirection = 0; // 1 = hacia la página siguiente, -1 = hacia la anterior, 0 = todavía sin determinar (o sin página de ese lado)
+    let dragDirection = 0;
 
     viewport.addEventListener("touchstart", (e) => {
         if (isAnimating) return;
@@ -164,7 +140,7 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
             if (Math.abs(dragDx) < 5) return;
             const wantDirection = dragDx < 0 ? 1 : -1;
             const neighbor = currentPage + wantDirection;
-            if (neighbor < 1 || neighbor > pageCount) return; // no hay página de ese lado
+            if (neighbor < 1 || neighbor > pageCount) return;
 
             dragDirection = wantDirection;
             activeImg.style.transition = "none";
@@ -184,7 +160,7 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
         const dx = dragDx;
         dragStartX = null;
 
-        if (!direction) return; // no llegó a moverse, o no había página de ese lado
+        if (!direction) return;
 
         const shouldComplete = Math.abs(dx) > SWIPE_THRESHOLD_PX;
         isAnimating = true;
@@ -216,9 +192,6 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
         }
     });
 
-    // Arrastrar el contador de página ("12 / 41") permite saltar varias
-    // páginas de una, en vez de tener que deslizar de a una — útil en
-    // catálogos largos.
     let scrubStartX = null;
     let scrubStartPage = currentPage;
 
@@ -245,7 +218,7 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
         const delta = Math.round((dx / SCRUB_RANGE_PX) * pageCount);
         const target = Math.min(Math.max(scrubStartPage + delta, 1), pageCount);
         if (target === currentPage) {
-            updateInfo(); // no hubo cambio de página: restaura el texto a lo que estaba
+            updateInfo();
         } else {
             goToPage(target);
         }

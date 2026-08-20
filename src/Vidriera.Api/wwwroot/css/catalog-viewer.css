@@ -119,7 +119,6 @@ body { overflow: auto; }
 .index-panel {
     position: fixed; left: 78px; top: 50%; transform: translateY(-50%);
     box-sizing: border-box;
-    /* left(78) + max-width debe quedar por debajo de la reserva de layout.js (78 + INDEX_PANEL_MAX_WIDTH) */
     max-height: 70vh; overflow-y: auto; min-width: 180px; max-width: 206px;
     background: #232325; border-radius: 12px; padding: 10px;
     box-shadow: 0 8px 24px rgba(0,0,0,.4);
@@ -158,10 +157,6 @@ body { overflow: auto; }
     padding: 8px 8px; border-radius: 8px; cursor: pointer; font-size: 13px; line-height: 1.3;
     font-family: inherit; overflow: hidden; text-overflow: ellipsis;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; white-space: normal;
-    /* -webkit-line-clamp solo no siempre recorta limpio (queda asomando un
-       borde de la 3ra línea) — el max-height en em fuerza el corte real con
-       overflow:hidden. Un poco más que line-height × 2 líneas exactas (2.6em)
-       para no cortar descendentes (la "j", "g") de la 2da línea. */
     max-height: 3.3em;
 }
 .index-item:hover { background: #3a3a3c; }
@@ -221,10 +216,6 @@ body { overflow: auto; }
     display: flex; align-items: center; justify-content: center; box-sizing: border-box;
 }
 
-/* Contenedor de ancho completo sin alto propio — cada chip se ubica con su
-   propio "left" (en píxeles de viewport, calculado por el visor a partir del
-   elemento real de esa página) para quedar centrado bajo esa página puntual,
-   en vez de centrar el grupo entero bajo el libro. */
 .page-order-bar {
     position: fixed; left: 0; right: 0; bottom: 76px; height: 0; z-index: 21;
     display: none;
@@ -243,8 +234,6 @@ body { overflow: auto; }
 .page-order-chip-price {
     font-size: 11px; font-weight: 600; color: #f5f5f7;
 }
-/* Versión chica de los botones del stepper compartido, para que entren dos
-   chips (doble página con dos productos distintos) sin desbordar. */
 .page-order-chip .order-add-btn,
 .page-order-chip .order-stepper button {
     width: 20px; height: 20px; font-size: 13px;
@@ -315,24 +304,12 @@ body { overflow: auto; }
 .order-form-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
 .order-form-error { font-size: 12px; color: #ff6b6b; min-height: 14px; }
 
-/* Debe coincidir con MOBILE_BREAKPOINT en layout.js */
 @media (max-width: 700px) {
-    /* Ningún elemento debería desbordar el ancho de la pantalla, pero si algo
-       lo hace por un instante durante la carga, esto evita que el navegador
-       mobile achique el zoom general para acomodarlo. */
     html, body { overflow-x: hidden; }
 
-    /* Espacio reservado abajo para el toolbar-barra (64px, ver MOBILE_TOOLBAR_HEIGHT
-       en layout.js) + el margen de 12px que usa computeFitSize en mobile, para que
-       el libro quede centrado en el área libre y no se meta debajo del toolbar. */
     .stage:not(:fullscreen) { padding: 12px 0 calc(76px + env(safe-area-inset-bottom)) 0; }
     .stage:fullscreen { padding: 0; }
 
-    /* En pantalla completa, el navegador puede mostrar un aviso nativo tipo
-       "para salir de pantalla completa..." pegado al borde inferior (aviso
-       de seguridad que no se puede ocultar desde la página). El toolbar pasa
-       al margen superior en ese caso para no competir con ese aviso; el logo
-       (que ocupaba esa esquina) se oculta para no chocar con el toolbar. */
     .stage:fullscreen .toolbar {
         top: 0; bottom: auto;
         padding-top: calc(8px + env(safe-area-inset-top));
@@ -353,22 +330,12 @@ body { overflow: auto; }
     }
     .toolbar button, .toolbar a { width: 44px; height: 44px; }
 
-    /* La lupa no tiene sentido: en mobile ya se puede hacer zoom con el
-       dedo (pinch-to-zoom nativo). Imprimir tampoco es un flujo típico
-       de mobile. */
     #lens-btn, #print-btn { display: none; }
 
-    /* El swipe ya es la forma natural de pasar de página en mobile — las
-       flechas son una necesidad de desktop (sin gesto táctil) que acá
-       quedan redundantes. */
     .side-nav { display: none !important; }
 
     #static-page-viewport { margin-top: 18px; }
 
-    /* Un poco más grande que en desktop: además de mostrar el número de
-       página, acá se puede arrastrar para saltar varias de una. Va apoyado
-       cerca del toolbar, en el espacio libre entre el catálogo y el borde
-       inferior, en vez de arriba pegado al logo. */
     #page-info { top: auto; bottom: calc(76px + env(safe-area-inset-bottom) + 4px); padding: 7px 16px; touch-action: none; }
     .page-info-scrubbable::after { content: " \21D4"; opacity: .55; font-size: 16px; }
     .update-banner { bottom: auto; top: 54px; }
@@ -386,11 +353,7 @@ body { overflow: auto; }
     .index-item { padding: 11px 8px; font-size: 14px; }
 
     .order-badge-wrap { bottom: calc(88px + env(safe-area-inset-bottom)); right: 12px; }
-    /* En mobile el "VER PEDIDO" de arriba del ícono no entra cómodo junto al
-       resto de la UI apretada del toolbar-barra — se deja solo el ícono. */
     .order-badge-label { display: none; }
-    /* Separado bien por arriba del contador de página (que en mobile mide
-       más alto, con más padding) para que no se solapen. */
     .page-order-bar { bottom: calc(150px + env(safe-area-inset-bottom)); }
     .order-drawer {
         left: 10px; right: 10px; bottom: calc(88px + env(safe-area-inset-bottom));

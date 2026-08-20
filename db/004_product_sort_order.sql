@@ -1,6 +1,5 @@
 ALTER TABLE products ADD COLUMN sort_order integer NOT NULL DEFAULT 0;
 
--- Backfill: orden alfabético actual como punto de partida, por empresa.
 UPDATE products p
 SET sort_order = sub.rn
 FROM (

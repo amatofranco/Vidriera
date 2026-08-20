@@ -3,9 +3,6 @@ import { renderIndexPanel } from "./index-panel.js";
 
 const INITIAL_LOAD_COUNT = 5;
 
-// showCover:true hace que la portada (página 1) se muestre siempre sola;
-// de ahí en más las páginas se emparejan de a dos (2-3, 4-5, ...) y
-// getCurrentPageIndex() devuelve la izquierda del par.
 function getSpreadPages(current, pageCount) {
     if (current <= 1) return [1];
     const right = current + 1;
@@ -61,12 +58,6 @@ export async function renderFlipbookViewer({ catalogId, pageCount, pageAspect, d
 
     let pageFlip = null;
 
-    // El contenedor del libro no se mueve al pasar de página (solo cambia lo
-    // que hay adentro) — medirlo una vez por layout (al construir/redimensionar)
-    // y derivar la posición de cada mitad matemáticamente evita medir en pleno
-    // vuelo de página, que era racy: durante la animación de flip la página
-    // todavía puede no tener tamaño (o tener el de la página anterior), y el
-    // botón de "agregar" quedaba mostrando la posición vieja un instante.
     let stageRect = null;
 
     function measureStage() {
@@ -86,10 +77,6 @@ export async function renderFlipbookViewer({ catalogId, pageCount, pageAspect, d
                 : [
                       {
                           pageNumber: pages[0],
-                          // La portada (página 1) se dibuja en la mitad derecha del
-                          // contenedor de doble página; una página suelta al final
-                          // del catálogo (cantidad de páginas impar) no tiene un
-                          // lado fijo conocido, así que se centra.
                           centerX: stageRect.left + stageRect.width * (current <= 1 ? 0.75 : 0.5),
                       },
                   ];
@@ -141,9 +128,6 @@ export async function renderFlipbookViewer({ catalogId, pageCount, pageAspect, d
         requestAnimationFrame(() => {
             positionSideNav(flipbookEl, dom);
             positionCoverInfo(flipbookEl, dom);
-            // Recalcula con el layout ya asentado — la primera pasada (justo
-            // después de loadFromHTML) a veces mide el contenedor todavía en su
-            // tamaño/posición anterior.
             measureStage();
             updateInfo();
         });

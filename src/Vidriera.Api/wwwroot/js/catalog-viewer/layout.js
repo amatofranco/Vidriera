@@ -1,12 +1,9 @@
 import { getNicheMaxWidth, getNicheRect } from "./niche.js";
 
-// Debe coincidir con max-width de .index-panel en catalog-viewer.css.
 const INDEX_PANEL_MAX_WIDTH = 210;
 
-// Debe coincidir con el media query en catalog-viewer.css.
 export const MOBILE_BREAKPOINT = 700;
 
-// Alto reservado para el toolbar-barra-inferior en mobile (catalog-viewer.css).
 const MOBILE_TOOLBAR_HEIGHT = 64;
 
 function isMobileViewport() {
@@ -69,7 +66,7 @@ export function positionCoverInfo(referenceEl, dom) {
 
 export function positionIndexPanel(dom) {
     if (!dom.indexPanel) return;
-    if (isMobileViewport()) return; // el CSS del media query maneja la posición/tamaño a pantalla completa.
+    if (isMobileViewport()) return;
 
     const rect = dom.toolbarEl.getBoundingClientRect();
     const top = rect.top;

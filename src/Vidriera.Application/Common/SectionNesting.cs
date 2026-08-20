@@ -7,11 +7,6 @@ namespace Vidriera.Application.Common;
 
 internal static class SectionNesting
 {
-    /// <summary>
-    /// Resolves and validates a section's would-be parent, enforcing the two-level nesting limit.
-    /// Pass <paramref name="excludeSectionId"/> as the id of the section being modified (null when
-    /// creating a brand-new section, which can never already have a parent or children of its own).
-    /// </summary>
     public static async Task<Section?> ResolveParentAsync(
         ISession session,
         Guid companyId,

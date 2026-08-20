@@ -19,9 +19,6 @@ if (dom.indexBtn) {
 document.addEventListener("fullscreenchange", () => {
     const isFullscreen = !!document.fullscreenElement;
 
-    // El ícono/título del botón cambian según el estado, para que quede
-    // claro que tocarlo de nuevo saca de pantalla completa (antes usaba
-    // siempre el mismo ícono, sin importar el estado).
     if (dom.fullscreenBtn) {
         dom.fullscreenBtn.textContent = isFullscreen ? "✕" : "⛶";
         dom.fullscreenBtn.title = isFullscreen ? "Salir de pantalla completa" : "Pantalla completa";
@@ -54,8 +51,6 @@ async function start() {
     const pageAspect = width / height;
 
     const isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
-    // En desktop el índice es un sidebar angosto que arranca visible (colapsado por dentro).
-    // En mobile es un overlay a pantalla completa: debe arrancar cerrado del todo.
     if (isMobile && dom.indexPanel) dom.indexPanel.classList.add("closed");
 
     if (dom.pageCount <= 1 || isMobile) {

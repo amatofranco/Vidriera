@@ -40,10 +40,6 @@ export function renderIndexPanel({ dom, indexEntries, onJumpToPage, rebuildRef }
         label.textContent = entry.name;
         label.addEventListener("click", () => {
             onJumpToPage(entry.startPage);
-            // En mobile el índice es un overlay a pantalla completa que tapa el
-            // catálogo — a diferencia del sidebar de desktop, acá conviene
-            // cerrarlo solo al elegir un producto en vez de obligar a cerrarlo
-            // a mano para ver a dónde saltó.
             if (window.innerWidth <= MOBILE_BREAKPOINT && dom.indexPanel) {
                 dom.indexPanel.classList.add("closed");
                 if (rebuildRef) rebuildRef.current();

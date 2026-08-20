@@ -1,6 +1,3 @@
--- Vidriera — esquema inicial (PostgreSQL / Neon)
--- Corresponde a los mappings de NHibernate en Vidriera.Infrastructure.Persistence.Mappings
-
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE TABLE companies (
@@ -34,8 +31,6 @@ CREATE TABLE products (
 
 CREATE INDEX ix_products_company_id ON products (company_id);
 
--- Estado del catálogo generado: 0 = Active, 1 = Expired, 2 = Revoked
--- (mismo orden que el enum Vidriera.Domain.Enums.CatalogStatus)
 CREATE TABLE generated_catalogs (
     id                      uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     company_id              uuid NOT NULL REFERENCES companies (id),
