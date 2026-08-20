@@ -2,7 +2,7 @@ using Vidriera.Application.Orders;
 
 namespace Vidriera.Application.Abstractions;
 
-public record OrderExcelLine(string ProductName, string? Code, int Quantity);
+public record OrderExcelLine(string ProductName, string? Code, int Quantity, decimal? UnitPrice = null);
 
 public interface IExcelOrderService
 {

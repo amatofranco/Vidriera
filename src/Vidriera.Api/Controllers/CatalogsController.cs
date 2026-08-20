@@ -23,7 +23,7 @@ public class CatalogsController : ControllerBase
 
     [HttpPost]
     [Authorize]
-    public async Task Generate(CancellationToken cancellationToken)
+    public async Task Generate([FromQuery] bool showPrices, CancellationToken cancellationToken)
     {
         var companyId = User.GetCompanyId();
         var userId = User.GetUserId();
@@ -42,6 +42,7 @@ public class CatalogsController : ControllerBase
                 new GenerateCatalogCommand(
                     companyId,
                     userId,
+                    showPrices,
                     progress => WriteLineAsync(new { type = "progress", stage = progress.Stage, current = progress.Current, total = progress.Total })),
                 cancellationToken);
 

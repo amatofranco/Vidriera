@@ -43,7 +43,8 @@ public class OrdersController : ControllerBase
                 request.Customer.City,
                 request.Customer.Province,
                 request.Customer.Carrier,
-                request.Customer.DeliveryAddress));
+                request.Customer.DeliveryAddress),
+            request.ShowPrices);
 
         var result = await _mediator.Send(command, cancellationToken);
 
@@ -71,4 +72,5 @@ public record GenerateOrderExcelCustomerRequest(
 public record GenerateOrderExcelRequest(
     Guid CompanyId,
     IReadOnlyList<GenerateOrderExcelItemRequest> Items,
-    GenerateOrderExcelCustomerRequest Customer);
+    GenerateOrderExcelCustomerRequest Customer,
+    bool ShowPrices = false);

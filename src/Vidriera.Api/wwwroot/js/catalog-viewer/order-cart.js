@@ -35,6 +35,7 @@ function createCartState(dom) {
                 productId,
                 name: entry.name,
                 quantity: entry.quantity,
+                price: entry.price ?? null,
             }));
         },
         getQuantity(productId) {
@@ -45,16 +46,32 @@ function createCartState(dom) {
             for (const entry of items.values()) total += entry.quantity;
             return total;
         },
-        setQuantity(productId, name, quantity) {
+        // El total solo se calcula si TODOS los items tienen precio — vienen
+        // del mismo catálogo generado, así que si a uno le falta es porque el
+        // catálogo se generó sin precios y no hay que sumar nada.
+        getTotalPrice() {
+            let total = 0;
+            let hasAnyPrice = false;
+            for (const entry of items.values()) {
+                if (entry.price == null) return null;
+                hasAnyPrice = true;
+                total += entry.price * entry.quantity;
+            }
+            return hasAnyPrice ? total : null;
+        },
+        // price es opcional: al cambiar solo la cantidad (drawer) no viene, y
+        // se preserva el precio que ya estaba guardado en vez de perderlo.
+        setQuantity(productId, name, quantity, price) {
             if (quantity <= 0) {
                 items.delete(productId);
             } else {
-                items.set(productId, { name, quantity });
+                const existingPrice = items.get(productId)?.price;
+                items.set(productId, { name, quantity, price: price !== undefined ? price : existingPrice });
             }
             notify();
         },
-        increment(productId, name) {
-            this.setQuantity(productId, name, this.getQuantity(productId) + 1);
+        increment(productId, name, price) {
+            this.setQuantity(productId, name, this.getQuantity(productId) + 1, price);
         },
         decrement(productId, name) {
             this.setQuantity(productId, name, this.getQuantity(productId) - 1);
@@ -139,18 +156,44 @@ function renderDrawerItems(dom, cart) {
         const name = document.createElement("span");
         name.className = "order-item-name";
         name.textContent = item.name;
+        row.appendChild(name);
+
+        if (item.price != null) {
+            const price = document.createElement("span");
+            price.className = "order-item-price";
+            price.textContent = priceFormatter.format(item.price);
+            row.appendChild(price);
+        }
 
         const stepperEl = createStepperEl(
             item.quantity,
             () => cart.decrement(item.productId, item.name),
-            () => cart.increment(item.productId, item.name),
-            (value) => cart.setQuantity(item.productId, item.name, value)
+            () => cart.increment(item.productId, item.name, item.price),
+            (value) => cart.setQuantity(item.productId, item.name, value, item.price)
         );
 
-        row.appendChild(name);
         row.appendChild(stepperEl);
         dom.orderItemsList.appendChild(row);
     });
+}
+
+function renderDrawerTotal(dom, cart) {
+    if (!dom.orderDrawerTotal) return;
+    const total = cart.getTotalPrice();
+    if (total == null) {
+        dom.orderDrawerTotal.style.display = "none";
+        return;
+    }
+    dom.orderDrawerTotal.style.display = "flex";
+    dom.orderDrawerTotal.innerHTML = "";
+
+    const label = document.createElement("span");
+    label.textContent = "Total";
+    const amount = document.createElement("span");
+    amount.textContent = priceFormatter.format(total);
+
+    dom.orderDrawerTotal.appendChild(label);
+    dom.orderDrawerTotal.appendChild(amount);
 }
 
 function updateBadge(dom, cart) {
@@ -236,8 +279,8 @@ function renderPageOrderBar(dom, cart, pageEntries) {
             createStepperEl(
                 cart.getQuantity(entry.productId),
                 () => cart.decrement(entry.productId, entry.name),
-                () => cart.increment(entry.productId, entry.name),
-                (value) => cart.setQuantity(entry.productId, entry.name, value)
+                () => cart.increment(entry.productId, entry.name, entry.price),
+                (value) => cart.setQuantity(entry.productId, entry.name, value, entry.price)
             )
         );
 
@@ -316,6 +359,7 @@ function setupOrderUi(dom, cart, renderPageBar) {
             const form = dom.orderCheckoutForm;
             const customer = Object.fromEntries(new FormData(form));
             const items = cart.getItems().map((i) => ({ productId: i.productId, quantity: i.quantity }));
+            const showPrices = cart.getTotalPrice() !== null;
 
             if (dom.orderSubmitBtn) {
                 dom.orderSubmitBtn.disabled = true;
@@ -326,7 +370,7 @@ function setupOrderUi(dom, cart, renderPageBar) {
                 const response = await fetch("/api/orders/excel", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ companyId: dom.companyId, items, customer }),
+                    body: JSON.stringify({ companyId: dom.companyId, items, customer, showPrices }),
                 });
 
                 if (!response.ok) {
@@ -364,11 +408,13 @@ function setupOrderUi(dom, cart, renderPageBar) {
     cart.subscribe(() => {
         updateBadge(dom, cart);
         renderDrawerItems(dom, cart);
+        renderDrawerTotal(dom, cart);
         renderPageBar();
     });
 
     updateBadge(dom, cart);
     renderDrawerItems(dom, cart);
+    renderDrawerTotal(dom, cart);
 }
 
 export function initOrderCart(dom) {

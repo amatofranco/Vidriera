@@ -19,7 +19,8 @@ internal static class CatalogMergePlanBuilder
 
     public static List<CatalogIndexEntry> BuildIndexSnapshot(
         IReadOnlyList<MergeEntry> entries,
-        IReadOnlyList<int> pageCounts)
+        IReadOnlyList<int> pageCounts,
+        bool includePrices = false)
     {
         var indexSnapshot = new List<CatalogIndexEntry>();
         var pageCursor = 0;
@@ -48,7 +49,7 @@ internal static class CatalogMergePlanBuilder
                         level,
                         IsProduct: true,
                         ProductId: productEntry.Product.Id,
-                        Price: productEntry.Product.Price));
+                        Price: includePrices ? productEntry.Product.Price : null));
                     break;
             }
             pageCursor += pageCounts[i];

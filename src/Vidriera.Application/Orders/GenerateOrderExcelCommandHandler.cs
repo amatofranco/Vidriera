@@ -49,7 +49,8 @@ public class GenerateOrderExcelCommandHandler : IRequestHandler<GenerateOrderExc
             .Select(i => new OrderExcelLine(
                 productsById[i.ProductId].Name,
                 productsById[i.ProductId].Code,
-                i.Quantity))
+                i.Quantity,
+                request.ShowPrices ? productsById[i.ProductId].Price : null))
             .ToList();
 
         var order = new Order

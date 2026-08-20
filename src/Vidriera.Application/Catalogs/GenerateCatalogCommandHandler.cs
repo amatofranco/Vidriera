@@ -43,11 +43,20 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             throw new ValidationException(ErrorMessages.MustSelectAtLeastOneProduct);
         }
 
+        if (request.ShowPrices)
+        {
+            var missingCount = allProducts.Count(p => selectedIds.Contains(p.Id) && p.Price is null);
+            if (missingCount > 0)
+            {
+                throw new ValidationException(ErrorMessages.MissingPricesForCatalog(missingCount));
+            }
+        }
+
         var entries = CatalogMergePlanBuilder.BuildEntries(allSections, allProducts, selectedIds);
         var mergePlan = await BuildMergePlanAsync(entries, request.OnProgress, cancellationToken);
 
         var mergeResult = await _pdfMergeService.MergeAsync(mergePlan.PdfBytes, cancellationToken);
-        var indexSnapshot = CatalogMergePlanBuilder.BuildIndexSnapshot(entries, mergeResult.PageCounts);
+        var indexSnapshot = CatalogMergePlanBuilder.BuildIndexSnapshot(entries, mergeResult.PageCounts, request.ShowPrices);
 
         var generatedBlobKey = await UploadMergedPdfAsync(request.CompanyId, mergeResult.Bytes, cancellationToken);
         var company = await _session.GetAsync<Company>(request.CompanyId, cancellationToken);

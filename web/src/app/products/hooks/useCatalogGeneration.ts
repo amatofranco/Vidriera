@@ -7,7 +7,7 @@ import {
   type GenerateCatalogResult,
   type Product,
 } from "@/lib/api";
-import { Messages, apiErrorMessage } from "@/lib/messages";
+import { Messages, apiErrorMessage, missingPricesHint } from "@/lib/messages";
 
 export function useCatalogGeneration({
   auth,
@@ -21,8 +21,10 @@ export function useCatalogGeneration({
   const [isGenerating, setIsGenerating] = useState(false);
   const [catalogResult, setCatalogResult] = useState<GenerateCatalogResult | null>(null);
   const [generationProgress, setGenerationProgress] = useState<CatalogGenerationProgress | null>(null);
+  const [showPrices, setShowPrices] = useState(false);
 
   const selectableCount = products.filter((p) => p.hasStock && p.hasSheet).length;
+  const missingPriceCount = products.filter((p) => p.hasStock && p.hasSheet && p.price == null).length;
 
   useEffect(() => {
     if (!auth) return;
@@ -34,13 +36,17 @@ export function useCatalogGeneration({
   async function handleGenerateCatalog() {
     if (!auth) return;
     if (selectableCount === 0) return;
+    if (showPrices && missingPriceCount > 0) {
+      setError(missingPricesHint(missingPriceCount));
+      return;
+    }
 
     setIsGenerating(true);
     setError(null);
     setCatalogResult(null);
     setGenerationProgress(null);
     try {
-      const result = await generateCatalog(auth.token, setGenerationProgress);
+      const result = await generateCatalog(auth.token, setGenerationProgress, showPrices);
       setCatalogResult(result);
     } catch (err) {
       setError(apiErrorMessage(err, Messages.catalogGenerationFailed));
@@ -50,5 +56,14 @@ export function useCatalogGeneration({
     }
   }
 
-  return { isGenerating, catalogResult, generationProgress, selectableCount, handleGenerateCatalog };
+  return {
+    isGenerating,
+    catalogResult,
+    generationProgress,
+    selectableCount,
+    showPrices,
+    setShowPrices,
+    missingPriceCount,
+    handleGenerateCatalog,
+  };
 }

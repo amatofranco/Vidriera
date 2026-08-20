@@ -68,6 +68,7 @@ export const Labels = {
   positionInOrder: "Posición en el orden",
   productNameFieldTitle: "Nombre",
   priceFieldTitle: "Precio",
+  showPricesLabel: "Mostrar precios en este catálogo",
   optionalPricePlaceholder: "Precio",
   sectionSelectTitle: "Carátula",
   sectionParentSelectTitle: "Carátula padre",

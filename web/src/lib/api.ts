@@ -237,9 +237,10 @@ export interface CatalogGenerationProgress {
 
 export async function generateCatalog(
   token: string,
-  onProgress?: (progress: CatalogGenerationProgress) => void
+  onProgress?: (progress: CatalogGenerationProgress) => void,
+  showPrices?: boolean
 ): Promise<GenerateCatalogResult> {
-  const response = await fetch(`${API_URL}/api/catalogs`, {
+  const response = await fetch(`${API_URL}/api/catalogs${showPrices ? "?showPrices=true" : ""}`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,

@@ -125,7 +125,16 @@ export default function ProductsPage() {
     handleAssignSectionParent,
   } = useSectionActions({ auth, setSections, setProducts, loadProducts, loadSections, setError });
 
-  const { isGenerating, catalogResult, generationProgress, selectableCount, handleGenerateCatalog } = useCatalogGeneration({
+  const {
+    isGenerating,
+    catalogResult,
+    generationProgress,
+    selectableCount,
+    showPrices,
+    setShowPrices,
+    missingPriceCount,
+    handleGenerateCatalog,
+  } = useCatalogGeneration({
     auth,
     products,
     setError,
@@ -410,6 +419,9 @@ export default function ProductsPage() {
           generationProgress={generationProgress}
           onGenerate={handleGenerateCatalog}
           catalogResult={catalogResult}
+          showPrices={showPrices}
+          onToggleShowPrices={() => setShowPrices((prev) => !prev)}
+          missingPriceCount={missingPriceCount}
         />
       </div>
     </div>

@@ -34,6 +34,7 @@ export const dom = {
     orderDrawer: document.getElementById("order-drawer"),
     orderDrawerClose: document.getElementById("order-drawer-close"),
     orderItemsList: document.getElementById("order-items-list"),
+    orderDrawerTotal: document.getElementById("order-drawer-total"),
     orderCheckoutBtn: document.getElementById("order-checkout-btn"),
     orderCheckoutModal: document.getElementById("order-checkout-modal"),
     orderModalClose: document.getElementById("order-modal-close"),

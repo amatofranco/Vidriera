@@ -66,3 +66,7 @@ export function bulkUploadFailed(totalCount: number, failed: { name: string; mes
 export function apiErrorMessage(err: unknown, fallback: string) {
   return err instanceof ApiError ? err.message : fallback;
 }
+
+export function missingPricesHint(count: number) {
+  return `Hay ${count} producto(s) sin precio cargado. Completalo o desmarcá "Mostrar precios".`;
+}

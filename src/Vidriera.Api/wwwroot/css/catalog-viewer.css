@@ -271,7 +271,12 @@ body { overflow: auto; }
 .order-empty-hint { margin: 8px 0; font-size: 12px; color: #a1a1a6; }
 .order-item-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .order-item-name { flex: 1; min-width: 0; font-size: 12px; color: #f5f5f7; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.order-item-price { flex-shrink: 0; font-size: 11px; color: #a1a1a6; white-space: nowrap; }
 .order-drawer-footer { padding: 12px 14px; border-top: 1px solid rgba(255,255,255,.08); }
+.order-drawer-total {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px; font-size: 13px; font-weight: 600; color: #f5f5f7;
+}
 
 .order-primary-btn {
     width: 100%; background: #0a84ff; color: white; border: none; border-radius: 8px;

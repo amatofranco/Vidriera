@@ -2,6 +2,7 @@
 
 import type { CatalogGenerationProgress, GenerateCatalogResult } from "@/lib/api";
 import { Labels } from "@/lib/labels";
+import { missingPricesHint } from "@/lib/messages";
 
 export function CatalogPanel({
   selectableCount,
@@ -9,12 +10,18 @@ export function CatalogPanel({
   generationProgress,
   onGenerate,
   catalogResult,
+  showPrices,
+  onToggleShowPrices,
+  missingPriceCount,
 }: {
   selectableCount: number;
   isGenerating: boolean;
   generationProgress: CatalogGenerationProgress | null;
   onGenerate: () => void;
   catalogResult: GenerateCatalogResult | null;
+  showPrices: boolean;
+  onToggleShowPrices: () => void;
+  missingPriceCount: number;
 }) {
   return (
     <div className="rounded-xl border border-black/10 bg-[#ecdcc0] p-5 shadow-lg dark:border-white/10 dark:bg-zinc-900">
@@ -31,7 +38,23 @@ export function CatalogPanel({
             ? Labels.generatingCatalog
             : Labels.generateCatalogButton(selectableCount)}
         </button>
+        <label className="flex items-center gap-2 text-xs text-zinc-700 dark:text-zinc-300">
+          <input
+            type="checkbox"
+            checked={showPrices}
+            onChange={onToggleShowPrices}
+            disabled={isGenerating}
+            style={{ accentColor: "#c9a86a" }}
+          />
+          {Labels.showPricesLabel}
+        </label>
       </div>
+
+      {showPrices && missingPriceCount > 0 && (
+        <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">
+          {missingPricesHint(missingPriceCount)}
+        </p>
+      )}
 
       {isGenerating && (
         <div className="mt-2">

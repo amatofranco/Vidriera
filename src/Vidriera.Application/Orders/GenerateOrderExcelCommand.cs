@@ -19,6 +19,7 @@ public record CustomerOrderInfo(
 public record GenerateOrderExcelCommand(
     Guid CompanyId,
     IReadOnlyList<OrderLineItem> Items,
-    CustomerOrderInfo Customer) : IRequest<OrderExcelResult>;
+    CustomerOrderInfo Customer,
+    bool ShowPrices = false) : IRequest<OrderExcelResult>;
 
 public record OrderExcelResult(byte[] Content, string FileName);
