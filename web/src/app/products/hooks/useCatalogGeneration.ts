@@ -9,6 +9,16 @@ import {
 } from "@/lib/api";
 import { Messages, apiErrorMessage, missingPricesHint } from "@/lib/messages";
 
+const SHOW_PRICES_STORAGE_PREFIX = "vidriera-admin-show-prices-";
+
+function loadShowPrices(companyId: string): boolean {
+  try {
+    return localStorage.getItem(SHOW_PRICES_STORAGE_PREFIX + companyId) === "true";
+  } catch {
+    return false;
+  }
+}
+
 export function useCatalogGeneration({
   auth,
   products,
@@ -31,7 +41,22 @@ export function useCatalogGeneration({
     getCurrentCatalog(auth.token)
       .then((result) => setCatalogResult(result))
       .catch(() => {});
+    /* eslint-disable-next-line react-hooks/set-state-in-effect */
+    setShowPrices(loadShowPrices(auth.companyId));
   }, [auth]);
+
+  function handleToggleShowPrices() {
+    setShowPrices((prev) => {
+      const next = !prev;
+      if (auth) {
+        try {
+          localStorage.setItem(SHOW_PRICES_STORAGE_PREFIX + auth.companyId, String(next));
+        } catch {
+        }
+      }
+      return next;
+    });
+  }
 
   async function handleGenerateCatalog() {
     if (!auth) return;
@@ -62,7 +87,7 @@ export function useCatalogGeneration({
     generationProgress,
     selectableCount,
     showPrices,
-    setShowPrices,
+    handleToggleShowPrices,
     missingPriceCount,
     handleGenerateCatalog,
   };

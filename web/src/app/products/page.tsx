@@ -131,7 +131,7 @@ export default function ProductsPage() {
     generationProgress,
     selectableCount,
     showPrices,
-    setShowPrices,
+    handleToggleShowPrices,
     missingPriceCount,
     handleGenerateCatalog,
   } = useCatalogGeneration({
@@ -420,7 +420,7 @@ export default function ProductsPage() {
           onGenerate={handleGenerateCatalog}
           catalogResult={catalogResult}
           showPrices={showPrices}
-          onToggleShowPrices={() => setShowPrices((prev) => !prev)}
+          onToggleShowPrices={handleToggleShowPrices}
           missingPriceCount={missingPriceCount}
         />
       </div>
