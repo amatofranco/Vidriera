@@ -25,7 +25,8 @@ export function useCreateProduct({
     name: string,
     customNames?: string[],
     code?: string,
-    customCodes?: string[]
+    customCodes?: string[],
+    customPrices?: string[]
   ) {
     if (!auth || files.length === 0) return;
     setIsCreating(true);
@@ -45,6 +46,13 @@ export function useCreateProduct({
         return [file, parseProductFileName(file.name).code || undefined];
       })
     );
+    const priceByFile = new Map<File, number | undefined>(
+      files.map((file, index) => {
+        const raw = customPrices?.[index]?.trim();
+        const parsed = raw ? Number(raw) : NaN;
+        return [file, Number.isFinite(parsed) ? parsed : undefined];
+      })
+    );
     const failed: { name: string; message: string }[] = [];
     const oversized = files.filter((f) => f.size > MAX_FILE_SIZE_BYTES);
     const validFiles = files.filter((f) => f.size <= MAX_FILE_SIZE_BYTES);
@@ -59,7 +67,13 @@ export function useCreateProduct({
 
     await runWithConcurrency(validFiles, 4, async (file) => {
       try {
-        const created = await createProduct(auth.token, file, overrideByFile.get(file), codeByFile.get(file));
+        const created = await createProduct(
+          auth.token,
+          file,
+          overrideByFile.get(file),
+          codeByFile.get(file),
+          priceByFile.get(file)
+        );
         setProducts((prev) => [created, ...prev]);
       } catch (err) {
         failed.push({

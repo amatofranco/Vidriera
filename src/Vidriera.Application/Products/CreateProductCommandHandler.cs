@@ -37,6 +37,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
             Company = company,
             Name = name,
             Code = code,
+            Price = request.Price,
             HasStock = false,
             IsActive = true,
             SortOrder = nextSortOrder
@@ -54,6 +55,6 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
 
         await transaction.CommitAsync(cancellationToken);
 
-        return new ProductDto(product.Id, product.Name, product.HasStock, HasSheet: true, SectionId: null, product.SortOrder, product.Code);
+        return new ProductDto(product.Id, product.Name, product.HasStock, HasSheet: true, SectionId: null, product.SortOrder, product.Code, product.Price);
     }
 }

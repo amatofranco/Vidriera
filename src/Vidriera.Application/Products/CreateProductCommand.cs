@@ -7,4 +7,5 @@ public record CreateProductCommand(
     Stream FileContent,
     string OriginalFileName,
     string? Name,
-    string? Code) : IRequest<ProductDto>;
+    string? Code,
+    decimal? Price = null) : IRequest<ProductDto>;

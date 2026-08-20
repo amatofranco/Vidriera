@@ -35,7 +35,7 @@ public class ProductsController : ControllerBase
 
         await using var stream = request.File.OpenReadStream();
         var result = await _mediator.Send(
-            new CreateProductCommand(companyId, stream, request.File.FileName, request.Name, request.Code),
+            new CreateProductCommand(companyId, stream, request.File.FileName, request.Name, request.Code, request.Price),
             cancellationToken);
 
         return CreatedAtAction(nameof(GetProducts), null, result);
@@ -109,7 +109,7 @@ public record UpdateNameRequest(string Name);
 
 public record UpdatePriceRequest(decimal? Price);
 
-public record CreateProductRequest(IFormFile File, string? Name, string? Code);
+public record CreateProductRequest(IFormFile File, string? Name, string? Code, decimal? Price);
 
 public record AssignProductSectionRequest(Guid? SectionId);
 

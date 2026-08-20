@@ -29,7 +29,8 @@ export function UploadCreateForm({
     name: string,
     customNames?: string[],
     code?: string,
-    customCodes?: string[]
+    customCodes?: string[],
+    customPrices?: string[]
   ) => Promise<void> | void;
   marginBottomClassName?: string;
   codeEnabled?: boolean;
@@ -39,18 +40,27 @@ export function UploadCreateForm({
   const [code, setCode] = useState("");
   const [customNames, setCustomNames] = useState<string[] | null>(null);
   const [customCodes, setCustomCodes] = useState<string[] | null>(null);
+  const [customPrices, setCustomPrices] = useState<string[] | null>(null);
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (files.length === 0) return;
-    await onSubmit(files, name.trim(), customNames ?? undefined, code.trim() || undefined, customCodes ?? undefined);
+    await onSubmit(
+      files,
+      name.trim(),
+      customNames ?? undefined,
+      code.trim() || undefined,
+      customCodes ?? undefined,
+      customPrices ?? undefined
+    );
     setFiles([]);
     setName("");
     setCode("");
     setCustomNames(null);
     setCustomCodes(null);
+    setCustomPrices(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
@@ -109,6 +119,7 @@ export function UploadCreateForm({
               setFiles(selected);
               setCustomNames(null);
               setCustomCodes(null);
+              setCustomPrices(null);
 
               if (selected.length === 1) {
                 if (codeEnabled) {
@@ -199,9 +210,11 @@ export function UploadCreateForm({
           initialNames={customNames}
           codeEnabled={codeEnabled}
           initialCodes={customCodes}
-          onApply={(names, codes) => {
+          initialPrices={customPrices}
+          onApply={(names, codes, prices) => {
             setCustomNames(names);
             setCustomCodes(codes ?? null);
+            setCustomPrices(prices ?? null);
             setIsRenameModalOpen(false);
           }}
           onClose={() => setIsRenameModalOpen(false)}

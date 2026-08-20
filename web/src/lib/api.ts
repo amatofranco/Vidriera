@@ -159,11 +159,12 @@ export function updatePrice(token: string, productId: string, price: number | nu
   });
 }
 
-export function createProduct(token: string, file: File, name?: string, code?: string) {
+export function createProduct(token: string, file: File, name?: string, code?: string, price?: number) {
   const formData = new FormData();
   formData.append("file", file);
   if (name) formData.append("name", name);
   if (code) formData.append("code", code);
+  if (price != null) formData.append("price", String(price));
 
   return request<Product>("/api/products", {
     method: "POST",
