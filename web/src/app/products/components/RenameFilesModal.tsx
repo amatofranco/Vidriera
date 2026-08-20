@@ -43,7 +43,7 @@ export function RenameFilesModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="flex max-h-[80vh] w-full max-w-2xl flex-col rounded-xl border border-black/10 bg-[#ecdcc0] p-5 shadow-lg dark:border-white/10 dark:bg-zinc-900">
+      <div className="flex max-h-[80vh] w-full max-w-3xl flex-col rounded-xl border border-black/10 bg-[#ecdcc0] p-5 shadow-lg dark:border-white/10 dark:bg-zinc-900">
         <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">{Labels.renameFilesTitle}</h2>
         <p className="mt-1 mb-3 text-xs text-zinc-600 dark:text-zinc-400">{Labels.renameFilesHint}</p>
 
