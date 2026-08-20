@@ -141,6 +141,15 @@ export function updateStock(token: string, productId: string, hasStock: boolean)
   });
 }
 
+export function updateName(token: string, productId: string, name: string) {
+  return request<void>(`/api/products/${productId}/name`, {
+    method: "PUT",
+    token,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name }),
+  });
+}
+
 export function updatePrice(token: string, productId: string, price: number | null) {
   return request<void>(`/api/products/${productId}/price`, {
     method: "PUT",

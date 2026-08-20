@@ -103,6 +103,9 @@
   <data name="ProductNotFound" xml:space="preserve">
     <value>No se encontró el producto {0} para esta empresa.</value>
   </data>
+  <data name="ProductNameRequired" xml:space="preserve">
+    <value>El nombre del producto no puede quedar vacío.</value>
+  </data>
   <data name="SectionNotFound" xml:space="preserve">
     <value>No se encontró la carátula {0} para esta empresa.</value>
   </data>

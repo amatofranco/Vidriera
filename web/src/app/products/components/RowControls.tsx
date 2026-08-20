@@ -50,6 +50,30 @@ export function PositionInput({
   );
 }
 
+export function NameInput({
+  itemKey,
+  name,
+  onUpdateName,
+}: {
+  itemKey: string;
+  name: string;
+  onUpdateName: (rawValue: string) => void;
+}) {
+  return (
+    <input
+      key={`${itemKey}-${name}`}
+      type="text"
+      defaultValue={name}
+      onBlur={(e) => onUpdateName(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") e.currentTarget.blur();
+      }}
+      title={Labels.productNameFieldTitle}
+      className="min-w-0 flex-1 rounded border border-transparent bg-transparent px-1 py-0.5 text-zinc-900 outline-none hover:border-zinc-300 focus:border-zinc-500 focus:bg-white dark:text-zinc-50 dark:hover:border-zinc-700 dark:focus:bg-zinc-800"
+    />
+  );
+}
+
 export function PriceInput({
   itemKey,
   price,

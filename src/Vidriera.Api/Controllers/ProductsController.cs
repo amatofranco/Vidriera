@@ -49,6 +49,14 @@ public class ProductsController : ControllerBase
         return NoContent();
     }
 
+    [HttpPut("{id:guid}/name")]
+    public async Task<IActionResult> UpdateName(Guid id, [FromBody] UpdateNameRequest request, CancellationToken cancellationToken)
+    {
+        var companyId = User.GetCompanyId();
+        await _mediator.Send(new UpdateNameCommand(companyId, id, request.Name), cancellationToken);
+        return NoContent();
+    }
+
     [HttpPut("{id:guid}/price")]
     public async Task<IActionResult> UpdatePrice(Guid id, [FromBody] UpdatePriceRequest request, CancellationToken cancellationToken)
     {
@@ -96,6 +104,8 @@ public class ProductsController : ControllerBase
 }
 
 public record UpdateStockRequest(bool HasStock);
+
+public record UpdateNameRequest(string Name);
 
 public record UpdatePriceRequest(decimal? Price);
 

@@ -13,6 +13,7 @@ import { useCompanyLogo } from "./hooks/useCompanyLogo";
 import { useContainerReorder } from "./hooks/useContainerReorder";
 import { useBulkStockToggle } from "./hooks/useBulkStockToggle";
 import { useProductPrice } from "./hooks/useProductPrice";
+import { useProductName } from "./hooks/useProductName";
 import { useBulkDelete } from "./hooks/useBulkDelete";
 import { useBulkAssign } from "./hooks/useBulkAssign";
 import { useCreateProduct } from "./hooks/useCreateProduct";
@@ -88,6 +89,7 @@ export default function ProductsPage() {
   });
 
   const { handleUpdatePrice } = useProductPrice({ auth, setProducts, setError });
+  const { handleUpdateName } = useProductName({ auth, setProducts, setError });
 
   const { pendingBulkDelete, setPendingBulkDelete, isBulkDeleting, requestBulkDelete, handleConfirmBulkDelete } =
     useBulkDelete({ auth, setProducts, setError });
@@ -229,6 +231,7 @@ export default function ProductsPage() {
         }
         onAssignSection={(sid) => handleAssignSection(product, sid)}
         onUploadSheet={(file) => handleUploadSheet(product, file)}
+        onUpdateName={(v) => handleUpdateName(product, v)}
         onUpdatePrice={(v) => handleUpdatePrice(product, v)}
         onRequestDelete={() => setConfirmingDeleteId(product.id)}
         onConfirmDelete={() => handleDeleteProduct(product)}
