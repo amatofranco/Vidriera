@@ -66,6 +66,8 @@ export const Labels = {
 
   dragToReorder: "Arrastrar para reordenar",
   positionInOrder: "Posición en el orden",
+  priceFieldTitle: "Precio",
+  optionalPricePlaceholder: "Precio",
   sectionSelectTitle: "Carátula",
   sectionParentSelectTitle: "Carátula padre",
   noParentSectionOption: "Sin carátula padre",

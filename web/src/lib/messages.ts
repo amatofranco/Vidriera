@@ -7,6 +7,7 @@ export const Messages = {
   topLevelOrderSaveFailed: "No se pudo guardar el nuevo orden.",
   sectionOrderSaveFailed: "No se pudo guardar el orden de la carátula.",
   stockUpdateFailed: "No se pudo actualizar el stock, intentá de nuevo.",
+  priceUpdateFailed: "No se pudo actualizar el precio, intentá de nuevo.",
   bulkStockUpdateFailed: "No se pudo actualizar el stock de todos los productos, revisá la lista.",
   productsLoadFailed: "No se pudieron cargar los productos.",
   ordersLoadFailed: "No se pudieron cargar los pedidos.",

@@ -62,6 +62,7 @@ export interface Product {
   sectionId: string | null;
   sortOrder: number;
   code: string | null;
+  price: number | null;
 }
 
 export function getProducts(token: string) {
@@ -137,6 +138,15 @@ export function updateStock(token: string, productId: string, hasStock: boolean)
     token,
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ hasStock }),
+  });
+}
+
+export function updatePrice(token: string, productId: string, price: number | null) {
+  return request<void>(`/api/products/${productId}/price`, {
+    method: "PUT",
+    token,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ price }),
   });
 }
 

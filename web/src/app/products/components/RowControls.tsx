@@ -50,6 +50,33 @@ export function PositionInput({
   );
 }
 
+export function PriceInput({
+  itemKey,
+  price,
+  onUpdatePrice,
+}: {
+  itemKey: string;
+  price: number | null;
+  onUpdatePrice: (rawValue: string) => void;
+}) {
+  return (
+    <input
+      key={`${itemKey}-${price ?? ""}`}
+      type="number"
+      min={0}
+      step="0.01"
+      defaultValue={price ?? ""}
+      placeholder={Labels.optionalPricePlaceholder}
+      onBlur={(e) => onUpdatePrice(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") e.currentTarget.blur();
+      }}
+      title={Labels.priceFieldTitle}
+      className="w-20 rounded border border-zinc-300 px-1 py-0.5 text-right text-xs text-zinc-700 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+    />
+  );
+}
+
 export function DeleteConfirmActions({
   question,
   isBusy,

@@ -47,6 +47,8 @@ public class ProductMapping : ClassMapping<Product>
             m.Length(300);
         });
 
+        Property(x => x.Price, m => m.Column("price"));
+
         Property(x => x.HasStock, m => m.Column("has_stock"));
         Property(x => x.IsActive, m => m.Column("is_active"));
         Property(x => x.SortOrder, m => m.Column("sort_order"));

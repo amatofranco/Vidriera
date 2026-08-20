@@ -194,6 +194,12 @@ function getVisibleProductEntries(dom, pageEntries) {
     }));
 }
 
+const priceFormatter = new Intl.NumberFormat("es-AR", {
+    style: "currency",
+    currency: "ARS",
+    maximumFractionDigits: 0,
+});
+
 function renderPageOrderBar(dom, cart, pageEntries) {
     if (!dom.pageOrderBar) return;
 
@@ -216,6 +222,15 @@ function renderPageOrderBar(dom, cart, pageEntries) {
         label.className = "page-order-chip-label";
         label.textContent = "AGREGAR";
 
+        chip.appendChild(label);
+
+        if (entry.price != null) {
+            const price = document.createElement("span");
+            price.className = "page-order-chip-price";
+            price.textContent = priceFormatter.format(entry.price);
+            chip.appendChild(price);
+        }
+
         const stepperSlot = document.createElement("div");
         stepperSlot.appendChild(
             createStepperEl(
@@ -226,7 +241,6 @@ function renderPageOrderBar(dom, cart, pageEntries) {
             )
         );
 
-        chip.appendChild(label);
         chip.appendChild(stepperSlot);
         dom.pageOrderBar.appendChild(chip);
     });

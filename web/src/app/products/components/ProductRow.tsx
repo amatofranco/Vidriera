@@ -3,7 +3,7 @@
 import type { Product, Section } from "@/lib/api";
 import { Labels } from "@/lib/labels";
 import { StockToggle } from "./StockToggle";
-import { DeleteConfirmActions, DragHandle, PositionInput } from "./RowControls";
+import { DeleteConfirmActions, DragHandle, PositionInput, PriceInput } from "./RowControls";
 
 export function ProductRow({
   product,
@@ -25,6 +25,7 @@ export function ProductRow({
   onToggleCheckbox,
   onAssignSection,
   onUploadSheet,
+  onUpdatePrice,
   onRequestDelete,
   onConfirmDelete,
   onCancelDelete,
@@ -48,6 +49,7 @@ export function ProductRow({
   onToggleCheckbox: () => void;
   onAssignSection: (sectionId: string | null) => void;
   onUploadSheet: (file: File) => void;
+  onUpdatePrice: (rawValue: string) => void;
   onRequestDelete: () => void;
   onConfirmDelete: () => void;
   onCancelDelete: () => void;
@@ -79,6 +81,7 @@ export function ProductRow({
           <StockToggle checked={isChecked} onToggle={onToggleCheckbox} title={checkboxTitle} />
         )}
         <span className="text-zinc-900 dark:text-zinc-50">{product.name}</span>
+        <PriceInput itemKey={product.id} price={product.price} onUpdatePrice={onUpdatePrice} />
       </div>
       <select
         value={product.sectionId ?? ""}
