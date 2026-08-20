@@ -14,7 +14,11 @@ export function useProductName({
   async function handleUpdateName(product: Product, rawValue: string) {
     if (!auth) return;
     const trimmed = rawValue.trim();
-    if (trimmed === "" || trimmed === product.name) return;
+    if (trimmed === "") {
+      setError(Messages.nameCannotBeEmpty);
+      return;
+    }
+    if (trimmed === product.name) return;
 
     const previous = product.name;
     setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, name: trimmed } : p)));

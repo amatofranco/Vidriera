@@ -64,7 +64,13 @@ export function NameInput({
       key={`${itemKey}-${name}`}
       type="text"
       defaultValue={name}
-      onBlur={(e) => onUpdateName(e.target.value)}
+      onBlur={(e) => {
+        const trimmed = e.target.value.trim();
+        if (trimmed === "") {
+          e.target.value = name;
+        }
+        onUpdateName(trimmed);
+      }}
       onKeyDown={(e) => {
         if (e.key === "Enter") e.currentTarget.blur();
       }}
