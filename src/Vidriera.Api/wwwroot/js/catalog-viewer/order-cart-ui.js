@@ -4,10 +4,6 @@ const priceFormatter = new Intl.NumberFormat("es-AR", {
     maximumFractionDigits: 0,
 });
 
-// Botón "+" cuando todavía no se agregó nada, o stepper "− [n] +" una vez
-// que hay cantidad — mismo control visual para el drawer y para la barra de
-// la página actual. El campo de cantidad es un input editable: además de
-// +/-, se puede escribir la cantidad directamente.
 function createStepperEl(quantity, onMinus, onPlus, onSetQuantity) {
     if (quantity === 0) {
         const addBtn = document.createElement("button");
@@ -125,9 +121,6 @@ export function updateBadge(dom, cart) {
     if (dom.orderCheckoutBtn) dom.orderCheckoutBtn.disabled = total === 0;
 }
 
-// El índice ya sabe en qué página empieza cada producto (entry.startPage);
-// como las entradas están en orden de página, el producto "activo" en una
-// página dada es la última entrada de producto cuyo startPage no la supera.
 function getProductEntryForPage(dom, pageNumber) {
     const entries = dom.sectionsData || [];
     let current = null;
@@ -138,10 +131,6 @@ function getProductEntryForPage(dom, pageNumber) {
     return current && current.isProduct && current.productId ? current : null;
 }
 
-// Página simple (mobile) o doble página (desktop): junta las entradas de
-// producto de cada página visible en este momento, promediando el centerX
-// de las páginas que comparten producto (una ficha que ocupa las dos mitades
-// de la doble página termina centrada en el medio de la doble página).
 function getVisibleProductEntries(dom, pageEntries) {
     const byProduct = new Map();
     pageEntries.forEach(({ pageNumber, centerX }) => {

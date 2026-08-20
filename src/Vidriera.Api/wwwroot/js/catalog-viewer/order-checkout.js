@@ -11,12 +11,8 @@ async function shareOrDownload(blob, fileName) {
             return;
         } catch (e) {
             if (e && e.name === "AbortError") {
-                // el usuario cerró el selector de compartir sin elegir nada — no es un error
                 return;
             }
-            // el share falló por otro motivo (activación de usuario perdida tras
-            // los await, sin apps de destino, etc.) — se cae a la descarga
-            // directa en vez de no hacer nada.
         }
     }
 
@@ -90,7 +86,6 @@ export function setupOrderUi(dom, cart, renderPageBar) {
                         const body = await response.json();
                         message = body.detail || body.title || message;
                     } catch (parseError) {
-                        // sin cuerpo JSON legible, se mantiene el mensaje genérico
                     }
                     throw new Error(message);
                 }

@@ -29,11 +29,6 @@ export function setupToolbar(dom) {
         printFrame.src = dom.fileUrl;
     });
 
-    // navigator.share solo existe en navegadores que tienen selector nativo de
-    // "compartir" — pero algunos navegadores desktop (ej. Edge en Windows)
-    // también lo soportan, y ahí no queda bien mostrar el botón. Se oculta
-    // salvo en mobile, en vez de armar un fallback (copiar al portapapeles,
-    // etc.) que complica la UI.
     if (dom.shareBtn) {
         if (!navigator.share || window.innerWidth > MOBILE_BREAKPOINT) {
             dom.shareBtn.style.display = "none";
@@ -43,7 +38,6 @@ export function setupToolbar(dom) {
                 try {
                     await navigator.share({ title: companyName, text: `Mirá el catálogo de ${companyName}`, url: location.href });
                 } catch (e) {
-                    // el usuario cerró el selector de compartir sin elegir nada — no es un error
                 }
             });
         }

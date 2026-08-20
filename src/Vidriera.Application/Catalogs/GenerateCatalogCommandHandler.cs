@@ -214,9 +214,6 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         return catalog;
     }
 
-    // Camino rápido: si el fingerprint de contenido no cambió, las páginas ya
-    // rasterizadas siguen siendo válidas — solo hace falta refrescar el
-    // snapshot de texto (nombre/precio) sin volver a descargar/mergear/rasterizar.
     private async Task<GenerateCatalogResult> RefreshSnapshotOnlyAsync(
         GenerateCatalogCommand request,
         GeneratedCatalog existingCatalog,

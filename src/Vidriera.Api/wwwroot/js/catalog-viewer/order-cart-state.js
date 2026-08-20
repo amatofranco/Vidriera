@@ -46,9 +46,6 @@ export function createCartState(dom) {
             for (const entry of items.values()) total += entry.quantity;
             return total;
         },
-        // El total solo se calcula si TODOS los items tienen precio — vienen
-        // del mismo catálogo generado, así que si a uno le falta es porque el
-        // catálogo se generó sin precios y no hay que sumar nada.
         getTotalPrice() {
             let total = 0;
             let hasAnyPrice = false;
@@ -59,8 +56,6 @@ export function createCartState(dom) {
             }
             return hasAnyPrice ? total : null;
         },
-        // price es opcional: al cambiar solo la cantidad (drawer) no viene, y
-        // se preserva el precio que ya estaba guardado en vez de perderlo.
         setQuantity(productId, name, quantity, price) {
             if (quantity <= 0) {
                 items.delete(productId);

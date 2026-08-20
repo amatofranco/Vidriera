@@ -10,10 +10,6 @@ export function initOrderCart(dom) {
         renderPageOrderBar(dom, cart, currentPageEntries);
     }
 
-    // pageEntries: [{ pageNumber, centerX }], una por cada página visible
-    // (una en mobile, hasta dos en doble página desktop) — el visor calcula
-    // centerX a partir del elemento real de esa página para que el chip
-    // quede centrado horizontalmente debajo de ella.
     cart.setCurrentPages = (pageEntries) => {
         currentPageEntries = pageEntries;
         renderPageBar();
