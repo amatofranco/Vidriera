@@ -1,3 +1,5 @@
+import { MOBILE_BREAKPOINT } from "./layout.js";
+
 export function setupToolbar(dom) {
     dom.fullscreenBtn.addEventListener("click", () => {
         if (document.fullscreenElement) {
@@ -28,10 +30,12 @@ export function setupToolbar(dom) {
     });
 
     // navigator.share solo existe en navegadores que tienen selector nativo de
-    // "compartir" (mobile, básicamente) — en el resto se oculta el botón en vez
-    // de armar un fallback (copiar al portapapeles, etc.) que complica la UI.
+    // "compartir" — pero algunos navegadores desktop (ej. Edge en Windows)
+    // también lo soportan, y ahí no queda bien mostrar el botón. Se oculta
+    // salvo en mobile, en vez de armar un fallback (copiar al portapapeles,
+    // etc.) que complica la UI.
     if (dom.shareBtn) {
-        if (!navigator.share) {
+        if (!navigator.share || window.innerWidth > MOBILE_BREAKPOINT) {
             dom.shareBtn.style.display = "none";
         } else {
             dom.shareBtn.addEventListener("click", async () => {
