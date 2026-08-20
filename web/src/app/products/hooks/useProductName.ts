@@ -1,6 +1,7 @@
 import type { AuthState } from "@/lib/auth-context";
 import { updateName, type Product } from "@/lib/api";
 import { Messages, apiErrorMessage } from "@/lib/messages";
+import { updateProductFieldOptimistically } from "./optimisticProductUpdate";
 
 export function useProductName({
   auth,
@@ -20,14 +21,14 @@ export function useProductName({
     }
     if (trimmed === product.name) return;
 
-    const previous = product.name;
-    setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, name: trimmed } : p)));
-    try {
-      await updateName(auth.token, product.id, trimmed);
-    } catch (err) {
-      setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, name: previous } : p)));
-      setError(apiErrorMessage(err, Messages.nameUpdateFailed));
-    }
+    await updateProductFieldOptimistically(
+      setProducts,
+      product.id,
+      (p) => ({ ...p, name: trimmed }),
+      (p) => ({ ...p, name: product.name }),
+      () => updateName(auth.token, product.id, trimmed),
+      (err) => setError(apiErrorMessage(err, Messages.nameUpdateFailed))
+    );
   }
 
   return { handleUpdateName };

@@ -1,6 +1,7 @@
 import type { AuthState } from "@/lib/auth-context";
 import { updatePrice, type Product } from "@/lib/api";
 import { Messages } from "@/lib/messages";
+import { updateProductFieldOptimistically } from "./optimisticProductUpdate";
 
 export function useProductPrice({
   auth,
@@ -16,15 +17,15 @@ export function useProductPrice({
     const trimmed = rawValue.trim();
     const parsed = trimmed === "" ? null : Number(trimmed);
     const nextValue = parsed !== null && Number.isFinite(parsed) ? parsed : null;
-    const previous = product.price;
 
-    setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, price: nextValue } : p)));
-    try {
-      await updatePrice(auth.token, product.id, nextValue);
-    } catch {
-      setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, price: previous } : p)));
-      setError(Messages.priceUpdateFailed);
-    }
+    await updateProductFieldOptimistically(
+      setProducts,
+      product.id,
+      (p) => ({ ...p, price: nextValue }),
+      (p) => ({ ...p, price: product.price }),
+      () => updatePrice(auth.token, product.id, nextValue),
+      () => setError(Messages.priceUpdateFailed)
+    );
   }
 
   return { handleUpdatePrice };

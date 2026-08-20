@@ -1,6 +1,7 @@
 import type { AuthState } from "@/lib/auth-context";
 import { updateStock, type Product } from "@/lib/api";
 import { Messages, sectionStockUpdateFailed } from "@/lib/messages";
+import { updateProductFieldOptimistically } from "./optimisticProductUpdate";
 
 export function useBulkStockToggle({
   auth,
@@ -18,17 +19,14 @@ export function useBulkStockToggle({
   async function handleToggleStock(product: Product) {
     if (!auth) return;
     const nextValue = !product.hasStock;
-    setProducts((prev) =>
-      prev.map((p) => (p.id === product.id ? { ...p, hasStock: nextValue } : p))
+    await updateProductFieldOptimistically(
+      setProducts,
+      product.id,
+      (p) => ({ ...p, hasStock: nextValue }),
+      (p) => ({ ...p, hasStock: !nextValue }),
+      () => updateStock(auth.token, product.id, nextValue),
+      () => setError(Messages.stockUpdateFailed)
     );
-    try {
-      await updateStock(auth.token, product.id, nextValue);
-    } catch {
-      setProducts((prev) =>
-        prev.map((p) => (p.id === product.id ? { ...p, hasStock: !nextValue } : p))
-      );
-      setError(Messages.stockUpdateFailed);
-    }
   }
 
   async function handleBulkStockToggle(nextValue: boolean, search: string) {
