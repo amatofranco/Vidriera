@@ -24,11 +24,11 @@ public class ClosedXmlOrderService : IExcelOrderService
         var customerFields = new (string Label, string? Value)[]
         {
             ("Razón Social", customer.BusinessName),
-            ("Nombre del local", customer.StoreName),
             ("CUIT", customer.Cuit),
+            ("Email", customer.Email),
+            ("Nombre del local", customer.StoreName),
             ("Condición frente al IVA", customer.VatCondition),
             ("Teléfono", customer.Phone),
-            ("Email", customer.Email),
             ("Ciudad", customer.City),
             ("Provincia", customer.Province),
             ("Expreso", customer.Carrier),

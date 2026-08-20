@@ -72,7 +72,7 @@ public class GenerateOrderExcelCommandHandler : IRequestHandler<GenerateOrderExc
         await _session.SaveInTransactionAsync(order, cancellationToken);
 
         var content = _excelOrderService.GenerateOrderWorkbook(company.Name, request.Customer, lines);
-        var fileName = $"{OrderLabels.DefaultFileNamePrefix}_{Sanitize(request.Customer.StoreName)}_{DateTime.UtcNow:yyyyMMdd_HHmm}.xlsx";
+        var fileName = $"{OrderLabels.DefaultFileNamePrefix}_{Sanitize(request.Customer.BusinessName)}_{DateTime.UtcNow:yyyyMMdd_HHmm}.xlsx";
 
         return new OrderExcelResult(content, fileName);
     }
