@@ -10,11 +10,13 @@ public class CreateSectionCommandHandler : IRequestHandler<CreateSectionCommand,
 {
     private readonly ISession _session;
     private readonly IBlobStorageService _blobStorageService;
+    private readonly IPdfMergeService _pdfMergeService;
 
-    public CreateSectionCommandHandler(ISession session, IBlobStorageService blobStorageService)
+    public CreateSectionCommandHandler(ISession session, IBlobStorageService blobStorageService, IPdfMergeService pdfMergeService)
     {
         _session = session;
         _blobStorageService = blobStorageService;
+        _pdfMergeService = pdfMergeService;
     }
 
     public async Task<SectionDto> Handle(CreateSectionCommand request, CancellationToken cancellationToken)
@@ -23,6 +25,9 @@ public class CreateSectionCommandHandler : IRequestHandler<CreateSectionCommand,
             request.CompanyId,
             $"No existe la empresa {request.CompanyId}.",
             cancellationToken);
+
+        await using var validatedFileContent = await PdfUploadValidation.BufferAndValidatePageCountAsync(
+            request.FileContent, _pdfMergeService, cancellationToken);
 
         var name = string.IsNullOrWhiteSpace(request.Name)
             ? Path.GetFileNameWithoutExtension(request.OriginalFileName)
@@ -47,7 +52,7 @@ public class CreateSectionCommandHandler : IRequestHandler<CreateSectionCommand,
         await _session.SaveAsync(section, cancellationToken);
 
         var blobKey = BlobKeys.SectionCover(request.CompanyId, section.Id);
-        await _blobStorageService.UploadAsync(blobKey, request.FileContent, "application/pdf", cancellationToken);
+        await _blobStorageService.UploadAsync(blobKey, validatedFileContent, "application/pdf", cancellationToken);
 
         section.CoverPdfBlobKey = blobKey;
         section.CoverPdfOriginalName = request.OriginalFileName;

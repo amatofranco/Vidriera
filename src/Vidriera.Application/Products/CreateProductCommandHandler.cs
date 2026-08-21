@@ -10,11 +10,13 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
 {
     private readonly ISession _session;
     private readonly IBlobStorageService _blobStorageService;
+    private readonly IPdfMergeService _pdfMergeService;
 
-    public CreateProductCommandHandler(ISession session, IBlobStorageService blobStorageService)
+    public CreateProductCommandHandler(ISession session, IBlobStorageService blobStorageService, IPdfMergeService pdfMergeService)
     {
         _session = session;
         _blobStorageService = blobStorageService;
+        _pdfMergeService = pdfMergeService;
     }
 
     public async Task<ProductDto> Handle(CreateProductCommand request, CancellationToken cancellationToken)
@@ -23,6 +25,9 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
             request.CompanyId,
             $"No existe la empresa {request.CompanyId}.",
             cancellationToken);
+
+        await using var validatedFileContent = await PdfUploadValidation.BufferAndValidatePageCountAsync(
+            request.FileContent, _pdfMergeService, cancellationToken);
 
         var name = string.IsNullOrWhiteSpace(request.Name)
             ? Path.GetFileNameWithoutExtension(request.OriginalFileName)
@@ -48,7 +53,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
         await _session.SaveAsync(product, cancellationToken);
 
         var blobKey = BlobKeys.ProductSheet(request.CompanyId, product.Id);
-        await _blobStorageService.UploadAsync(blobKey, request.FileContent, "application/pdf", cancellationToken);
+        await _blobStorageService.UploadAsync(blobKey, validatedFileContent, "application/pdf", cancellationToken);
 
         product.SheetPdfBlobKey = blobKey;
         product.SheetPdfOriginalName = request.OriginalFileName;

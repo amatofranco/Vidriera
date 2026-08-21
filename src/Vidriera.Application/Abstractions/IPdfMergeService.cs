@@ -5,4 +5,5 @@ public record PdfMergeResult(byte[] Bytes, IReadOnlyList<int> PageCounts);
 public interface IPdfMergeService
 {
     Task<PdfMergeResult> MergeAsync(IReadOnlyList<byte[]> pdfsInOrder, CancellationToken cancellationToken);
+    Task<int> GetPageCountAsync(Stream pdfContent, CancellationToken cancellationToken);
 }

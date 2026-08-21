@@ -73,6 +73,9 @@
   <data name="MissingPricesForCatalog" xml:space="preserve">
     <value>Hay {0} producto(s) sin precio cargado. Completalo o desmarcá "Mostrar precios".</value>
   </data>
+  <data name="PdfTooManyPages" xml:space="preserve">
+    <value>El PDF tiene {0} páginas; el máximo permitido es 2.</value>
+  </data>
   <data name="CompanyCatalogNotFound" xml:space="preserve">
     <value>Todavía no se generó un catálogo para esta empresa.</value>
   </data>

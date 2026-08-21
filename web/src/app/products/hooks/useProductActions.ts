@@ -27,8 +27,8 @@ export function useProductActions({
       setProducts((prev) =>
         prev.map((p) => (p.id === product.id ? { ...p, hasSheet: true } : p))
       );
-    } catch {
-      setError(sheetUploadFailed(product.name));
+    } catch (err) {
+      setError(apiErrorMessage(err, sheetUploadFailed(product.name)));
     }
   }
 

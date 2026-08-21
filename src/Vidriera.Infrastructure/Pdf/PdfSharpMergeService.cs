@@ -29,4 +29,10 @@ public class PdfSharpMergeService : IPdfMergeService
         outputDocument.Save(resultStream, false);
         return Task.FromResult(new PdfMergeResult(resultStream.ToArray(), pageCounts));
     }
+
+    public Task<int> GetPageCountAsync(Stream pdfContent, CancellationToken cancellationToken)
+    {
+        using var document = PdfReader.Open(pdfContent, PdfDocumentOpenMode.InformationOnly);
+        return Task.FromResult(document.PageCount);
+    }
 }

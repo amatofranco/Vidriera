@@ -17,6 +17,8 @@ public static class ErrorMessages
 
     public static string MustSelectAtLeastOneProduct => Get(nameof(MustSelectAtLeastOneProduct));
     public static string MissingPricesForCatalog(int count) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(MissingPricesForCatalog)), count);
+
+    public static string PdfTooManyPages(int pageCount) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(PdfTooManyPages)), pageCount);
     public static string CompanyCatalogNotFound => Get(nameof(CompanyCatalogNotFound));
 
     public static string InvalidSectionReorderItems => Get(nameof(InvalidSectionReorderItems));

@@ -10,11 +10,13 @@ public class UpdateProductSheetCommandHandler : IRequestHandler<UpdateProductShe
 {
     private readonly ISession _session;
     private readonly IBlobStorageService _blobStorageService;
+    private readonly IPdfMergeService _pdfMergeService;
 
-    public UpdateProductSheetCommandHandler(ISession session, IBlobStorageService blobStorageService)
+    public UpdateProductSheetCommandHandler(ISession session, IBlobStorageService blobStorageService, IPdfMergeService pdfMergeService)
     {
         _session = session;
         _blobStorageService = blobStorageService;
+        _pdfMergeService = pdfMergeService;
     }
 
     public async Task Handle(UpdateProductSheetCommand request, CancellationToken cancellationToken)
@@ -24,8 +26,11 @@ public class UpdateProductSheetCommandHandler : IRequestHandler<UpdateProductShe
             ErrorMessages.ProductNotFound(request.ProductId),
             cancellationToken);
 
+        await using var validatedFileContent = await PdfUploadValidation.BufferAndValidatePageCountAsync(
+            request.FileContent, _pdfMergeService, cancellationToken);
+
         var blobKey = BlobKeys.ProductSheet(request.CompanyId, request.ProductId);
-        await _blobStorageService.UploadAsync(blobKey, request.FileContent, "application/pdf", cancellationToken);
+        await _blobStorageService.UploadAsync(blobKey, validatedFileContent, "application/pdf", cancellationToken);
 
         product.SheetPdfBlobKey = blobKey;
         product.SheetPdfOriginalName = request.OriginalFileName;
