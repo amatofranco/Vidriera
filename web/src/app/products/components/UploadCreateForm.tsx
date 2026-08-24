@@ -225,7 +225,7 @@ export function UploadCreateForm({
         <button
           type="button"
           onClick={onExtraAction}
-          className="self-start text-xs font-medium text-zinc-600 underline hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+          className="self-start rounded-md border border-zinc-300 px-3 py-1.5 text-xs font-medium whitespace-nowrap text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
         >
           {extraActionLabel}
         </button>
