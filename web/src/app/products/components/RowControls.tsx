@@ -80,6 +80,31 @@ export function NameInput({
   );
 }
 
+export function CodeInput({
+  itemKey,
+  code,
+  onUpdateCode,
+}: {
+  itemKey: string;
+  code: string | null;
+  onUpdateCode: (rawValue: string) => void;
+}) {
+  return (
+    <input
+      key={`${itemKey}-${code ?? ""}`}
+      type="text"
+      defaultValue={code ?? ""}
+      placeholder={Labels.renameFilesCodeColumnLabel}
+      onBlur={(e) => onUpdateCode(e.target.value.trim())}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") e.currentTarget.blur();
+      }}
+      title={Labels.renameFilesCodeColumnLabel}
+      className="w-24 shrink-0 rounded border border-transparent bg-transparent px-1 py-0.5 text-xs text-zinc-700 outline-none hover:border-zinc-300 focus:border-zinc-500 focus:bg-white dark:text-zinc-300 dark:hover:border-zinc-700 dark:focus:bg-zinc-800"
+    />
+  );
+}
+
 export function PriceInput({
   itemKey,
   price,

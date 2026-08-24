@@ -10,6 +10,7 @@ export const Messages = {
   nameUpdateFailed: "No se pudo actualizar el nombre, intentá de nuevo.",
   nameCannotBeEmpty: "El nombre del producto no puede quedar vacío.",
   priceUpdateFailed: "No se pudo actualizar el precio, intentá de nuevo.",
+  codeUpdateFailed: "No se pudo actualizar el código, intentá de nuevo.",
   bulkStockUpdateFailed: "No se pudo actualizar el stock de todos los productos, revisá la lista.",
   productsLoadFailed: "No se pudieron cargar los productos.",
   ordersLoadFailed: "No se pudieron cargar los pedidos.",

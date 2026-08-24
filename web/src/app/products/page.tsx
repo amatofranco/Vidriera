@@ -13,6 +13,7 @@ import { useCompanyLogo } from "./hooks/useCompanyLogo";
 import { useContainerReorder } from "./hooks/useContainerReorder";
 import { useBulkStockToggle } from "./hooks/useBulkStockToggle";
 import { useProductPrice } from "./hooks/useProductPrice";
+import { useProductCode } from "./hooks/useProductCode";
 import { useProductName } from "./hooks/useProductName";
 import { useBulkDelete } from "./hooks/useBulkDelete";
 import { useBulkAssign } from "./hooks/useBulkAssign";
@@ -90,6 +91,7 @@ export default function ProductsPage() {
   });
 
   const { handleUpdatePrice } = useProductPrice({ auth, setProducts, setError });
+  const { handleUpdateCode } = useProductCode({ auth, setProducts, setError });
   const { handleUpdateName } = useProductName({ auth, setProducts, setError });
 
   const { pendingBulkDelete, setPendingBulkDelete, isBulkDeleting, requestBulkDelete, handleConfirmBulkDelete } =
@@ -249,6 +251,7 @@ export default function ProductsPage() {
         onUploadSheet={(file) => handleUploadSheet(product, file)}
         onUpdateName={(v) => handleUpdateName(product, v)}
         onUpdatePrice={(v) => handleUpdatePrice(product, v)}
+        onUpdateCode={(v) => handleUpdateCode(product, v)}
         onRequestDelete={() => setConfirmingDeleteId(product.id)}
         onConfirmDelete={() => handleDeleteProduct(product)}
         onCancelDelete={() => setConfirmingDeleteId(null)}
@@ -321,7 +324,7 @@ export default function ProductsPage() {
       <div className="fixed top-4 left-4 z-10">
         <Image src="/vidriera-logo.png" alt={Labels.logoAlt} width={1000} height={245} className="h-11 w-auto" />
       </div>
-      <div className="mx-auto w-full max-w-3xl">
+      <div className="mx-auto w-full max-w-4xl">
         <CompanyHeader
           auth={auth}
           logoUrl={logoUrl}

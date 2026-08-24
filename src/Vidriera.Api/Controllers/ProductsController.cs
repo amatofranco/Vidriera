@@ -65,6 +65,14 @@ public class ProductsController : ControllerBase
         return NoContent();
     }
 
+    [HttpPut("{id:guid}/code")]
+    public async Task<IActionResult> UpdateCode(Guid id, [FromBody] UpdateCodeRequest request, CancellationToken cancellationToken)
+    {
+        var companyId = User.GetCompanyId();
+        await _mediator.Send(new UpdateCodeCommand(companyId, id, request.Code), cancellationToken);
+        return NoContent();
+    }
+
     [HttpPost("{id:guid}/sheet")]
     [RequestSizeLimit(20_000_000)]
     public async Task<IActionResult> UploadSheet(Guid id, IFormFile file, CancellationToken cancellationToken)
@@ -127,6 +135,8 @@ public record UpdateStockRequest(bool HasStock);
 public record UpdateNameRequest(string Name);
 
 public record UpdatePriceRequest(decimal? Price);
+
+public record UpdateCodeRequest(string? Code);
 
 public record CreateProductRequest(IFormFile File, string? Name, string? Code, decimal? Price);
 

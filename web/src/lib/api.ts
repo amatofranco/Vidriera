@@ -159,6 +159,15 @@ export function updatePrice(token: string, productId: string, price: number | nu
   });
 }
 
+export function updateCode(token: string, productId: string, code: string | null) {
+  return request<void>(`/api/products/${productId}/code`, {
+    method: "PUT",
+    token,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code }),
+  });
+}
+
 export function createProduct(token: string, file: File, name?: string, code?: string, price?: number) {
   const formData = new FormData();
   formData.append("file", file);
