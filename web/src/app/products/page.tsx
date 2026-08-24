@@ -345,7 +345,7 @@ export default function ProductsPage() {
 
         <UploadCreateForm
           label={Labels.sectionCreateFormTitle}
-          fileButtonLabel={Labels.chooseCoverFileOptional}
+          fileButtonLabel={Labels.chooseFilesPlural}
           multiple
           maxSizeLabel={MAX_FILE_SIZE_LABEL}
           isSubmitting={isCreatingSection}
