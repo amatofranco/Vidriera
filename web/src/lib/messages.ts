@@ -15,6 +15,7 @@ export const Messages = {
   ordersLoadFailed: "No se pudieron cargar los pedidos.",
   sectionCreateFailed: "No se pudo crear la carátula.",
   priceImportFailed: "No se pudo importar el archivo de precios.",
+  templateDownloadFailed: "No se pudo descargar la plantilla.",
   unknownError: "Error desconocido",
 } as const;
 

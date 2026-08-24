@@ -216,6 +216,18 @@ export function importPrices(token: string, file: File) {
   });
 }
 
+export async function downloadPriceImportTemplate(token: string): Promise<Blob> {
+  const response = await fetch(`${API_URL}/api/products/import-prices/template`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!response.ok) {
+    throw new ApiError(`Error ${response.status}`, response.status);
+  }
+
+  return response.blob();
+}
+
 export function uploadCompanyLogo(token: string, file: File) {
   const formData = new FormData();
   formData.append("file", file);

@@ -118,6 +118,7 @@ export const Labels = {
   importPricesTitle: "Importar precios",
   importPricesHint: "Excel con Código en la primera columna y Precio en la segunda. La primera fila se ignora (encabezado).",
   chooseExcelFile: "Elegir Excel",
+  downloadTemplateButton: "Descargar plantilla",
   importingPrices: "Importando...",
   importPricesUpdatedCount: (count: number) => `${count} precio${plural(count)} actualizado${plural(count)}.`,
   importPricesNotFoundCodes: (codes: string[]) => `Códigos no encontrados: ${codes.join(", ")}`,

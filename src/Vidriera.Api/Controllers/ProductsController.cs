@@ -89,6 +89,13 @@ public class ProductsController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("import-prices/template")]
+    public async Task<IActionResult> DownloadPriceImportTemplate(CancellationToken cancellationToken)
+    {
+        var content = await _mediator.Send(new GetPriceImportTemplateQuery(), cancellationToken);
+        return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "plantilla-precios.xlsx");
+    }
+
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> DeleteProduct(Guid id, CancellationToken cancellationToken)
     {

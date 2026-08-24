@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { AuthState } from "@/lib/auth-context";
-import { importPrices, type ImportPricesResult } from "@/lib/api";
+import { downloadPriceImportTemplate, importPrices, type ImportPricesResult } from "@/lib/api";
 import { Messages, apiErrorMessage } from "@/lib/messages";
 
 export function useImportPrices({
@@ -28,5 +28,20 @@ export function useImportPrices({
     }
   }
 
-  return { isImporting, result, handleImport };
+  async function handleDownloadTemplate() {
+    if (!auth) return;
+    try {
+      const blob = await downloadPriceImportTemplate(auth.token);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "plantilla-precios.xlsx";
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(apiErrorMessage(err, Messages.templateDownloadFailed));
+    }
+  }
+
+  return { isImporting, result, handleImport, handleDownloadTemplate };
 }

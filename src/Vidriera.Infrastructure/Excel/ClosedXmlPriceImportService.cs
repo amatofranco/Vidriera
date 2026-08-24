@@ -30,4 +30,19 @@ public class ClosedXmlPriceImportService : IPriceImportService
 
         return rows;
     }
+
+    public byte[] GenerateTemplate()
+    {
+        using var workbook = new XLWorkbook();
+        var sheet = workbook.Worksheets.Add("Precios");
+
+        sheet.Cell(1, 1).Value = "Código";
+        sheet.Cell(1, 2).Value = "Precio";
+        sheet.Range(1, 1, 1, 2).Style.Font.Bold = true;
+        sheet.Columns(1, 2).AdjustToContents();
+
+        using var stream = new MemoryStream();
+        workbook.SaveAs(stream);
+        return stream.ToArray();
+    }
 }

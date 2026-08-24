@@ -22,7 +22,7 @@ export default function ImportPricesPage() {
 
   const { logoUrl, setLogoUrl, isLoading: isLogoLoading } = useCompanyLogo(auth);
   const [error, setError] = useState<string | null>(null);
-  const { isImporting, result, handleImport } = useImportPrices({ auth, setError });
+  const { isImporting, result, handleImport, handleDownloadTemplate } = useImportPrices({ auth, setError });
 
   if (authLoading || !auth) {
     return null;
@@ -76,7 +76,12 @@ export default function ImportPricesPage() {
           </p>
         )}
 
-        <ImportPricesPanel isImporting={isImporting} result={result} onImport={handleImport} />
+        <ImportPricesPanel
+          isImporting={isImporting}
+          result={result}
+          onImport={handleImport}
+          onDownloadTemplate={handleDownloadTemplate}
+        />
       </div>
     </div>
   );
