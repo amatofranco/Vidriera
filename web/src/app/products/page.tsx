@@ -352,17 +352,11 @@ export default function ProductsPage() {
           submitTitle={(count) => (count > 1 ? Labels.uploadSectionsSubmitTitle(count) : Labels.newSectionSubmitTitle)}
           progress={sectionUploadProgress}
           onSubmit={handleCreateSection}
-          marginBottomClassName="mb-2"
+          marginBottomClassName="mb-6"
           fileRequired={false}
+          extraActionLabel={Labels.createNamedSectionsButton}
+          onExtraAction={() => setIsCreateNamedSectionsModalOpen(true)}
         />
-
-        <button
-          type="button"
-          onClick={() => setIsCreateNamedSectionsModalOpen(true)}
-          className="mb-6 text-xs font-medium text-zinc-200 underline hover:text-zinc-50"
-        >
-          {Labels.createNamedSectionsButton}
-        </button>
 
         {isCreateNamedSectionsModalOpen && (
           <CreateNamedSectionsModal

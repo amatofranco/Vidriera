@@ -17,6 +17,8 @@ export function UploadCreateForm({
   marginBottomClassName = "mb-3",
   codeEnabled = false,
   fileRequired = true,
+  extraActionLabel,
+  onExtraAction,
 }: {
   label: string;
   fileButtonLabel: string;
@@ -36,6 +38,8 @@ export function UploadCreateForm({
   marginBottomClassName?: string;
   codeEnabled?: boolean;
   fileRequired?: boolean;
+  extraActionLabel?: string;
+  onExtraAction?: () => void;
 }) {
   const [files, setFiles] = useState<File[]>([]);
   const [name, setName] = useState("");
@@ -215,6 +219,16 @@ export function UploadCreateForm({
             style={{ width: `${(progress.done / progress.total) * 100}%` }}
           />
         </div>
+      )}
+
+      {extraActionLabel && onExtraAction && (
+        <button
+          type="button"
+          onClick={onExtraAction}
+          className="self-start text-xs font-medium text-zinc-600 underline hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+        >
+          {extraActionLabel}
+        </button>
       )}
 
       {isRenameModalOpen && (
