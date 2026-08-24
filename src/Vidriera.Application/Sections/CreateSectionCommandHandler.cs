@@ -45,15 +45,15 @@ public class CreateSectionCommandHandler : IRequestHandler<CreateSectionCommand,
 
         var parent = await SectionNesting.ResolveParentAsync(_session, request.CompanyId, request.ParentSectionId, null, cancellationToken);
 
-        var nextSortOrder = parent is null
-            ? await TopLevelOrdering.NextTopLevelSortOrderAsync(_session, request.CompanyId, cancellationToken)
+        var sortOrder = parent is null
+            ? await TopLevelOrdering.PrependTopLevelSortOrderAsync(_session, request.CompanyId, cancellationToken)
             : await TopLevelOrdering.NextSectionSortOrderAsync(_session, parent.Id, cancellationToken);
 
         var section = new Section
         {
             Company = company,
             Name = name,
-            SortOrder = nextSortOrder,
+            SortOrder = sortOrder,
             ParentSection = parent
         };
 

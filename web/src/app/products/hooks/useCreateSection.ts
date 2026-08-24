@@ -30,7 +30,7 @@ export function useCreateSection({
       setError(null);
       try {
         const created = await createSection(auth.token, undefined, trimmedName);
-        setSections((prev) => [...prev, created]);
+        setSections((prev) => [created, ...prev]);
       } catch (err) {
         setError(apiErrorMessage(err, Messages.sectionCreateFailed));
       } finally {
@@ -63,7 +63,7 @@ export function useCreateSection({
     await runWithConcurrency(validFiles, 4, async (file) => {
       try {
         const created = await createSection(auth.token, file, overrideByFile.get(file));
-        setSections((prev) => [...prev, created]);
+        setSections((prev) => [created, ...prev]);
       } catch (err) {
         failed.push({
           name: file.name,
@@ -92,7 +92,7 @@ export function useCreateSection({
     await runWithConcurrency(names, 4, async (name) => {
       try {
         const created = await createSection(auth.token, undefined, name);
-        setSections((prev) => [...prev, created]);
+        setSections((prev) => [created, ...prev]);
       } catch (err) {
         failed.push({
           name,
