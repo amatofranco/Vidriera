@@ -85,18 +85,29 @@ export function UploadCreateForm({
       onSubmit={handleSubmit}
       className={`${marginBottomClassName} flex flex-col gap-2 rounded-xl border border-black/10 bg-[#ecdcc0] px-4 py-3 shadow-lg dark:border-white/10 dark:bg-zinc-900`}
     >
-      <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
-        {label}
-        {fileRequired && (
-          <span className="text-zinc-400 dark:text-zinc-500"> {Labels.maxSizeSuffix(maxSizeLabel)}</span>
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+          {label}
+          {fileRequired && (
+            <span className="text-zinc-400 dark:text-zinc-500"> {Labels.maxSizeSuffix(maxSizeLabel)}</span>
+          )}
+          {!fileRequired && (
+            <span className="text-zinc-400 dark:text-zinc-500"> {Labels.sectionCoverOptionalHint(maxSizeLabel)}</span>
+          )}
+          {codeEnabled && (
+            <span className="ml-1 font-normal text-zinc-400 dark:text-zinc-500">{Labels.fileNameConventionHint}</span>
+          )}
+        </span>
+        {extraActionLabel && onExtraAction && (
+          <button
+            type="button"
+            onClick={onExtraAction}
+            className="shrink-0 text-xs font-medium text-zinc-600 underline hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+          >
+            {extraActionLabel}
+          </button>
         )}
-        {!fileRequired && (
-          <span className="text-zinc-400 dark:text-zinc-500"> {Labels.sectionCoverOptionalHint(maxSizeLabel)}</span>
-        )}
-        {codeEnabled && (
-          <span className="ml-1 font-normal text-zinc-400 dark:text-zinc-500">{Labels.fileNameConventionHint}</span>
-        )}
-      </span>
+      </div>
       <div
         className="grid items-center gap-x-3 gap-y-1"
         style={{
@@ -219,16 +230,6 @@ export function UploadCreateForm({
             style={{ width: `${(progress.done / progress.total) * 100}%` }}
           />
         </div>
-      )}
-
-      {extraActionLabel && onExtraAction && (
-        <button
-          type="button"
-          onClick={onExtraAction}
-          className="self-start rounded-md border border-zinc-300 px-3 py-1.5 text-xs font-medium whitespace-nowrap text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
-        >
-          {extraActionLabel}
-        </button>
       )}
 
       {isRenameModalOpen && (
