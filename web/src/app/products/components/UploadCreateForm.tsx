@@ -85,10 +85,15 @@ export function UploadCreateForm({
       onSubmit={handleSubmit}
       className={`${marginBottomClassName} flex flex-col gap-2 rounded-xl border border-black/10 bg-[#ecdcc0] px-4 py-3 shadow-lg dark:border-white/10 dark:bg-zinc-900`}
     >
-      <div className="flex items-center gap-2">
-        <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">{label}</span>
-        <span className="text-xs text-zinc-400 dark:text-zinc-500">
-          {fileRequired ? Labels.maxSizeSuffix(maxSizeLabel) : Labels.sectionCoverOptionalHint(maxSizeLabel)}
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+          {label}{" "}
+          <span className="text-zinc-400 dark:text-zinc-500">
+            {fileRequired ? Labels.maxSizeSuffix(maxSizeLabel) : Labels.sectionCoverOptionalHint(maxSizeLabel)}
+          </span>
+          {codeEnabled && (
+            <span className="ml-1 font-normal text-zinc-400 dark:text-zinc-500">{Labels.fileNameConventionHint}</span>
+          )}
         </span>
         {extraActionLabel && onExtraAction && (
           <button
@@ -98,9 +103,6 @@ export function UploadCreateForm({
           >
             {extraActionLabel}
           </button>
-        )}
-        {codeEnabled && (
-          <span className="text-xs font-normal text-zinc-400 dark:text-zinc-500">{Labels.fileNameConventionHint}</span>
         )}
       </div>
       <div

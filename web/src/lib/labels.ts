@@ -36,7 +36,7 @@ export const Labels = {
   renameFilesApply: "Aplicar nombres",
   renameFilesFileColumnLabel: "Archivo",
   renameFilesNameColumnLabel: "Nombre",
-  createNamedSectionsButton: "Varias sin PDF",
+  createNamedSectionsButton: "Alta masiva sin PDF",
   createNamedSectionsTitle: "Crear varias carátulas",
   createNamedSectionsHint: "Se crean solo con nombre, sin PDF — se les puede asociar productos como a cualquier carátula.",
   addAnotherNameButton: "+ Agregar otra",
