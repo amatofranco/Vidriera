@@ -40,8 +40,7 @@ export const Labels = {
   createNamedSectionsButton: "+ Crear varias carátulas solo con nombre",
   createNamedSectionsTitle: "Crear varias carátulas",
   createNamedSectionsHint: "Se crean solo con nombre, sin PDF — se les puede asociar productos como a cualquier carátula.",
-  addAnotherNameButton: "+ Agregar otra",
-  removeNameRowTitle: "Quitar",
+  createNamedSectionsPlaceholder: "Un nombre de carátula por línea, por ejemplo:\nJuguetería\nElectrónica\nLibros",
   createNamedSectionsSubmit: (count: number) => `Crear (${count})`,
 
   searchPlaceholder: "Buscar por nombre...",
