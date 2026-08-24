@@ -136,4 +136,13 @@
   <data name="OrderCustomerDataIncomplete" xml:space="preserve">
     <value>Faltan completar datos obligatorios del cliente.</value>
   </data>
+  <data name="InvalidSubscriptionPlan" xml:space="preserve">
+    <value>El plan indicado no es válido.</value>
+  </data>
+  <data name="SubscriptionAccessExpired" xml:space="preserve">
+    <value>La suscripción de la empresa no está activa. Contactá al administrador.</value>
+  </data>
+  <data name="CompanySubscriptionNotFound" xml:space="preserve">
+    <value>La empresa {0} no tiene una suscripción generada.</value>
+  </data>
 </root>

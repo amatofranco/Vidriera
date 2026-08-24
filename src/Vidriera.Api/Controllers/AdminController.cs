@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Vidriera.Api.Common;
 using Vidriera.Application.Admin;
+using Vidriera.Application.Subscriptions;
 
 namespace Vidriera.Api.Controllers;
 
@@ -36,6 +37,33 @@ public class AdminController : ControllerBase
 
         return Ok(result);
     }
+
+    [HttpPost("companies/{companyId:guid}/subscription")]
+    public async Task<ActionResult<CreateCompanySubscriptionResult>> CreateSubscription(
+        Guid companyId,
+        [FromBody] CreateSubscriptionRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new CreateCompanySubscriptionCommand(companyId, request.PayerEmail, request.Plan),
+            cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpPut("companies/{companyId:guid}/subscription/exempt")]
+    public async Task<IActionResult> SetSubscriptionExempt(
+        Guid companyId,
+        [FromBody] SetSubscriptionExemptRequest request,
+        CancellationToken cancellationToken)
+    {
+        await _mediator.Send(new SetCompanySubscriptionExemptCommand(companyId, request.IsExempt), cancellationToken);
+        return NoContent();
+    }
 }
 
 public record AddUserRequest(string Email, string Name, string Password);
+
+public record CreateSubscriptionRequest(string PayerEmail, string Plan);
+
+public record SetSubscriptionExemptRequest(bool IsExempt);
