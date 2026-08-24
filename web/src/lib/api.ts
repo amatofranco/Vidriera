@@ -80,9 +80,9 @@ export function getSections(token: string) {
   return request<Section[]>("/api/sections", { token });
 }
 
-export function createSection(token: string, file: File, name?: string, parentSectionId?: string) {
+export function createSection(token: string, file?: File, name?: string, parentSectionId?: string) {
   const formData = new FormData();
-  formData.append("file", file);
+  if (file) formData.append("file", file);
   if (name) formData.append("name", name);
   if (parentSectionId) formData.append("parentSectionId", parentSectionId);
 

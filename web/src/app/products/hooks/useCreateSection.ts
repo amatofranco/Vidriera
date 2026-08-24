@@ -3,7 +3,7 @@ import type { AuthState } from "@/lib/auth-context";
 import { runWithConcurrency } from "@/lib/concurrency";
 import { MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_LABEL, formatFileSize } from "@/lib/file-size";
 import { ApiError, createSection, type Section } from "@/lib/api";
-import { Messages, bulkUploadFailed, fileTooLargeReason } from "@/lib/messages";
+import { Messages, apiErrorMessage, bulkUploadFailed, fileTooLargeReason } from "@/lib/messages";
 
 export function useCreateSection({
   auth,
@@ -20,7 +20,25 @@ export function useCreateSection({
   );
 
   async function handleCreateSection(files: File[], name: string, customNames?: string[]) {
-    if (!auth || files.length === 0) return;
+    if (!auth) return;
+
+    if (files.length === 0) {
+      const trimmedName = name.trim();
+      if (!trimmedName) return;
+
+      setIsCreatingSection(true);
+      setError(null);
+      try {
+        const created = await createSection(auth.token, undefined, trimmedName);
+        setSections((prev) => [...prev, created]);
+      } catch (err) {
+        setError(apiErrorMessage(err, Messages.sectionCreateFailed));
+      } finally {
+        setIsCreatingSection(false);
+      }
+      return;
+    }
+
     setIsCreatingSection(true);
     setError(null);
 

@@ -32,17 +32,24 @@ internal static class CatalogMergePlanBuilder
     {
         var indexSnapshot = new List<CatalogIndexEntry>();
         var pageCursor = 0;
+        var physicalIndex = 0;
 
         for (var i = 0; i < entries.Count; i++)
         {
             switch (entries[i])
             {
                 case SectionCoverEntry cover:
+                    var hasOwnPage = cover.Section.CoverPdfBlobKey is not null;
                     indexSnapshot.Add(new CatalogIndexEntry(
                         cover.Section.Name,
                         pageCursor + 1,
                         cover.Section.ParentSection is not null ? 1 : 0,
                         IsProduct: false));
+                    if (hasOwnPage)
+                    {
+                        pageCursor += pageCounts[physicalIndex];
+                        physicalIndex++;
+                    }
                     break;
 
                 case ProductEntry productEntry:
@@ -58,9 +65,10 @@ internal static class CatalogMergePlanBuilder
                         IsProduct: true,
                         ProductId: productEntry.Product.Id,
                         Price: includePrices ? productEntry.Product.Price : null));
+                    pageCursor += pageCounts[physicalIndex];
+                    physicalIndex++;
                     break;
             }
-            pageCursor += pageCounts[i];
         }
 
         return indexSnapshot;

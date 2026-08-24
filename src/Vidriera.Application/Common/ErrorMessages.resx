@@ -76,6 +76,9 @@
   <data name="PdfTooManyPages" xml:space="preserve">
     <value>El PDF tiene {0} páginas; el máximo permitido es 2.</value>
   </data>
+  <data name="SectionNameRequired" xml:space="preserve">
+    <value>El nombre de la carátula es obligatorio si no se sube un PDF.</value>
+  </data>
   <data name="CompanyCatalogNotFound" xml:space="preserve">
     <value>Todavía no se generó un catálogo para esta empresa.</value>
   </data>

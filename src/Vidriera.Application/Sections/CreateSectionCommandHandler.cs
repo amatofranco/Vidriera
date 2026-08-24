@@ -2,6 +2,7 @@ using MediatR;
 using NHibernate;
 using Vidriera.Application.Abstractions;
 using Vidriera.Application.Common;
+using Vidriera.Application.Common.Exceptions;
 using Vidriera.Domain.Entities;
 
 namespace Vidriera.Application.Sections;
@@ -21,16 +22,25 @@ public class CreateSectionCommandHandler : IRequestHandler<CreateSectionCommand,
 
     public async Task<SectionDto> Handle(CreateSectionCommand request, CancellationToken cancellationToken)
     {
+        if (string.IsNullOrWhiteSpace(request.Name) && request.FileContent is null)
+        {
+            throw new ValidationException(ErrorMessages.SectionNameRequired);
+        }
+
         var company = await _session.GetOrThrowAsync<Company>(
             request.CompanyId,
             $"No existe la empresa {request.CompanyId}.",
             cancellationToken);
 
-        await using var validatedFileContent = await PdfUploadValidation.BufferAndValidatePageCountAsync(
-            request.FileContent, _pdfMergeService, cancellationToken);
+        MemoryStream? validatedFileContent = null;
+        if (request.FileContent is not null)
+        {
+            validatedFileContent = await PdfUploadValidation.BufferAndValidatePageCountAsync(
+                request.FileContent, _pdfMergeService, cancellationToken);
+        }
 
         var name = string.IsNullOrWhiteSpace(request.Name)
-            ? Path.GetFileNameWithoutExtension(request.OriginalFileName)
+            ? Path.GetFileNameWithoutExtension(request.OriginalFileName)!
             : request.Name;
 
         var parent = await SectionNesting.ResolveParentAsync(_session, request.CompanyId, request.ParentSectionId, null, cancellationToken);
@@ -51,11 +61,16 @@ public class CreateSectionCommandHandler : IRequestHandler<CreateSectionCommand,
 
         await _session.SaveAsync(section, cancellationToken);
 
-        var blobKey = BlobKeys.SectionCover(request.CompanyId, section.Id);
-        await _blobStorageService.UploadAsync(blobKey, validatedFileContent, "application/pdf", cancellationToken);
+        if (validatedFileContent is not null)
+        {
+            var blobKey = BlobKeys.SectionCover(request.CompanyId, section.Id);
+            await _blobStorageService.UploadAsync(blobKey, validatedFileContent, "application/pdf", cancellationToken);
 
-        section.CoverPdfBlobKey = blobKey;
-        section.CoverPdfOriginalName = request.OriginalFileName;
+            section.CoverPdfBlobKey = blobKey;
+            section.CoverPdfOriginalName = request.OriginalFileName;
+
+            await validatedFileContent.DisposeAsync();
+        }
 
         await transaction.CommitAsync(cancellationToken);
 

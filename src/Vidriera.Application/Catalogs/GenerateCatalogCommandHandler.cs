@@ -111,10 +111,14 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         Func<CatalogGenerationProgress, Task>? onProgress,
         CancellationToken cancellationToken)
     {
-        var pdfBytesInOrder = new byte[entries.Count][];
+        var physicalEntries = entries
+            .Where(entry => entry is ProductEntry || (entry is SectionCoverEntry cover && cover.Section.CoverPdfBlobKey is not null))
+            .ToList();
+
+        var pdfBytesInOrder = new byte[physicalEntries.Count][];
         var includedProducts = new List<Product>();
 
-        foreach (var entry in entries)
+        foreach (var entry in physicalEntries)
         {
             if (entry is ProductEntry productEntry)
             {
@@ -123,13 +127,13 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         }
 
         var downloadedCount = 0;
-        var pendingDownloads = new List<Task>(entries.Count);
+        var pendingDownloads = new List<Task>(physicalEntries.Count);
         using var downloadSemaphore = new SemaphoreSlim(MaxConcurrentDownloads);
         using var progressLock = new SemaphoreSlim(1, 1);
 
-        for (var index = 0; index < entries.Count; index++)
+        for (var index = 0; index < physicalEntries.Count; index++)
         {
-            var blobKey = entries[index] switch
+            var blobKey = physicalEntries[index] switch
             {
                 SectionCoverEntry cover => cover.Section.CoverPdfBlobKey!,
                 ProductEntry productEntry => productEntry.Product.SheetPdfBlobKey!,
@@ -145,7 +149,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
                 () =>
                 {
                     var completed = Interlocked.Increment(ref downloadedCount);
-                    return ReportProgressSerializedAsync(progressLock, onProgress, "downloading", completed, entries.Count);
+                    return ReportProgressSerializedAsync(progressLock, onProgress, "downloading", completed, physicalEntries.Count);
                 },
                 cancellationToken));
         }
@@ -244,7 +248,11 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         for (var i = 0; i < cachedEntries.Count; i++)
         {
             var end = i + 1 < cachedEntries.Count ? cachedEntries[i + 1].StartPage : totalPages + 1;
-            pageCounts.Add(end - cachedEntries[i].StartPage);
+            var count = end - cachedEntries[i].StartPage;
+            if (count > 0)
+            {
+                pageCounts.Add(count);
+            }
         }
         return pageCounts;
     }

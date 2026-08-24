@@ -34,9 +34,9 @@ public class SectionsController : ControllerBase
     {
         var companyId = User.GetCompanyId();
 
-        await using var stream = request.File.OpenReadStream();
+        await using var stream = request.File?.OpenReadStream();
         var result = await _mediator.Send(
-            new CreateSectionCommand(companyId, stream, request.File.FileName, request.Name, request.ParentSectionId),
+            new CreateSectionCommand(companyId, stream, request.File?.FileName, request.Name, request.ParentSectionId),
             cancellationToken);
 
         return CreatedAtAction(nameof(GetSections), null, result);
@@ -73,7 +73,7 @@ public class SectionsController : ControllerBase
     }
 }
 
-public record CreateSectionRequest(IFormFile File, string? Name, Guid? ParentSectionId);
+public record CreateSectionRequest(IFormFile? File, string? Name, Guid? ParentSectionId);
 
 public record AssignSectionParentRequest(Guid? ParentSectionId);
 

@@ -16,6 +16,7 @@ export function UploadCreateForm({
   onSubmit,
   marginBottomClassName = "mb-3",
   codeEnabled = false,
+  fileRequired = true,
 }: {
   label: string;
   fileButtonLabel: string;
@@ -34,6 +35,7 @@ export function UploadCreateForm({
   ) => Promise<void> | void;
   marginBottomClassName?: string;
   codeEnabled?: boolean;
+  fileRequired?: boolean;
 }) {
   const [files, setFiles] = useState<File[]>([]);
   const [name, setName] = useState("");
@@ -46,7 +48,7 @@ export function UploadCreateForm({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (files.length === 0) return;
+    if (files.length === 0 && (fileRequired || name.trim() === "")) return;
     await onSubmit(
       files,
       name.trim(),
@@ -70,6 +72,8 @@ export function UploadCreateForm({
       : files.length === 1
         ? files[0].name
         : Labels.filesChosenCount(files.length);
+
+  const showSingleFields = files.length === 1 || (!fileRequired && files.length === 0);
 
   return (
     <form
@@ -95,7 +99,7 @@ export function UploadCreateForm({
             {Labels.renameFilesCodeColumnLabel}
           </span>
         )}
-        {files.length === 1 && (
+        {showSingleFields && (
           <span
             className={`row-start-1 text-xs font-bold text-zinc-600 dark:text-zinc-400 ${codeEnabled ? "col-start-3" : "col-start-2"}`}
           >
@@ -113,7 +117,7 @@ export function UploadCreateForm({
             type="file"
             accept="application/pdf"
             multiple={multiple}
-            required
+            required={fileRequired}
             onChange={(e) => {
               const selected = Array.from(e.target.files ?? []);
               setFiles(selected);
@@ -170,7 +174,7 @@ export function UploadCreateForm({
             className="col-start-2 row-start-2 w-36 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
           />
         )}
-        {files.length === 1 && (
+        {showSingleFields && (
           <input
             type="text"
             value={name}
@@ -179,7 +183,7 @@ export function UploadCreateForm({
             className={`row-start-2 w-48 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 ${codeEnabled ? "col-start-3" : "col-start-2"}`}
           />
         )}
-        {files.length === 1 && (
+        {showSingleFields && (
           <button
             type="submit"
             title={submitTitle(files.length)}

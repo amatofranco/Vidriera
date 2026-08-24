@@ -346,6 +346,7 @@ export default function ProductsPage() {
           progress={sectionUploadProgress}
           onSubmit={handleCreateSection}
           marginBottomClassName="mb-6"
+          fileRequired={false}
         />
 
         {error && (
