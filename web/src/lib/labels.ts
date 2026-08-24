@@ -24,7 +24,7 @@ export const Labels = {
   chooseFilesPlural: "Elegir archivos",
   sectionCreateFormTitle: "Alta de carátula",
   sectionCoverOptionalHint: (maxLabel: string) => `PDF opcional, máx. ${maxLabel}`,
-  chooseCoverFileOptional: "Elegir PDF (opcional)",
+  chooseCoverFileOptional: "Elegir PDF",
   chooseFileSingular: "Elegir archivo",
   newProductSubmitTitle: "Nuevo producto",
   newSectionSubmitTitle: "Nueva carátula",
