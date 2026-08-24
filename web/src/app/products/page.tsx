@@ -25,6 +25,7 @@ import { useFilteredRows, type StockFilter } from "./hooks/useFilteredRows";
 
 import { CompanyHeader } from "./components/CompanyHeader";
 import { UploadCreateForm } from "./components/UploadCreateForm";
+import { CreateNamedSectionsModal } from "./components/CreateNamedSectionsModal";
 import { ProductRow } from "./components/ProductRow";
 import { SectionRow } from "./components/SectionRow";
 import { BulkActionsToolbar } from "./components/BulkActionsToolbar";
@@ -107,11 +108,17 @@ export default function ProductsPage() {
   } = useBulkAssign({ auth, products, loadProducts, setError });
 
   const { isCreating, uploadProgress, handleCreateProduct } = useCreateProduct({ auth, setProducts, setError });
-  const { isCreatingSection, uploadProgress: sectionUploadProgress, handleCreateSection } = useCreateSection({
+  const {
+    isCreatingSection,
+    uploadProgress: sectionUploadProgress,
+    handleCreateSection,
+    handleCreateNamedSections,
+  } = useCreateSection({
     auth,
     setSections,
     setError,
   });
+  const [isCreateNamedSectionsModalOpen, setIsCreateNamedSectionsModalOpen] = useState(false);
 
   const { confirmingDeleteId, setConfirmingDeleteId, isDeleting, handleUploadSheet, handleDeleteProduct } =
     useProductActions({ auth, setProducts, setError });
@@ -337,17 +344,35 @@ export default function ProductsPage() {
         />
 
         <UploadCreateForm
-          label={Labels.sectionCoverFormLabel}
-          fileButtonLabel={Labels.chooseFilesPlural}
+          label={Labels.sectionCreateFormTitle}
+          fileButtonLabel={Labels.chooseCoverFileOptional}
           multiple
           maxSizeLabel={MAX_FILE_SIZE_LABEL}
           isSubmitting={isCreatingSection}
           submitTitle={(count) => (count > 1 ? Labels.uploadSectionsSubmitTitle(count) : Labels.newSectionSubmitTitle)}
           progress={sectionUploadProgress}
           onSubmit={handleCreateSection}
-          marginBottomClassName="mb-6"
+          marginBottomClassName="mb-2"
           fileRequired={false}
         />
+
+        <button
+          type="button"
+          onClick={() => setIsCreateNamedSectionsModalOpen(true)}
+          className="mb-6 text-xs font-medium text-zinc-200 underline hover:text-zinc-50"
+        >
+          {Labels.createNamedSectionsButton}
+        </button>
+
+        {isCreateNamedSectionsModalOpen && (
+          <CreateNamedSectionsModal
+            onApply={(names) => {
+              setIsCreateNamedSectionsModalOpen(false);
+              handleCreateNamedSections(names);
+            }}
+            onClose={() => setIsCreateNamedSectionsModalOpen(false)}
+          />
+        )}
 
         {error && (
           <p className="mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">

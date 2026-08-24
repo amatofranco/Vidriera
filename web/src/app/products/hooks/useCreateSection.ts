@@ -81,5 +81,34 @@ export function useCreateSection({
     }
   }
 
-  return { isCreatingSection, uploadProgress, handleCreateSection };
+  async function handleCreateNamedSections(names: string[]) {
+    if (!auth || names.length === 0) return;
+    setIsCreatingSection(true);
+    setError(null);
+
+    const failed: { name: string; message: string }[] = [];
+    setUploadProgress({ done: 0, total: names.length });
+
+    await runWithConcurrency(names, 4, async (name) => {
+      try {
+        const created = await createSection(auth.token, undefined, name);
+        setSections((prev) => [...prev, created]);
+      } catch (err) {
+        failed.push({
+          name,
+          message: err instanceof ApiError ? err.message : Messages.unknownError,
+        });
+      }
+      setUploadProgress((prev) => (prev ? { ...prev, done: prev.done + 1 } : prev));
+    });
+
+    setIsCreatingSection(false);
+    setUploadProgress(null);
+
+    if (failed.length > 0) {
+      setError(bulkUploadFailed(names.length, failed));
+    }
+  }
+
+  return { isCreatingSection, uploadProgress, handleCreateSection, handleCreateNamedSections };
 }

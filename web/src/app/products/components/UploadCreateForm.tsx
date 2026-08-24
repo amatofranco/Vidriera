@@ -74,6 +74,7 @@ export function UploadCreateForm({
         : Labels.filesChosenCount(files.length);
 
   const showSingleFields = files.length === 1 || (!fileRequired && files.length === 0);
+  const nameFirst = !fileRequired && showSingleFields;
 
   return (
     <form
@@ -81,7 +82,13 @@ export function UploadCreateForm({
       className={`${marginBottomClassName} flex flex-col gap-2 rounded-xl border border-black/10 bg-[#ecdcc0] px-4 py-3 shadow-lg dark:border-white/10 dark:bg-zinc-900`}
     >
       <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
-        {label} <span className="text-zinc-400 dark:text-zinc-500">{Labels.maxSizeSuffix(maxSizeLabel)}</span>
+        {label}
+        {fileRequired && (
+          <span className="text-zinc-400 dark:text-zinc-500"> {Labels.maxSizeSuffix(maxSizeLabel)}</span>
+        )}
+        {!fileRequired && (
+          <span className="text-zinc-400 dark:text-zinc-500"> {Labels.sectionCoverOptionalHint(maxSizeLabel)}</span>
+        )}
         {codeEnabled && (
           <span className="ml-1 font-normal text-zinc-400 dark:text-zinc-500">{Labels.fileNameConventionHint}</span>
         )}
@@ -91,7 +98,9 @@ export function UploadCreateForm({
         style={{
           gridTemplateColumns: codeEnabled
             ? "minmax(0,max-content) 9rem 12rem max-content"
-            : "minmax(0,max-content) 12rem max-content",
+            : nameFirst
+              ? "12rem minmax(0,max-content) max-content"
+              : "minmax(0,max-content) 12rem max-content",
         }}
       >
         {codeEnabled && files.length === 1 && (
@@ -101,13 +110,13 @@ export function UploadCreateForm({
         )}
         {showSingleFields && (
           <span
-            className={`row-start-1 text-xs font-bold text-zinc-600 dark:text-zinc-400 ${codeEnabled ? "col-start-3" : "col-start-2"}`}
+            className={`row-start-1 text-xs font-bold text-zinc-600 dark:text-zinc-400 ${codeEnabled ? "col-start-3" : nameFirst ? "col-start-1" : "col-start-2"}`}
           >
             {Labels.renameFilesNameColumnLabel}
           </span>
         )}
 
-        <label className="col-start-1 row-start-2 flex cursor-pointer items-center gap-2 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800">
+        <label className={`row-start-2 flex cursor-pointer items-center gap-2 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800 ${nameFirst ? "col-start-2" : "col-start-1"}`}>
           <span className="w-28 shrink-0 rounded bg-[#c9a86a] px-2 py-0.5 text-center text-xs font-medium whitespace-nowrap text-zinc-900">
             {fileButtonLabel}
           </span>
@@ -180,7 +189,7 @@ export function UploadCreateForm({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={Labels.optionalNamePlaceholder}
-            className={`row-start-2 w-48 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 ${codeEnabled ? "col-start-3" : "col-start-2"}`}
+            className={`row-start-2 w-48 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 ${codeEnabled ? "col-start-3" : nameFirst ? "col-start-1" : "col-start-2"}`}
           />
         )}
         {showSingleFields && (

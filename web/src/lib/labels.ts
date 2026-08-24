@@ -22,7 +22,9 @@ export const Labels = {
 
   productSheetFormLabel: "PDF de Fichas",
   chooseFilesPlural: "Elegir archivos",
-  sectionCoverFormLabel: "PDF de Carátulas",
+  sectionCreateFormTitle: "Alta de carátula",
+  sectionCoverOptionalHint: (maxLabel: string) => `PDF opcional, máx. ${maxLabel}`,
+  chooseCoverFileOptional: "Elegir PDF (opcional)",
   chooseFileSingular: "Elegir archivo",
   newProductSubmitTitle: "Nuevo producto",
   newSectionSubmitTitle: "Nueva carátula",
@@ -35,6 +37,12 @@ export const Labels = {
   renameFilesApply: "Aplicar nombres",
   renameFilesFileColumnLabel: "Archivo",
   renameFilesNameColumnLabel: "Nombre",
+  createNamedSectionsButton: "+ Crear varias carátulas solo con nombre",
+  createNamedSectionsTitle: "Crear varias carátulas",
+  createNamedSectionsHint: "Se crean solo con nombre, sin PDF — se les puede asociar productos como a cualquier carátula.",
+  addAnotherNameButton: "+ Agregar otra",
+  removeNameRowTitle: "Quitar",
+  createNamedSectionsSubmit: (count: number) => `Crear (${count})`,
 
   searchPlaceholder: "Buscar por nombre...",
   stockFilterAllLabel: "Todos",
