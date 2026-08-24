@@ -87,6 +87,9 @@ export function UploadCreateForm({
     >
       <div className="flex items-center gap-2">
         <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">{label}</span>
+        <span className="text-xs text-zinc-400 dark:text-zinc-500">
+          {fileRequired ? Labels.maxSizeSuffix(maxSizeLabel) : Labels.sectionCoverOptionalHint(maxSizeLabel)}
+        </span>
         {extraActionLabel && onExtraAction && (
           <button
             type="button"
@@ -96,9 +99,6 @@ export function UploadCreateForm({
             {extraActionLabel}
           </button>
         )}
-        <span className="text-xs text-zinc-400 dark:text-zinc-500">
-          {fileRequired ? Labels.maxSizeSuffix(maxSizeLabel) : Labels.sectionCoverOptionalHint(maxSizeLabel)}
-        </span>
         {codeEnabled && (
           <span className="text-xs font-normal text-zinc-400 dark:text-zinc-500">{Labels.fileNameConventionHint}</span>
         )}
