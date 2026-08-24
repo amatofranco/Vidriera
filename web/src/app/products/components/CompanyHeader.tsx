@@ -11,6 +11,7 @@ import { Messages, apiErrorMessage } from "@/lib/messages";
 const NAV_LINKS = [
   { href: "/products", label: Labels.productsNavLabel },
   { href: "/orders", label: Labels.ordersNavLabel },
+  { href: "/import-prices", label: Labels.importPricesNavLabel },
 ];
 
 export function CompanyHeader({

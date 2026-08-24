@@ -114,6 +114,13 @@ export const Labels = {
 
   productsNavLabel: "Productos",
   ordersNavLabel: "Pedidos",
+  importPricesNavLabel: "Precios",
+  importPricesTitle: "Importar precios",
+  importPricesHint: "Excel con Código en la primera columna y Precio en la segunda. La primera fila se ignora (encabezado).",
+  chooseExcelFile: "Elegir Excel",
+  importingPrices: "Importando...",
+  importPricesUpdatedCount: (count: number) => `${count} precio${plural(count)} actualizado${plural(count)}.`,
+  importPricesNotFoundCodes: (codes: string[]) => `Códigos no encontrados: ${codes.join(", ")}`,
 
   loadingOrders: "Cargando pedidos...",
   noOrdersYet: "Todavía no se recibieron pedidos.",

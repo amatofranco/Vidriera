@@ -20,6 +20,8 @@ public static class ErrorMessages
 
     public static string PdfTooManyPages(int pageCount) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(PdfTooManyPages)), pageCount);
     public static string SectionNameRequired => Get(nameof(SectionNameRequired));
+    public static string PriceImportInvalidFile => Get(nameof(PriceImportInvalidFile));
+    public static string PriceImportEmpty => Get(nameof(PriceImportEmpty));
     public static string CompanyCatalogNotFound => Get(nameof(CompanyCatalogNotFound));
 
     public static string InvalidSectionReorderItems => Get(nameof(InvalidSectionReorderItems));

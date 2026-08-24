@@ -77,6 +77,18 @@ public class ProductsController : ControllerBase
         return NoContent();
     }
 
+    [HttpPost("import-prices")]
+    [RequestSizeLimit(20_000_000)]
+    public async Task<ActionResult<ImportPricesResult>> ImportPrices(IFormFile file, CancellationToken cancellationToken)
+    {
+        var companyId = User.GetCompanyId();
+
+        await using var stream = file.OpenReadStream();
+        var result = await _mediator.Send(new ImportPricesCommand(companyId, stream), cancellationToken);
+
+        return Ok(result);
+    }
+
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> DeleteProduct(Guid id, CancellationToken cancellationToken)
     {

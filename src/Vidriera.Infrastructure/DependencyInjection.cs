@@ -27,6 +27,7 @@ public static class DependencyInjection
         services.AddSingleton<IPdfMergeService, PdfSharpMergeService>();
         services.AddSingleton<IPdfRasterizerService, PdfiumRasterizerService>();
         services.AddSingleton<IExcelOrderService, ClosedXmlOrderService>();
+        services.AddSingleton<IPriceImportService, ClosedXmlPriceImportService>();
 
         services.Configure<JwtOptions>(configuration.GetSection("Jwt"));
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();

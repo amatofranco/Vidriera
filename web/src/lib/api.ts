@@ -200,6 +200,22 @@ export function uploadSheet(token: string, productId: string, file: File) {
   });
 }
 
+export interface ImportPricesResult {
+  updatedCount: number;
+  notFoundCodes: string[];
+}
+
+export function importPrices(token: string, file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  return request<ImportPricesResult>("/api/products/import-prices", {
+    method: "POST",
+    token,
+    body: formData,
+  });
+}
+
 export function uploadCompanyLogo(token: string, file: File) {
   const formData = new FormData();
   formData.append("file", file);
