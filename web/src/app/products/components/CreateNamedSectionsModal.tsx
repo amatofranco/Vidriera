@@ -10,7 +10,7 @@ export function CreateNamedSectionsModal({
   onApply: (names: string[]) => void;
   onClose: () => void;
 }) {
-  const [names, setNames] = useState<string[]>(["", ""]);
+  const [names, setNames] = useState<string[]>(["", "", "", "", "", ""]);
 
   function setNameAt(index: number, value: string) {
     setNames((prev) => prev.map((n, i) => (i === index ? value : n)));
@@ -28,13 +28,17 @@ export function CreateNamedSectionsModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="flex max-h-[80vh] w-full max-w-md flex-col rounded-xl border border-black/10 bg-[#ecdcc0] p-5 shadow-lg dark:border-white/10 dark:bg-zinc-900">
+      <div className="flex max-h-[80vh] w-full max-w-3xl flex-col rounded-xl border border-black/10 bg-[#ecdcc0] p-5 shadow-lg dark:border-white/10 dark:bg-zinc-900">
         <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">{Labels.createNamedSectionsTitle}</h2>
         <p className="mt-1 mb-3 text-xs text-zinc-600 dark:text-zinc-400">{Labels.createNamedSectionsHint}</p>
 
-        <ul className="flex-1 space-y-2 overflow-y-auto">
+        <div className="px-3 pb-1 text-xs font-bold text-zinc-600 dark:text-zinc-400">
+          {Labels.renameFilesNameColumnLabel}
+        </div>
+
+        <ul className="flex-1 divide-y divide-zinc-300 overflow-y-auto rounded-md border border-zinc-300 dark:divide-zinc-700 dark:border-zinc-700">
           {names.map((name, index) => (
-            <li key={index} className="flex items-center gap-2">
+            <li key={index} className="flex items-center gap-2 px-3 py-2">
               <input
                 type="text"
                 value={name}
