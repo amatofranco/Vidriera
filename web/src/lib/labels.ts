@@ -20,9 +20,9 @@ export const Labels = {
   noProductsOrSectionsYet: "Todavía no hay productos ni carátulas cargadas.",
   noSearchMatches: "Ningún producto coincide con la búsqueda.",
 
-  productSheetFormLabel: "PDF de Fichas",
+  productSheetFormLabel: "Alta de Fichas",
   chooseFilesPlural: "Elegir archivos",
-  sectionCreateFormTitle: "Alta de carátula",
+  sectionCreateFormTitle: "Alta de Carátulas",
   sectionCoverOptionalHint: (maxLabel: string) => `PDF opcional, máx. ${maxLabel}`,
   chooseCoverFileOptional: "Elegir PDF",
   chooseFileSingular: "Elegir archivo",
