@@ -32,28 +32,39 @@ public class MercadoPagoClient : IMercadoPagoClient
             new AutoRecurringRequest(1, "months", amountArs, _options.CurrencyId));
 
         var response = await _httpClient.PostAsJsonAsync("preapproval", request, cancellationToken);
-        response.EnsureSuccessStatusCode();
-
-        var result = await response.Content.ReadFromJsonAsync<PreapprovalResponse>(cancellationToken)
-            ?? throw new InvalidOperationException("MercadoPago no devolvió una respuesta válida al crear la preapproval.");
+        var result = await ReadOrThrowAsync<PreapprovalResponse>(response, cancellationToken);
 
         return new MercadoPagoPreapproval(result.Id, result.Status, result.InitPoint ?? string.Empty);
     }
 
     public async Task<MercadoPagoPreapproval> GetPreapprovalAsync(string preapprovalId, CancellationToken cancellationToken)
     {
-        var result = await _httpClient.GetFromJsonAsync<PreapprovalResponse>($"preapproval/{preapprovalId}", cancellationToken)
-            ?? throw new InvalidOperationException($"MercadoPago no devolvió datos para la preapproval {preapprovalId}.");
+        var response = await _httpClient.GetAsync($"preapproval/{preapprovalId}", cancellationToken);
+        var result = await ReadOrThrowAsync<PreapprovalResponse>(response, cancellationToken);
 
         return new MercadoPagoPreapproval(result.Id, result.Status, result.InitPoint ?? string.Empty);
     }
 
     public async Task<MercadoPagoPayment> GetPaymentAsync(string paymentId, CancellationToken cancellationToken)
     {
-        var result = await _httpClient.GetFromJsonAsync<PaymentResponse>($"v1/payments/{paymentId}", cancellationToken)
-            ?? throw new InvalidOperationException($"MercadoPago no devolvió datos para el pago {paymentId}.");
+        var response = await _httpClient.GetAsync($"v1/payments/{paymentId}", cancellationToken);
+        var result = await ReadOrThrowAsync<PaymentResponse>(response, cancellationToken);
 
         return new MercadoPagoPayment(result.Id, result.Status, result.ExternalReference);
+    }
+
+    private static async Task<T> ReadOrThrowAsync<T>(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        var body = await response.Content.ReadAsStringAsync(cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new InvalidOperationException(
+                $"MercadoPago devolvió {(int)response.StatusCode} {response.StatusCode}: {body}");
+        }
+
+        return System.Text.Json.JsonSerializer.Deserialize<T>(body)
+            ?? throw new InvalidOperationException("MercadoPago no devolvió una respuesta válida.");
     }
 
     private record CreatePreapprovalRequest(
