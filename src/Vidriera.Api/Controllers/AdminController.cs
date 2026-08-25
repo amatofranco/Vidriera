@@ -76,6 +76,19 @@ public class AdminController : ControllerBase
         await _mediator.Send(new CancelCompanySubscriptionCommand(companyId), cancellationToken);
         return NoContent();
     }
+
+    [HttpPost("companies/{companyId:guid}/subscription/change-plan")]
+    public async Task<ActionResult<ChangeCompanyPlanResult>> ChangePlan(
+        Guid companyId,
+        [FromBody] ChangePlanRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new ChangeCompanyPlanCommand(companyId, request.PayerEmail, request.NewPlan),
+            cancellationToken);
+
+        return Ok(result);
+    }
 }
 
 public record AddUserRequest(string Email, string Name, string Password);
@@ -83,3 +96,5 @@ public record AddUserRequest(string Email, string Name, string Password);
 public record CreateSubscriptionRequest(string PayerEmail, string Plan);
 
 public record SetSubscriptionExemptRequest(bool IsExempt);
+
+public record ChangePlanRequest(string PayerEmail, string NewPlan);

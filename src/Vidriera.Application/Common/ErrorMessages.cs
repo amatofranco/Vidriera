@@ -57,4 +57,6 @@ public static class ErrorMessages
 
     public static string ProductLimitReached(int max) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(ProductLimitReached)), max);
     public static string UserLimitReached(int max) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(UserLimitReached)), max);
+
+    public static string CannotChangePlanWithoutPayment => Get(nameof(CannotChangePlanWithoutPayment));
 }

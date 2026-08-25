@@ -151,4 +151,7 @@
   <data name="UserLimitReached" xml:space="preserve">
     <value>Llegaste al máximo de {0} usuarios de tu plan.</value>
   </data>
+  <data name="CannotChangePlanWithoutPayment" xml:space="preserve">
+    <value>La empresa todavía no tuvo ningún pago aprobado — usá el alta de suscripción normal en vez de cambiar de plan.</value>
+  </data>
 </root>
