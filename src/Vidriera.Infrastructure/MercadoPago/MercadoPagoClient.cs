@@ -53,6 +53,8 @@ public class MercadoPagoClient : IMercadoPagoClient
         return new MercadoPagoPayment(result.Id, result.Status, result.ExternalReference);
     }
 
+    private static readonly System.Text.Json.JsonSerializerOptions JsonOptions = new(System.Text.Json.JsonSerializerDefaults.Web);
+
     private static async Task<T> ReadOrThrowAsync<T>(HttpResponseMessage response, CancellationToken cancellationToken)
     {
         var body = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -63,7 +65,7 @@ public class MercadoPagoClient : IMercadoPagoClient
                 $"MercadoPago devolvió {(int)response.StatusCode} {response.StatusCode}: {body}");
         }
 
-        return System.Text.Json.JsonSerializer.Deserialize<T>(body)
+        return System.Text.Json.JsonSerializer.Deserialize<T>(body, JsonOptions)
             ?? throw new InvalidOperationException("MercadoPago no devolvió una respuesta válida.");
     }
 
