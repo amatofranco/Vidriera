@@ -25,7 +25,7 @@ public class DeleteSectionCommandHandler : IRequestHandler<DeleteSectionCommand>
             ErrorMessages.SectionNotFound(request.SectionId),
             cancellationToken);
 
-        var members = await _session.Query<Product>()
+        var members = await _session.Query<Item>()
             .Where(p => p.Section != null && p.Section.Id == request.SectionId)
             .OrderBy(p => p.SortOrder)
             .ToListAsync(cancellationToken);

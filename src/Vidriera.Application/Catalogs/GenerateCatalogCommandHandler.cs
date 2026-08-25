@@ -34,25 +34,25 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
 
     public async Task<GenerateCatalogResult> Handle(GenerateCatalogCommand request, CancellationToken cancellationToken)
     {
-        var (allProducts, allSections) = await LoadCatalogDataAsync(request.CompanyId, cancellationToken);
+        var (allItems, allSections) = await LoadCatalogDataAsync(request.CompanyId, cancellationToken);
         var selectedIds = new HashSet<Guid>(
-            allProducts.Where(p => p.HasStock && !string.IsNullOrEmpty(p.SheetPdfBlobKey)).Select(p => p.Id));
+            allItems.Where(p => p.HasStock && !string.IsNullOrEmpty(p.SheetPdfBlobKey)).Select(p => p.Id));
 
         if (selectedIds.Count == 0)
         {
-            throw new ValidationException(ErrorMessages.MustSelectAtLeastOneProduct);
+            throw new ValidationException(ErrorMessages.MustSelectAtLeastOneItem);
         }
 
         if (request.ShowPrices)
         {
-            var missingCount = allProducts.Count(p => selectedIds.Contains(p.Id) && p.Price is null);
+            var missingCount = allItems.Count(p => selectedIds.Contains(p.Id) && p.Price is null);
             if (missingCount > 0)
             {
                 throw new ValidationException(ErrorMessages.MissingPricesForCatalog(missingCount));
             }
         }
 
-        var entries = CatalogMergePlanBuilder.BuildEntries(allSections, allProducts, selectedIds);
+        var entries = CatalogMergePlanBuilder.BuildEntries(allSections, allItems, selectedIds);
         var fingerprint = CatalogMergePlanBuilder.ComputeContentFingerprint(entries);
 
         var company = await _session.GetAsync<Company>(request.CompanyId, cancellationToken);
@@ -73,7 +73,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         var generatedBlobKey = await UploadMergedPdfAsync(request.CompanyId, mergeResult.Bytes, cancellationToken);
         var previousCatalogId = company.CurrentCatalogId;
 
-        var catalog = await CreateCatalogAsync(request, company, mergePlan.IncludedProducts, indexSnapshot, generatedBlobKey, fingerprint, cancellationToken);
+        var catalog = await CreateCatalogAsync(request, company, mergePlan.IncludedItems, indexSnapshot, generatedBlobKey, fingerprint, cancellationToken);
         await RasterizePagesAsync(catalog, mergeResult.Bytes, mergeResult.PageCounts.Sum(), request.OnProgress, cancellationToken);
 
         company.CurrentCatalogId = catalog.Id;
@@ -88,21 +88,21 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         return new GenerateCatalogResult(catalog.Id, url);
     }
 
-    private async Task<(List<Product> Products, List<Section> Sections)> LoadCatalogDataAsync(
+    private async Task<(List<Item> Items, List<Section> Sections)> LoadCatalogDataAsync(
         Guid companyId,
         CancellationToken cancellationToken)
     {
-        var products = await _session.Query<Product>()
+        var items = await _session.Query<Item>()
             .Where(p => p.Company.Id == companyId)
             .ToListAsync(cancellationToken);
         var sections = await _session.Query<Section>()
             .Where(s => s.Company.Id == companyId)
             .ToListAsync(cancellationToken);
 
-        return (products, sections);
+        return (items, sections);
     }
 
-    private sealed record MergePlan(List<byte[]> PdfBytes, List<Product> IncludedProducts);
+    private sealed record MergePlan(List<byte[]> PdfBytes, List<Item> IncludedItems);
 
     private const int MaxConcurrentDownloads = 4;
 
@@ -112,17 +112,17 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         CancellationToken cancellationToken)
     {
         var physicalEntries = entries
-            .Where(entry => entry is ProductEntry || (entry is SectionCoverEntry cover && cover.Section.CoverPdfBlobKey is not null))
+            .Where(entry => entry is ItemEntry || (entry is SectionCoverEntry cover && cover.Section.CoverPdfBlobKey is not null))
             .ToList();
 
         var pdfBytesInOrder = new byte[physicalEntries.Count][];
-        var includedProducts = new List<Product>();
+        var includedItems = new List<Item>();
 
         foreach (var entry in physicalEntries)
         {
-            if (entry is ProductEntry productEntry)
+            if (entry is ItemEntry itemEntry)
             {
-                includedProducts.Add(productEntry.Product);
+                includedItems.Add(itemEntry.Item);
             }
         }
 
@@ -136,7 +136,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             var blobKey = physicalEntries[index] switch
             {
                 SectionCoverEntry cover => cover.Section.CoverPdfBlobKey!,
-                ProductEntry productEntry => productEntry.Product.SheetPdfBlobKey!,
+                ItemEntry itemEntry => itemEntry.Item.SheetPdfBlobKey!,
                 _ => throw new InvalidOperationException("Unknown merge entry type.")
             };
 
@@ -156,7 +156,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
 
         await Task.WhenAll(pendingDownloads);
 
-        return new MergePlan(pdfBytesInOrder.ToList(), includedProducts);
+        return new MergePlan(pdfBytesInOrder.ToList(), includedItems);
     }
 
     private async Task DownloadEntryAndReportAsync(
@@ -191,7 +191,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
     private async Task<GeneratedCatalog> CreateCatalogAsync(
         GenerateCatalogCommand request,
         Company company,
-        IReadOnlyList<Product> includedProducts,
+        IReadOnlyList<Item> includedItems,
         List<CatalogIndexEntry> indexSnapshot,
         string generatedBlobKey,
         string fingerprint,
@@ -199,10 +199,10 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
     {
         var user = await _session.GetAsync<User>(request.UserId, cancellationToken);
 
-        var productsSnapshot = includedProducts
-            .Select(p => new CatalogProductSnapshot(p.Id, p.Name, p.Code))
+        var itemsSnapshot = includedItems
+            .Select(p => new CatalogItemSnapshot(p.Id, p.Name, p.Code))
             .ToList();
-        var snapshot = new CatalogSnapshot(productsSnapshot, indexSnapshot);
+        var snapshot = new CatalogSnapshot(itemsSnapshot, indexSnapshot);
 
         var catalog = new GeneratedCatalog
         {
@@ -210,7 +210,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             User = user,
             GeneratedAt = DateTime.UtcNow,
             GeneratedPdfBlobKey = generatedBlobKey,
-            ProductsSnapshotJson = JsonSerializer.Serialize(snapshot),
+            ItemsSnapshotJson = JsonSerializer.Serialize(snapshot),
             ContentFingerprint = fingerprint
         };
 
@@ -224,16 +224,16 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         IReadOnlyList<MergeEntry> entries,
         CancellationToken cancellationToken)
     {
-        var existingSnapshot = JsonSerializer.Deserialize<CatalogSnapshot>(existingCatalog.ProductsSnapshotJson)
+        var existingSnapshot = JsonSerializer.Deserialize<CatalogSnapshot>(existingCatalog.ItemsSnapshotJson)
             ?? new CatalogSnapshot([], []);
         var pageCounts = ReconstructPageCounts(existingSnapshot.IndexEntries, existingCatalog.RasterizedPageCount);
 
         var indexSnapshot = CatalogMergePlanBuilder.BuildIndexSnapshot(entries, pageCounts, request.ShowPrices);
-        var productsSnapshot = entries.OfType<ProductEntry>()
-            .Select(e => new CatalogProductSnapshot(e.Product.Id, e.Product.Name, e.Product.Code))
+        var itemsSnapshot = entries.OfType<ItemEntry>()
+            .Select(e => new CatalogItemSnapshot(e.Item.Id, e.Item.Name, e.Item.Code))
             .ToList();
 
-        existingCatalog.ProductsSnapshotJson = JsonSerializer.Serialize(new CatalogSnapshot(productsSnapshot, indexSnapshot));
+        existingCatalog.ItemsSnapshotJson = JsonSerializer.Serialize(new CatalogSnapshot(itemsSnapshot, indexSnapshot));
         existingCatalog.GeneratedAt = DateTime.UtcNow;
         existingCatalog.User = await _session.GetAsync<User>(request.UserId, cancellationToken);
         await _session.UpdateInTransactionAsync(existingCatalog, cancellationToken);

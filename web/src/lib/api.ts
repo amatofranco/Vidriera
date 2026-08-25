@@ -71,7 +71,7 @@ export function resetPassword(token: string, newPassword: string) {
   });
 }
 
-export interface Product {
+export interface Item {
   id: string;
   name: string;
   hasStock: boolean;
@@ -82,8 +82,8 @@ export interface Product {
   price: number | null;
 }
 
-export function getProducts(token: string) {
-  return request<Product[]>("/api/products", { token });
+export function getItems(token: string) {
+  return request<Item[]>("/api/items", { token });
 }
 
 export interface Section {
@@ -117,8 +117,8 @@ export function deleteSection(token: string, sectionId: string) {
   });
 }
 
-export function assignProductSection(token: string, productId: string, sectionId: string | null) {
-  return request<void>(`/api/products/${productId}/section`, {
+export function assignItemSection(token: string, itemId: string, sectionId: string | null) {
+  return request<void>(`/api/items/${itemId}/section`, {
     method: "PUT",
     token,
     headers: { "Content-Type": "application/json" },
@@ -136,7 +136,7 @@ export function assignSectionParent(token: string, sectionId: string, parentSect
 }
 
 export interface TopLevelItem {
-  type: "section" | "product";
+  type: "section" | "item";
   id: string;
 }
 
@@ -149,8 +149,8 @@ export function reorderSectionChildren(token: string, sectionId: string, items: 
   });
 }
 
-export function updateStock(token: string, productId: string, hasStock: boolean) {
-  return request<void>(`/api/products/${productId}/stock`, {
+export function updateStock(token: string, itemId: string, hasStock: boolean) {
+  return request<void>(`/api/items/${itemId}/stock`, {
     method: "PUT",
     token,
     headers: { "Content-Type": "application/json" },
@@ -158,8 +158,8 @@ export function updateStock(token: string, productId: string, hasStock: boolean)
   });
 }
 
-export function updateName(token: string, productId: string, name: string) {
-  return request<void>(`/api/products/${productId}/name`, {
+export function updateName(token: string, itemId: string, name: string) {
+  return request<void>(`/api/items/${itemId}/name`, {
     method: "PUT",
     token,
     headers: { "Content-Type": "application/json" },
@@ -167,8 +167,8 @@ export function updateName(token: string, productId: string, name: string) {
   });
 }
 
-export function updatePrice(token: string, productId: string, price: number | null) {
-  return request<void>(`/api/products/${productId}/price`, {
+export function updatePrice(token: string, itemId: string, price: number | null) {
+  return request<void>(`/api/items/${itemId}/price`, {
     method: "PUT",
     token,
     headers: { "Content-Type": "application/json" },
@@ -176,8 +176,8 @@ export function updatePrice(token: string, productId: string, price: number | nu
   });
 }
 
-export function updateCode(token: string, productId: string, code: string | null) {
-  return request<void>(`/api/products/${productId}/code`, {
+export function updateCode(token: string, itemId: string, code: string | null) {
+  return request<void>(`/api/items/${itemId}/code`, {
     method: "PUT",
     token,
     headers: { "Content-Type": "application/json" },
@@ -185,29 +185,29 @@ export function updateCode(token: string, productId: string, code: string | null
   });
 }
 
-export function createProduct(token: string, file: File, name?: string, code?: string, price?: number) {
+export function createItem(token: string, file: File, name?: string, code?: string, price?: number) {
   const formData = new FormData();
   formData.append("file", file);
   if (name) formData.append("name", name);
   if (code) formData.append("code", code);
   if (price != null) formData.append("price", String(price));
 
-  return request<Product>("/api/products", {
+  return request<Item>("/api/items", {
     method: "POST",
     token,
     body: formData,
   });
 }
 
-export function deleteProduct(token: string, productId: string) {
-  return request<void>(`/api/products/${productId}`, {
+export function deleteItem(token: string, itemId: string) {
+  return request<void>(`/api/items/${itemId}`, {
     method: "DELETE",
     token,
   });
 }
 
 export function reorderTopLevel(token: string, items: TopLevelItem[]) {
-  return request<void>("/api/products/reorder", {
+  return request<void>("/api/items/reorder", {
     method: "PUT",
     token,
     headers: { "Content-Type": "application/json" },
@@ -215,11 +215,11 @@ export function reorderTopLevel(token: string, items: TopLevelItem[]) {
   });
 }
 
-export function uploadSheet(token: string, productId: string, file: File) {
+export function uploadSheet(token: string, itemId: string, file: File) {
   const formData = new FormData();
   formData.append("file", file);
 
-  return request<void>(`/api/products/${productId}/sheet`, {
+  return request<void>(`/api/items/${itemId}/sheet`, {
     method: "POST",
     token,
     body: formData,
@@ -235,7 +235,7 @@ export function importPrices(token: string, file: File) {
   const formData = new FormData();
   formData.append("file", file);
 
-  return request<ImportPricesResult>("/api/products/import-prices", {
+  return request<ImportPricesResult>("/api/items/import-prices", {
     method: "POST",
     token,
     body: formData,
@@ -243,7 +243,7 @@ export function importPrices(token: string, file: File) {
 }
 
 export async function downloadPriceImportTemplate(token: string): Promise<Blob> {
-  const response = await fetch(`${API_URL}/api/products/import-prices/template`, {
+  const response = await fetch(`${API_URL}/api/items/import-prices/template`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 
@@ -339,7 +339,7 @@ export function getCurrentCatalog(token: string) {
 }
 
 export interface OrderItem {
-  productName: string;
+  itemName: string;
   code: string | null;
   quantity: number;
 }

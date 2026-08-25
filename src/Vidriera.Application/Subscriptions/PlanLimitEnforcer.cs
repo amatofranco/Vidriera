@@ -8,18 +8,18 @@ namespace Vidriera.Application.Subscriptions;
 
 internal static class PlanLimitEnforcer
 {
-    public static async Task EnsureCanAddProductAsync(ISession session, Guid companyId, CancellationToken cancellationToken)
+    public static async Task EnsureCanAddItemAsync(ISession session, Guid companyId, CancellationToken cancellationToken)
     {
-        var max = await GetLimitAsync(session, companyId, PlanLimits.MaxProducts, cancellationToken);
+        var max = await GetLimitAsync(session, companyId, PlanLimits.MaxItems, cancellationToken);
         if (max is null)
         {
             return;
         }
 
-        var count = await session.Query<Product>().CountAsync(p => p.Company.Id == companyId && p.IsActive, cancellationToken);
+        var count = await session.Query<Item>().CountAsync(p => p.Company.Id == companyId && p.IsActive, cancellationToken);
         if (count >= max)
         {
-            throw new ValidationException(ErrorMessages.ProductLimitReached(max.Value));
+            throw new ValidationException(ErrorMessages.ItemLimitReached(max.Value));
         }
     }
 

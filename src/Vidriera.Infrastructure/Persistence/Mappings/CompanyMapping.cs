@@ -47,7 +47,7 @@ public class CompanyMapping : ClassMapping<Company>
             m.Cascade(Cascade.None);
         }, r => r.OneToMany());
 
-        Bag(x => x.Products, m =>
+        Bag(x => x.Items, m =>
         {
             m.Key(k => k.Column("company_id"));
             m.Inverse(true);

@@ -4,24 +4,24 @@ namespace Vidriera.Application.Catalogs;
 
 internal abstract record MergeEntry;
 internal sealed record SectionCoverEntry(Section Section) : MergeEntry;
-internal sealed record ProductEntry(Product Product) : MergeEntry;
+internal sealed record ItemEntry(Item Item) : MergeEntry;
 
 internal static class CatalogMergePlanBuilder
 {
     public static IReadOnlyList<MergeEntry> BuildEntries(
         IReadOnlyList<Section> allSections,
-        IReadOnlyList<Product> allProducts,
+        IReadOnlyList<Item> allItems,
         HashSet<Guid> selectedIds)
     {
-        var topLevel = BuildTopLevelSequence(allSections, allProducts);
-        return BuildMergeEntries(topLevel, allProducts, allSections, selectedIds).ToList();
+        var topLevel = BuildTopLevelSequence(allSections, allItems);
+        return BuildMergeEntries(topLevel, allItems, allSections, selectedIds).ToList();
     }
 
     public static string ComputeContentFingerprint(IReadOnlyList<MergeEntry> entries) =>
         string.Join("|", entries.Select(entry => entry switch
         {
             SectionCoverEntry cover => "S:" + cover.Section.CoverPdfBlobKey,
-            ProductEntry productEntry => "P:" + productEntry.Product.SheetPdfBlobKey,
+            ItemEntry itemEntry => "P:" + itemEntry.Item.SheetPdfBlobKey,
             _ => throw new InvalidOperationException("Unknown merge entry type.")
         }));
 
@@ -44,7 +44,7 @@ internal static class CatalogMergePlanBuilder
                         cover.Section.Name,
                         pageCursor + 1,
                         cover.Section.ParentSection is not null ? 1 : 0,
-                        IsProduct: false));
+                        IsItem: false));
                     if (hasOwnPage)
                     {
                         pageCursor += pageCounts[physicalIndex];
@@ -52,19 +52,19 @@ internal static class CatalogMergePlanBuilder
                     }
                     break;
 
-                case ProductEntry productEntry:
-                    var level = productEntry.Product.Section?.ParentSection is not null
+                case ItemEntry itemEntry:
+                    var level = itemEntry.Item.Section?.ParentSection is not null
                         ? 2
-                        : productEntry.Product.Section is not null
+                        : itemEntry.Item.Section is not null
                             ? 1
                             : 0;
                     indexSnapshot.Add(new CatalogIndexEntry(
-                        productEntry.Product.Name,
+                        itemEntry.Item.Name,
                         pageCursor + 1,
                         level,
-                        IsProduct: true,
-                        ProductId: productEntry.Product.Id,
-                        Price: includePrices ? productEntry.Product.Price : null));
+                        IsItem: true,
+                        ItemId: itemEntry.Item.Id,
+                        Price: includePrices ? itemEntry.Item.Price : null));
                     pageCursor += pageCounts[physicalIndex];
                     physicalIndex++;
                     break;
@@ -74,23 +74,23 @@ internal static class CatalogMergePlanBuilder
         return indexSnapshot;
     }
 
-    private static IEnumerable<object> BuildTopLevelSequence(IReadOnlyList<Section> sections, IReadOnlyList<Product> allProducts)
+    private static IEnumerable<object> BuildTopLevelSequence(IReadOnlyList<Section> sections, IReadOnlyList<Item> allItems)
     {
         var topLevelSections = sections.Where(s => s.ParentSection is null);
-        var looseProducts = allProducts.Where(p => p.Section is null);
+        var looseItems = allItems.Where(p => p.Section is null);
         return topLevelSections.Cast<object>()
-            .Concat(looseProducts.Cast<object>())
+            .Concat(looseItems.Cast<object>())
             .OrderBy(item => item switch
             {
                 Section s => s.SortOrder,
-                Product p => p.SortOrder,
+                Item p => p.SortOrder,
                 _ => 0
             });
     }
 
     private static IEnumerable<MergeEntry> BuildMergeEntries(
         IEnumerable<object> topLevel,
-        IReadOnlyList<Product> allProducts,
+        IReadOnlyList<Item> allItems,
         IReadOnlyList<Section> allSections,
         HashSet<Guid> selectedIds)
     {
@@ -99,14 +99,14 @@ internal static class CatalogMergePlanBuilder
             switch (item)
             {
                 case Section section:
-                    foreach (var entry in BuildSectionEntries(section, allProducts, allSections, selectedIds))
+                    foreach (var entry in BuildSectionEntries(section, allItems, allSections, selectedIds))
                     {
                         yield return entry;
                     }
                     break;
 
-                case Product product when selectedIds.Contains(product.Id):
-                    yield return new ProductEntry(product);
+                case Item catalogItem when selectedIds.Contains(catalogItem.Id):
+                    yield return new ItemEntry(catalogItem);
                     break;
             }
         }
@@ -114,19 +114,19 @@ internal static class CatalogMergePlanBuilder
 
     private static IEnumerable<MergeEntry> BuildSectionEntries(
         Section section,
-        IReadOnlyList<Product> allProducts,
+        IReadOnlyList<Item> allItems,
         IReadOnlyList<Section> allSections,
         HashSet<Guid> selectedIds)
     {
         var childSections = allSections.Where(s => s.ParentSection?.Id == section.Id);
-        var directProducts = allProducts.Where(p => p.Section?.Id == section.Id);
+        var directItems = allItems.Where(p => p.Section?.Id == section.Id);
 
         var children = childSections.Cast<object>()
-            .Concat(directProducts.Cast<object>())
+            .Concat(directItems.Cast<object>())
             .OrderBy(item => item switch
             {
                 Section s => s.SortOrder,
-                Product p => p.SortOrder,
+                Item p => p.SortOrder,
                 _ => 0
             });
 
@@ -136,11 +136,11 @@ internal static class CatalogMergePlanBuilder
             switch (child)
             {
                 case Section subSection:
-                    entries.AddRange(BuildLeafSectionEntries(subSection, allProducts, selectedIds));
+                    entries.AddRange(BuildLeafSectionEntries(subSection, allItems, selectedIds));
                     break;
 
-                case Product product when selectedIds.Contains(product.Id):
-                    entries.Add(new ProductEntry(product));
+                case Item item when selectedIds.Contains(item.Id):
+                    entries.Add(new ItemEntry(item));
                     break;
             }
         }
@@ -159,10 +159,10 @@ internal static class CatalogMergePlanBuilder
 
     private static IEnumerable<MergeEntry> BuildLeafSectionEntries(
         Section section,
-        IReadOnlyList<Product> allProducts,
+        IReadOnlyList<Item> allItems,
         HashSet<Guid> selectedIds)
     {
-        var members = allProducts
+        var members = allItems
             .Where(p => p.Section?.Id == section.Id && selectedIds.Contains(p.Id))
             .OrderBy(p => p.SortOrder)
             .ToList();
@@ -175,7 +175,7 @@ internal static class CatalogMergePlanBuilder
         yield return new SectionCoverEntry(section);
         foreach (var member in members)
         {
-            yield return new ProductEntry(member);
+            yield return new ItemEntry(member);
         }
     }
 }

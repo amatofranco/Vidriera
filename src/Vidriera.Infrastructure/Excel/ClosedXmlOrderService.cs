@@ -49,7 +49,7 @@ public class ClosedXmlOrderService : IExcelOrderService
         const string priceFormat = "$ #,##0.00";
 
         var headerRow = row;
-        sheet.Cell(headerRow, 1).Value = "Producto";
+        sheet.Cell(headerRow, 1).Value = "Itemo";
         sheet.Cell(headerRow, 2).Value = "Código";
         sheet.Cell(headerRow, 3).Value = "Cantidad";
         if (showPrices)
@@ -63,7 +63,7 @@ public class ClosedXmlOrderService : IExcelOrderService
         decimal total = 0;
         foreach (var line in lines)
         {
-            sheet.Cell(row, 1).Value = line.ProductName;
+            sheet.Cell(row, 1).Value = line.ItemName;
             sheet.Cell(row, 2).Value = line.Code ?? "";
             sheet.Cell(row, 3).Value = line.Quantity;
             if (showPrices)

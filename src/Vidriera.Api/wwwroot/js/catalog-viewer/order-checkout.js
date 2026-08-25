@@ -65,7 +65,7 @@ export function setupOrderUi(dom, cart, renderPageBar) {
 
             const form = dom.orderCheckoutForm;
             const customer = Object.fromEntries(new FormData(form));
-            const items = cart.getItems().map((i) => ({ productId: i.productId, quantity: i.quantity }));
+            const items = cart.getItems().map((i) => ({ itemId: i.itemId, quantity: i.quantity }));
             const showPrices = cart.getTotalPrice() !== null;
 
             if (dom.orderSubmitBtn) {

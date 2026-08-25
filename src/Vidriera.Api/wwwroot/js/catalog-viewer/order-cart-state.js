@@ -31,15 +31,15 @@ export function createCartState(dom) {
             listeners.push(fn);
         },
         getItems() {
-            return Array.from(items.entries()).map(([productId, entry]) => ({
-                productId,
+            return Array.from(items.entries()).map(([itemId, entry]) => ({
+                itemId,
                 name: entry.name,
                 quantity: entry.quantity,
                 price: entry.price ?? null,
             }));
         },
-        getQuantity(productId) {
-            return items.get(productId)?.quantity || 0;
+        getQuantity(itemId) {
+            return items.get(itemId)?.quantity || 0;
         },
         getTotalQuantity() {
             let total = 0;
@@ -56,20 +56,20 @@ export function createCartState(dom) {
             }
             return hasAnyPrice ? total : null;
         },
-        setQuantity(productId, name, quantity, price) {
+        setQuantity(itemId, name, quantity, price) {
             if (quantity <= 0) {
-                items.delete(productId);
+                items.delete(itemId);
             } else {
-                const existingPrice = items.get(productId)?.price;
-                items.set(productId, { name, quantity, price: price !== undefined ? price : existingPrice });
+                const existingPrice = items.get(itemId)?.price;
+                items.set(itemId, { name, quantity, price: price !== undefined ? price : existingPrice });
             }
             notify();
         },
-        increment(productId, name, price) {
-            this.setQuantity(productId, name, this.getQuantity(productId) + 1, price);
+        increment(itemId, name, price) {
+            this.setQuantity(itemId, name, this.getQuantity(itemId) + 1, price);
         },
-        decrement(productId, name) {
-            this.setQuantity(productId, name, this.getQuantity(productId) - 1);
+        decrement(itemId, name) {
+            this.setQuantity(itemId, name, this.getQuantity(itemId) - 1);
         },
         clear() {
             items.clear();

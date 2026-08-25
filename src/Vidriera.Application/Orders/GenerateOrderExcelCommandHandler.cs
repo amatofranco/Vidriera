@@ -34,23 +34,23 @@ public class GenerateOrderExcelCommandHandler : IRequestHandler<GenerateOrderExc
             ErrorMessages.CompanyNotFound(request.CompanyId),
             cancellationToken);
 
-        var productIds = request.Items.Select(i => i.ProductId).Distinct().ToList();
-        var products = await _session.Query<Product>()
-            .Where(p => p.Company.Id == request.CompanyId && productIds.Contains(p.Id))
+        var itemIds = request.Items.Select(i => i.ItemId).Distinct().ToList();
+        var items = await _session.Query<Item>()
+            .Where(p => p.Company.Id == request.CompanyId && itemIds.Contains(p.Id))
             .ToListAsync(cancellationToken);
 
-        if (products.Count != productIds.Count)
+        if (items.Count != itemIds.Count)
         {
-            throw new ValidationException(ErrorMessages.OrderContainsInvalidProducts);
+            throw new ValidationException(ErrorMessages.OrderContainsInvalidItems);
         }
 
-        var productsById = products.ToDictionary(p => p.Id);
+        var itemsById = items.ToDictionary(p => p.Id);
         var lines = request.Items
             .Select(i => new OrderExcelLine(
-                productsById[i.ProductId].Name,
-                productsById[i.ProductId].Code,
+                itemsById[i.ItemId].Name,
+                itemsById[i.ItemId].Code,
                 i.Quantity,
-                request.ShowPrices ? productsById[i.ProductId].Price : null))
+                request.ShowPrices ? itemsById[i.ItemId].Price : null))
             .ToList();
 
         var order = new Order

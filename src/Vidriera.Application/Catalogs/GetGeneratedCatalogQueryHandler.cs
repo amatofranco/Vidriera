@@ -33,7 +33,7 @@ public class GetGeneratedCatalogQueryHandler : IRequestHandler<GetGeneratedCatal
         CatalogSnapshot snapshot;
         try
         {
-            snapshot = JsonSerializer.Deserialize<CatalogSnapshot>(catalog.ProductsSnapshotJson)
+            snapshot = JsonSerializer.Deserialize<CatalogSnapshot>(catalog.ItemsSnapshotJson)
                 ?? new CatalogSnapshot([], []);
         }
         catch (JsonException)

@@ -8,7 +8,7 @@ public class GeneratedCatalog
     public virtual DateTime GeneratedAt { get; set; }
     public virtual string GeneratedPdfBlobKey { get; set; } = null!;
 
-    public virtual string ProductsSnapshotJson { get; set; } = "[]";
+    public virtual string ItemsSnapshotJson { get; set; } = "[]";
     public virtual int RasterizedPageCount { get; set; }
     public virtual string ContentFingerprint { get; set; } = "";
 }

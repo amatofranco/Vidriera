@@ -2,8 +2,8 @@ namespace Vidriera.Application.Common;
 
 internal static class BlobKeys
 {
-    public static string ProductSheet(Guid companyId, Guid productId) =>
-        $"companies/{companyId}/products/{productId}/{Guid.NewGuid()}.pdf";
+    public static string ItemSheet(Guid companyId, Guid itemId) =>
+        $"companies/{companyId}/items/{itemId}/{Guid.NewGuid()}.pdf";
 
     public static string SectionCover(Guid companyId, Guid sectionId) =>
         $"companies/{companyId}/sections/{sectionId}/{Guid.NewGuid()}.pdf";

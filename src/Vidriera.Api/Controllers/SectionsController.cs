@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Vidriera.Api.Common;
 using Vidriera.Application.Common;
-using Vidriera.Application.Products;
+using Vidriera.Application.Items;
 using Vidriera.Application.Sections;
 
 namespace Vidriera.Api.Controllers;

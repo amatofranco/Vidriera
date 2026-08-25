@@ -67,11 +67,11 @@
   <data name="MissingUserIdClaim" xml:space="preserve">
     <value>El token no tiene un identificador de usuario válido.</value>
   </data>
-  <data name="MustSelectAtLeastOneProduct" xml:space="preserve">
-    <value>Hay que seleccionar al menos un producto.</value>
+  <data name="MustSelectAtLeastOneItem" xml:space="preserve">
+    <value>Hay que seleccionar al menos un item.</value>
   </data>
   <data name="MissingPricesForCatalog" xml:space="preserve">
-    <value>Hay {0} producto(s) sin precio cargado. Completalo o desmarcá "Mostrar precios".</value>
+    <value>Hay {0} item(s) sin precio cargado. Completalo o desmarcá "Mostrar precios".</value>
   </data>
   <data name="PdfTooManyPages" xml:space="preserve">
     <value>El PDF tiene {0} páginas; el máximo permitido es 2.</value>
@@ -109,11 +109,11 @@
   <data name="CatalogNotFound" xml:space="preserve">
     <value>No existe el catálogo {0}.</value>
   </data>
-  <data name="ProductNotFound" xml:space="preserve">
-    <value>No se encontró el producto {0} para esta empresa.</value>
+  <data name="ItemNotFound" xml:space="preserve">
+    <value>No se encontró el item {0} para esta empresa.</value>
   </data>
-  <data name="ProductNameRequired" xml:space="preserve">
-    <value>El nombre del producto no puede quedar vacío.</value>
+  <data name="ItemNameRequired" xml:space="preserve">
+    <value>El nombre del item no puede quedar vacío.</value>
   </data>
   <data name="PriceImportInvalidFile" xml:space="preserve">
     <value>No se pudo leer el archivo. Verificá que sea un Excel (.xlsx) válido.</value>
@@ -128,10 +128,10 @@
     <value>El catálogo {0} no tiene la página {1}.</value>
   </data>
   <data name="MustSelectAtLeastOneOrderItem" xml:space="preserve">
-    <value>Hay que agregar al menos un producto al pedido.</value>
+    <value>Hay que agregar al menos un item al pedido.</value>
   </data>
-  <data name="OrderContainsInvalidProducts" xml:space="preserve">
-    <value>Alguno de los productos del pedido no existe o no pertenece a esta empresa.</value>
+  <data name="OrderContainsInvalidItems" xml:space="preserve">
+    <value>Alguno de los items del pedido no existe o no pertenece a esta empresa.</value>
   </data>
   <data name="OrderCustomerDataIncomplete" xml:space="preserve">
     <value>Faltan completar datos obligatorios del cliente.</value>
@@ -145,8 +145,8 @@
   <data name="CompanySubscriptionNotFound" xml:space="preserve">
     <value>La empresa {0} no tiene una suscripción generada.</value>
   </data>
-  <data name="ProductLimitReached" xml:space="preserve">
-    <value>Llegaste al máximo de {0} productos de tu plan. Para sumar más, hay que pasar a un plan superior.</value>
+  <data name="ItemLimitReached" xml:space="preserve">
+    <value>Llegaste al máximo de {0} items de tu plan. Para sumar más, hay que pasar a un plan superior.</value>
   </data>
   <data name="UserLimitReached" xml:space="preserve">
     <value>Llegaste al máximo de {0} usuarios de tu plan.</value>

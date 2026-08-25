@@ -2,7 +2,7 @@ using MediatR;
 
 namespace Vidriera.Application.Orders;
 
-public record OrderItemDto(string ProductName, string? Code, int Quantity);
+public record OrderItemDto(string ItemName, string? Code, int Quantity);
 
 public record OrderDto(
     Guid Id,

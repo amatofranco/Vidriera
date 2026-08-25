@@ -15,7 +15,7 @@ public static class ErrorMessages
     public static string MissingCompanyIdClaim => Get(nameof(MissingCompanyIdClaim));
     public static string MissingUserIdClaim => Get(nameof(MissingUserIdClaim));
 
-    public static string MustSelectAtLeastOneProduct => Get(nameof(MustSelectAtLeastOneProduct));
+    public static string MustSelectAtLeastOneItem => Get(nameof(MustSelectAtLeastOneItem));
     public static string MissingPricesForCatalog(int count) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(MissingPricesForCatalog)), count);
 
     public static string PdfTooManyPages(int pageCount) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(PdfTooManyPages)), pageCount);
@@ -38,16 +38,16 @@ public static class ErrorMessages
 
     public static string CatalogNotFound(Guid catalogId) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(CatalogNotFound)), catalogId);
 
-    public static string ProductNotFound(Guid productId) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(ProductNotFound)), productId);
+    public static string ItemNotFound(Guid itemId) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(ItemNotFound)), itemId);
 
-    public static string ProductNameRequired => Get(nameof(ProductNameRequired));
+    public static string ItemNameRequired => Get(nameof(ItemNameRequired));
 
     public static string SectionNotFound(Guid sectionId) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(SectionNotFound)), sectionId);
 
     public static string CatalogPageNotFound(Guid catalogId, int pageNumber) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(CatalogPageNotFound)), catalogId, pageNumber);
 
     public static string MustSelectAtLeastOneOrderItem => Get(nameof(MustSelectAtLeastOneOrderItem));
-    public static string OrderContainsInvalidProducts => Get(nameof(OrderContainsInvalidProducts));
+    public static string OrderContainsInvalidItems => Get(nameof(OrderContainsInvalidItems));
     public static string OrderCustomerDataIncomplete => Get(nameof(OrderCustomerDataIncomplete));
 
     public static string InvalidSubscriptionPlan => Get(nameof(InvalidSubscriptionPlan));
@@ -55,7 +55,7 @@ public static class ErrorMessages
 
     public static string CompanySubscriptionNotFound(Guid companyId) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(CompanySubscriptionNotFound)), companyId);
 
-    public static string ProductLimitReached(int max) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(ProductLimitReached)), max);
+    public static string ItemLimitReached(int max) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(ItemLimitReached)), max);
     public static string UserLimitReached(int max) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(UserLimitReached)), max);
 
     public static string CannotChangePlanWithoutPayment => Get(nameof(CannotChangePlanWithoutPayment));

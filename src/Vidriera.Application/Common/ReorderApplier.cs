@@ -13,23 +13,23 @@ internal static class ReorderApplier
         ISession session,
         IReadOnlyList<OrderedItemRef> orderedItems,
         IQueryable<Section> sectionScope,
-        IQueryable<Product> productScope,
+        IQueryable<Item> itemScope,
         string invalidItemsMessage,
         CancellationToken cancellationToken)
     {
         var sectionIds = orderedItems.Where(i => i.IsSection).Select(i => i.Id).ToList();
-        var productIds = orderedItems.Where(i => !i.IsSection).Select(i => i.Id).ToList();
+        var itemIds = orderedItems.Where(i => !i.IsSection).Select(i => i.Id).ToList();
 
         var sections = await sectionScope.Where(s => sectionIds.Contains(s.Id)).ToListAsync(cancellationToken);
-        var products = await productScope.Where(p => productIds.Contains(p.Id)).ToListAsync(cancellationToken);
+        var items = await itemScope.Where(p => itemIds.Contains(p.Id)).ToListAsync(cancellationToken);
 
-        if (sections.Count != sectionIds.Count || products.Count != productIds.Count)
+        if (sections.Count != sectionIds.Count || items.Count != itemIds.Count)
         {
             throw new ValidationException(invalidItemsMessage);
         }
 
         var sectionsById = sections.ToDictionary(s => s.Id);
-        var productsById = products.ToDictionary(p => p.Id);
+        var itemsById = items.ToDictionary(p => p.Id);
 
         using var transaction = session.BeginTransaction();
 
@@ -44,9 +44,9 @@ internal static class ReorderApplier
             }
             else
             {
-                var product = productsById[item.Id];
-                product.SortOrder = i;
-                await session.UpdateAsync(product, cancellationToken);
+                var itemEntity = itemsById[item.Id];
+                itemEntity.SortOrder = i;
+                await session.UpdateAsync(itemEntity, cancellationToken);
             }
         }
 

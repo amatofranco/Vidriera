@@ -32,7 +32,7 @@ public class OrdersController : ControllerBase
     {
         var command = new GenerateOrderExcelCommand(
             request.CompanyId,
-            request.Items.Select(i => new OrderLineItem(i.ProductId, i.Quantity)).ToList(),
+            request.Items.Select(i => new OrderLineItem(i.ItemId, i.Quantity)).ToList(),
             new CustomerOrderInfo(
                 request.Customer.BusinessName,
                 request.Customer.StoreName,
@@ -55,7 +55,7 @@ public class OrdersController : ControllerBase
     }
 }
 
-public record GenerateOrderExcelItemRequest(Guid ProductId, int Quantity);
+public record GenerateOrderExcelItemRequest(Guid ItemId, int Quantity);
 
 public record GenerateOrderExcelCustomerRequest(
     string BusinessName,

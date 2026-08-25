@@ -11,5 +11,5 @@ public class Company
     public virtual Guid? CurrentCatalogId { get; set; }
 
     public virtual IList<User> Users { get; set; } = new List<User>();
-    public virtual IList<Product> Products { get; set; } = new List<Product>();
+    public virtual IList<Item> Items { get; set; } = new List<Item>();
 }

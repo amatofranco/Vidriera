@@ -61,7 +61,7 @@ export function renderDrawerItems(dom, cart) {
     if (items.length === 0) {
         const empty = document.createElement("p");
         empty.className = "order-empty-hint";
-        empty.textContent = "Todavía no agregaste productos.";
+        empty.textContent = "Todavía no agregaste items.";
         dom.orderItemsList.appendChild(empty);
         return;
     }
@@ -84,9 +84,9 @@ export function renderDrawerItems(dom, cart) {
 
         const stepperEl = createStepperEl(
             item.quantity,
-            () => cart.decrement(item.productId, item.name),
-            () => cart.increment(item.productId, item.name, item.price),
-            (value) => cart.setQuantity(item.productId, item.name, value, item.price)
+            () => cart.decrement(item.itemId, item.name),
+            () => cart.increment(item.itemId, item.name, item.price),
+            (value) => cart.setQuantity(item.itemId, item.name, value, item.price)
         );
 
         row.appendChild(stepperEl);
@@ -121,27 +121,27 @@ export function updateBadge(dom, cart) {
     if (dom.orderCheckoutBtn) dom.orderCheckoutBtn.disabled = total === 0;
 }
 
-function getProductEntryForPage(dom, pageNumber) {
+function getItemEntryForPage(dom, pageNumber) {
     const entries = dom.sectionsData || [];
     let current = null;
     for (const entry of entries) {
         if (entry.startPage <= pageNumber) current = entry;
         else break;
     }
-    return current && current.isProduct && current.productId ? current : null;
+    return current && current.isItem && current.itemId ? current : null;
 }
 
-function getVisibleProductEntries(dom, pageEntries) {
-    const byProduct = new Map();
+function getVisibleItemEntries(dom, pageEntries) {
+    const byItem = new Map();
     pageEntries.forEach(({ pageNumber, centerX }) => {
-        const entry = getProductEntryForPage(dom, pageNumber);
+        const entry = getItemEntryForPage(dom, pageNumber);
         if (!entry) return;
-        if (!byProduct.has(entry.productId)) {
-            byProduct.set(entry.productId, { entry, centers: [] });
+        if (!byItem.has(entry.itemId)) {
+            byItem.set(entry.itemId, { entry, centers: [] });
         }
-        byProduct.get(entry.productId).centers.push(centerX);
+        byItem.get(entry.itemId).centers.push(centerX);
     });
-    return Array.from(byProduct.values()).map(({ entry, centers }) => ({
+    return Array.from(byItem.values()).map(({ entry, centers }) => ({
         entry,
         centerX: centers.reduce((sum, c) => sum + c, 0) / centers.length,
     }));
@@ -150,7 +150,7 @@ function getVisibleProductEntries(dom, pageEntries) {
 export function renderPageOrderBar(dom, cart, pageEntries) {
     if (!dom.pageOrderBar) return;
 
-    const items = getVisibleProductEntries(dom, pageEntries);
+    const items = getVisibleItemEntries(dom, pageEntries);
     dom.pageOrderBar.innerHTML = "";
 
     if (items.length === 0) {
@@ -181,10 +181,10 @@ export function renderPageOrderBar(dom, cart, pageEntries) {
         const stepperSlot = document.createElement("div");
         stepperSlot.appendChild(
             createStepperEl(
-                cart.getQuantity(entry.productId),
-                () => cart.decrement(entry.productId, entry.name),
-                () => cart.increment(entry.productId, entry.name, entry.price),
-                (value) => cart.setQuantity(entry.productId, entry.name, value, entry.price)
+                cart.getQuantity(entry.itemId),
+                () => cart.decrement(entry.itemId, entry.name),
+                () => cart.increment(entry.itemId, entry.name, entry.price),
+                (value) => cart.setQuantity(entry.itemId, entry.name, value, entry.price)
             )
         );
 

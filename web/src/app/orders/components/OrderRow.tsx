@@ -70,7 +70,7 @@ export function OrderRow({ order }: { order: Order }) {
               <thead className="bg-black/5 dark:bg-white/5">
                 <tr>
                   <th className="px-3 py-2 text-xs font-medium text-zinc-600 dark:text-zinc-400">
-                    {Labels.orderProductColumn}
+                    {Labels.orderItemColumn}
                   </th>
                   <th className="px-3 py-2 text-xs font-medium text-zinc-600 dark:text-zinc-400">
                     {Labels.orderCodeColumn}
@@ -83,7 +83,7 @@ export function OrderRow({ order }: { order: Order }) {
               <tbody className="divide-y divide-zinc-300 dark:divide-zinc-700">
                 {order.items.map((item, index) => (
                   <tr key={index}>
-                    <td className="px-3 py-2 text-zinc-900 dark:text-zinc-50">{item.productName}</td>
+                    <td className="px-3 py-2 text-zinc-900 dark:text-zinc-50">{item.itemName}</td>
                     <td className="px-3 py-2 text-zinc-600 dark:text-zinc-400">{item.code || Labels.notProvided}</td>
                     <td className="px-3 py-2 text-right text-zinc-900 dark:text-zinc-50">{item.quantity}</td>
                   </tr>

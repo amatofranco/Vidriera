@@ -5,8 +5,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { Labels } from "@/lib/labels";
-import { CompanyHeader } from "../products/components/CompanyHeader";
-import { useCompanyLogo } from "../products/hooks/useCompanyLogo";
+import { CompanyHeader } from "../items/components/CompanyHeader";
+import { useCompanyLogo } from "../items/hooks/useCompanyLogo";
 import { useOrdersData } from "./hooks/useOrdersData";
 import { OrderRow } from "./components/OrderRow";
 

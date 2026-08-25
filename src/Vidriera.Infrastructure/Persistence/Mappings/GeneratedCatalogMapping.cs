@@ -37,9 +37,9 @@ public class GeneratedCatalogMapping : ClassMapping<GeneratedCatalog>
             m.Length(500);
         });
 
-        Property(x => x.ProductsSnapshotJson, m =>
+        Property(x => x.ItemsSnapshotJson, m =>
         {
-            m.Column("products_snapshot");
+            m.Column("items_snapshot");
             m.NotNullable(true);
         });
 

@@ -36,7 +36,7 @@ export function renderIndexPanel({ dom, indexEntries, onJumpToPage, rebuildRef }
         label.className =
             "index-item" +
             (entry.level >= 1 ? " index-item-sub" : "") +
-            (entry.isProduct ? " index-item-product" : "");
+            (entry.isItem ? " index-item-item" : "");
         label.textContent = entry.name;
         label.addEventListener("click", () => {
             onJumpToPage(entry.startPage);

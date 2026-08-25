@@ -26,7 +26,7 @@ function LoginForm() {
     try {
       const result = await login(email, password);
       setAuth(result);
-      router.replace("/products");
+      router.replace("/items");
     } catch (err) {
       setError(apiErrorMessage(err, Messages.loginFailed));
     } finally {
