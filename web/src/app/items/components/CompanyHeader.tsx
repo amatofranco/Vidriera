@@ -8,11 +8,11 @@ import { fetchCompanyLogoUrl, uploadCompanyLogo } from "@/lib/api";
 import { Labels } from "@/lib/labels";
 import { Messages, apiErrorMessage } from "@/lib/messages";
 
-const NAV_LINKS = [
+const BASE_NAV_LINKS = [
   { href: "/items", label: Labels.itemsNavLabel },
   { href: "/orders", label: Labels.ordersNavLabel },
-  { href: "/import-prices", label: Labels.importPricesNavLabel },
 ];
+const PRICES_NAV_LINK = { href: "/import-prices", label: Labels.importPricesNavLabel };
 
 export function CompanyHeader({
   auth,
@@ -29,6 +29,7 @@ export function CompanyHeader({
 }) {
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const pathname = usePathname();
+  const navLinks = auth.showPrice ? [...BASE_NAV_LINKS, PRICES_NAV_LINK] : BASE_NAV_LINKS;
 
   async function handleLogoChange(file: File) {
     setIsUploadingLogo(true);
@@ -90,7 +91,7 @@ export function CompanyHeader({
           </div>
         </div>
         <nav className="flex items-center gap-5 border-t border-white/10 px-5">
-          {NAV_LINKS.map((link) => {
+          {navLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
               <Link

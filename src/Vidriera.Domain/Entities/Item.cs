@@ -12,5 +12,6 @@ public class Item
     public virtual bool HasStock { get; set; }
     public virtual bool IsActive { get; set; }
     public virtual int SortOrder { get; set; }
+    public virtual int PageCount { get; set; }
     public virtual Section? Section { get; set; }
 }

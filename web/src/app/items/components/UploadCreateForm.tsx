@@ -16,6 +16,7 @@ export function UploadCreateForm({
   onSubmit,
   marginBottomClassName = "mb-3",
   codeEnabled = false,
+  priceEnabled = false,
   fileRequired = true,
   extraActionLabel,
   onExtraAction,
@@ -37,6 +38,7 @@ export function UploadCreateForm({
   ) => Promise<void> | void;
   marginBottomClassName?: string;
   codeEnabled?: boolean;
+  priceEnabled?: boolean;
   fileRequired?: boolean;
   extraActionLabel?: string;
   onExtraAction?: () => void;
@@ -234,6 +236,7 @@ export function UploadCreateForm({
           files={files}
           initialNames={customNames}
           codeEnabled={codeEnabled}
+          priceEnabled={priceEnabled}
           initialCodes={customCodes}
           initialPrices={customPrices}
           onApply={(names, codes, prices) => {

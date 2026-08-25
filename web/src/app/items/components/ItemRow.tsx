@@ -17,6 +17,8 @@ export function ItemRow({
   isDeleting,
   deleteDisabled,
   confirmingDelete,
+  showCode,
+  showPrice,
   onDragStart,
   onDragEnd,
   onDragOver,
@@ -43,6 +45,8 @@ export function ItemRow({
   isDeleting: boolean;
   deleteDisabled: boolean;
   confirmingDelete: boolean;
+  showCode: boolean;
+  showPrice: boolean;
   onDragStart: () => void;
   onDragEnd: () => void;
   onDragOver: (e: React.DragEvent) => void;
@@ -84,9 +88,9 @@ export function ItemRow({
         ) : (
           <StockToggle checked={isChecked} onToggle={onToggleCheckbox} title={checkboxTitle} />
         )}
-        <CodeInput itemKey={item.id} code={item.code} onUpdateCode={onUpdateCode} />
+        {showCode && <CodeInput itemKey={item.id} code={item.code} onUpdateCode={onUpdateCode} />}
         <NameInput itemKey={item.id} name={item.name} onUpdateName={onUpdateName} />
-        <PriceInput itemKey={item.id} price={item.price} onUpdatePrice={onUpdatePrice} />
+        {showPrice && <PriceInput itemKey={item.id} price={item.price} onUpdatePrice={onUpdatePrice} />}
       </div>
       <select
         value={item.sectionId ?? ""}

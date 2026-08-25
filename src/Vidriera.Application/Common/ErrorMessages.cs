@@ -55,7 +55,7 @@ public static class ErrorMessages
 
     public static string CompanySubscriptionNotFound(Guid companyId) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(CompanySubscriptionNotFound)), companyId);
 
-    public static string ItemLimitReached(int max) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(ItemLimitReached)), max);
+    public static string PageLimitReached(int max) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(PageLimitReached)), max);
     public static string UserLimitReached(int max) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(UserLimitReached)), max);
 
     public static string CannotChangePlanWithoutPayment => Get(nameof(CannotChangePlanWithoutPayment));

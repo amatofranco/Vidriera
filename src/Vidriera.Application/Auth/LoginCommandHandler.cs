@@ -49,7 +49,16 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResult>
 
         var token = _jwtTokenGenerator.GenerateToken(user.Id, user.Company.Id, user.Email);
 
-        return new LoginResult(token, user.Id, user.Company.Id, user.Company.Name, user.Name, user.Email, subscription?.Plan);
+        return new LoginResult(
+            token,
+            user.Id,
+            user.Company.Id,
+            user.Company.Name,
+            user.Name,
+            user.Email,
+            subscription?.Plan,
+            user.Company.ShowCode,
+            user.Company.ShowPrice);
     }
 
     private bool HasAccess(Company company, CompanySubscription subscription)

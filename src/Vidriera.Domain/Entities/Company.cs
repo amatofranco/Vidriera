@@ -9,6 +9,8 @@ public class Company
     public virtual string? LogoBlobKey { get; set; }
     public virtual string? LogoContentType { get; set; }
     public virtual Guid? CurrentCatalogId { get; set; }
+    public virtual bool ShowCode { get; set; } = true;
+    public virtual bool ShowPrice { get; set; } = true;
 
     public virtual IList<User> Users { get; set; } = new List<User>();
     public virtual IList<Item> Items { get; set; } = new List<Item>();

@@ -49,7 +49,7 @@ public class ClosedXmlOrderService : IExcelOrderService
         const string priceFormat = "$ #,##0.00";
 
         var headerRow = row;
-        sheet.Cell(headerRow, 1).Value = "Itemo";
+        sheet.Cell(headerRow, 1).Value = "Item";
         sheet.Cell(headerRow, 2).Value = "Código";
         sheet.Cell(headerRow, 3).Value = "Cantidad";
         if (showPrices)

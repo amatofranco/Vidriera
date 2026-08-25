@@ -52,6 +52,7 @@ public class ItemMapping : ClassMapping<Item>
         Property(x => x.HasStock, m => m.Column("has_stock"));
         Property(x => x.IsActive, m => m.Column("is_active"));
         Property(x => x.SortOrder, m => m.Column("sort_order"));
+        Property(x => x.PageCount, m => m.Column("page_count"));
 
         ManyToOne(x => x.Section, m =>
         {

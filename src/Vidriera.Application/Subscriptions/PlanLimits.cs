@@ -4,7 +4,7 @@ namespace Vidriera.Application.Subscriptions;
 
 public static class PlanLimits
 {
-    public static int? MaxItems(string plan) => plan switch
+    public static int? MaxPages(string plan) => plan switch
     {
         SubscriptionPlans.Basic => 100,
         SubscriptionPlans.Premium => 250,

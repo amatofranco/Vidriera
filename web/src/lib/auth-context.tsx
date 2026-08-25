@@ -17,6 +17,8 @@ export interface AuthState {
   name: string;
   email: string;
   plan: string | null;
+  showCode: boolean;
+  showPrice: boolean;
 }
 
 interface AuthContextValue {
@@ -52,6 +54,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       name: result.name,
       email: result.email,
       plan: result.plan,
+      showCode: result.showCode,
+      showPrice: result.showPrice,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     setAuthState(state);

@@ -25,4 +25,19 @@ internal static class PdfUploadValidation
         buffered.Position = 0;
         return buffered;
     }
+
+    public static async Task<(MemoryStream Content, int PageCount)> BufferAndGetPageCountAsync(
+        Stream fileContent,
+        IPdfMergeService pdfMergeService,
+        CancellationToken cancellationToken)
+    {
+        var buffered = new MemoryStream();
+        await fileContent.CopyToAsync(buffered, cancellationToken);
+        buffered.Position = 0;
+
+        var pageCount = await pdfMergeService.GetPageCountAsync(buffered, cancellationToken);
+
+        buffered.Position = 0;
+        return (buffered, pageCount);
+    }
 }

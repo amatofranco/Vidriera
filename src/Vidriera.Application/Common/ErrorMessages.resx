@@ -145,8 +145,8 @@
   <data name="CompanySubscriptionNotFound" xml:space="preserve">
     <value>La empresa {0} no tiene una suscripción generada.</value>
   </data>
-  <data name="ItemLimitReached" xml:space="preserve">
-    <value>Llegaste al máximo de {0} items de tu plan. Para sumar más, hay que pasar a un plan superior.</value>
+  <data name="PageLimitReached" xml:space="preserve">
+    <value>Llegaste al máximo de {0} páginas de tu plan. Para sumar más, hay que pasar a un plan superior.</value>
   </data>
   <data name="UserLimitReached" xml:space="preserve">
     <value>Llegaste al máximo de {0} usuarios de tu plan.</value>

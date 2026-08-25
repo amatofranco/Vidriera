@@ -34,7 +34,9 @@ public class CreateCompanyCommandHandler : IRequestHandler<CreateCompanyCommand,
             Id = Guid.NewGuid(),
             Name = request.CompanyName,
             IsActive = true,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            ShowCode = request.ShowCode,
+            ShowPrice = request.ShowPrice
         };
 
         var user = new User

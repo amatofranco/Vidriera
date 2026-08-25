@@ -97,6 +97,16 @@ public class AdminController : ControllerBase
         var result = await _mediator.Send(new GetPreapprovalDetailsQuery(preapprovalId), cancellationToken);
         return Ok(result);
     }
+
+    [HttpPut("companies/{companyId:guid}/settings")]
+    public async Task<IActionResult> SetCompanySettings(
+        Guid companyId,
+        [FromBody] SetCompanySettingsRequest request,
+        CancellationToken cancellationToken)
+    {
+        await _mediator.Send(new SetCompanySettingsCommand(companyId, request.ShowCode, request.ShowPrice), cancellationToken);
+        return NoContent();
+    }
 }
 
 public record AddUserRequest(string Email, string Name, string Password);
@@ -106,3 +116,5 @@ public record CreateSubscriptionRequest(string PayerEmail, string Plan);
 public record SetSubscriptionExemptRequest(bool IsExempt);
 
 public record ChangePlanRequest(string PayerEmail, string NewPlan);
+
+public record SetCompanySettingsRequest(bool ShowCode, bool ShowPrice);

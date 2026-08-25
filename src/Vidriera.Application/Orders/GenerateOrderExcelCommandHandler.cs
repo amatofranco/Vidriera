@@ -50,7 +50,7 @@ public class GenerateOrderExcelCommandHandler : IRequestHandler<GenerateOrderExc
                 itemsById[i.ItemId].Name,
                 itemsById[i.ItemId].Code,
                 i.Quantity,
-                request.ShowPrices ? itemsById[i.ItemId].Price : null))
+                request.ShowPrices && company.ShowPrice ? itemsById[i.ItemId].Price : null))
             .ToList();
 
         var order = new Order

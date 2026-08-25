@@ -17,6 +17,8 @@ export default function ImportPricesPage() {
   useEffect(() => {
     if (!authLoading && !auth) {
       router.replace("/login");
+    } else if (!authLoading && auth && !auth.showPrice) {
+      router.replace("/items");
     }
   }, [auth, authLoading, router]);
 
@@ -24,7 +26,7 @@ export default function ImportPricesPage() {
   const [error, setError] = useState<string | null>(null);
   const { isImporting, result, handleImport, handleDownloadTemplate } = useImportPrices({ auth, setError });
 
-  if (authLoading || !auth) {
+  if (authLoading || !auth || !auth.showPrice) {
     return null;
   }
 

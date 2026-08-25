@@ -10,6 +10,7 @@ export function CatalogPanel({
   generationProgress,
   onGenerate,
   catalogResult,
+  priceEnabled,
   showPrices,
   onToggleShowPrices,
   missingPriceCount,
@@ -19,6 +20,7 @@ export function CatalogPanel({
   generationProgress: CatalogGenerationProgress | null;
   onGenerate: () => void;
   catalogResult: GenerateCatalogResult | null;
+  priceEnabled: boolean;
   showPrices: boolean;
   onToggleShowPrices: () => void;
   missingPriceCount: number;
@@ -38,19 +40,21 @@ export function CatalogPanel({
             ? Labels.generatingCatalog
             : Labels.generateCatalogButton(selectableCount)}
         </button>
-        <label className="flex items-center gap-2 text-xs text-zinc-700 dark:text-zinc-300">
-          <input
-            type="checkbox"
-            checked={showPrices}
-            onChange={onToggleShowPrices}
-            disabled={isGenerating}
-            style={{ accentColor: "#c9a86a" }}
-          />
-          {Labels.showPricesLabel}
-        </label>
+        {priceEnabled && (
+          <label className="flex items-center gap-2 text-xs text-zinc-700 dark:text-zinc-300">
+            <input
+              type="checkbox"
+              checked={showPrices}
+              onChange={onToggleShowPrices}
+              disabled={isGenerating}
+              style={{ accentColor: "#c9a86a" }}
+            />
+            {Labels.showPricesLabel}
+          </label>
+        )}
       </div>
 
-      {showPrices && missingPriceCount > 0 && (
+      {priceEnabled && showPrices && missingPriceCount > 0 && (
         <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">
           {missingPricesHint(missingPriceCount)}
         </p>

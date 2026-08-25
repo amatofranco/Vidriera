@@ -27,10 +27,11 @@ public class CreateItemCommandHandler : IRequestHandler<CreateItemCommand, ItemD
             $"No existe la empresa {request.CompanyId}.",
             cancellationToken);
 
-        await PlanLimitEnforcer.EnsureCanAddItemAsync(_session, request.CompanyId, cancellationToken);
-
-        await using var validatedFileContent = await PdfUploadValidation.BufferAndValidatePageCountAsync(
+        var (validatedFileContent, pageCount) = await PdfUploadValidation.BufferAndGetPageCountAsync(
             request.FileContent, _pdfMergeService, cancellationToken);
+        await using var _ = validatedFileContent;
+
+        await PlanLimitEnforcer.EnsureCanAddPagesAsync(_session, request.CompanyId, pageCount, cancellationToken);
 
         var name = string.IsNullOrWhiteSpace(request.Name)
             ? Path.GetFileNameWithoutExtension(request.OriginalFileName)
@@ -48,7 +49,8 @@ public class CreateItemCommandHandler : IRequestHandler<CreateItemCommand, ItemD
             Price = request.Price,
             HasStock = false,
             IsActive = true,
-            SortOrder = nextSortOrder
+            SortOrder = nextSortOrder,
+            PageCount = pageCount
         };
 
         using var transaction = _session.BeginTransaction();

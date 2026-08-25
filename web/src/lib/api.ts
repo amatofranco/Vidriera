@@ -45,6 +45,8 @@ export interface LoginResult {
   name: string;
   email: string;
   plan: string | null;
+  showCode: boolean;
+  showPrice: boolean;
 }
 
 export function login(email: string, password: string) {

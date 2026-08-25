@@ -8,6 +8,7 @@ export function RenameFilesModal({
   files,
   initialNames,
   codeEnabled,
+  priceEnabled,
   initialCodes,
   initialPrices,
   onApply,
@@ -16,6 +17,7 @@ export function RenameFilesModal({
   files: File[];
   initialNames: string[] | null;
   codeEnabled?: boolean;
+  priceEnabled?: boolean;
   initialCodes?: string[] | null;
   initialPrices?: string[] | null;
   onApply: (names: string[], codes?: string[], prices?: string[]) => void;
@@ -51,7 +53,7 @@ export function RenameFilesModal({
           <span className="w-1/3 shrink-0">{Labels.renameFilesFileColumnLabel}</span>
           {codeEnabled && <span className="w-32 shrink-0">{Labels.renameFilesCodeColumnLabel}</span>}
           <span className="flex-1">{Labels.renameFilesNameColumnLabel}</span>
-          {codeEnabled && <span className="w-24 shrink-0">{Labels.priceFieldTitle}</span>}
+          {priceEnabled && <span className="w-24 shrink-0">{Labels.priceFieldTitle}</span>}
         </div>
 
         <ul className="flex-1 divide-y divide-zinc-300 overflow-y-auto rounded-md border border-zinc-300 dark:divide-zinc-700 dark:border-zinc-700">
@@ -75,7 +77,7 @@ export function RenameFilesModal({
                 onChange={(e) => setNameAt(index, e.target.value)}
                 className="flex-1 rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
               />
-              {codeEnabled && (
+              {priceEnabled && (
                 <input
                   type="number"
                   min={0}
@@ -100,7 +102,7 @@ export function RenameFilesModal({
           </button>
           <button
             type="button"
-            onClick={() => onApply(names, codeEnabled ? codes : undefined, codeEnabled ? prices : undefined)}
+            onClick={() => onApply(names, codeEnabled ? codes : undefined, priceEnabled ? prices : undefined)}
             className="rounded bg-[#8a5a35] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#a06b41]"
           >
             {Labels.renameFilesApply}

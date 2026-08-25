@@ -160,6 +160,9 @@ export default function ItemsPage() {
     return null;
   }
 
+  const showCode = auth.showCode;
+  const showPrice = auth.showPrice;
+
   if (isLoading || isLogoLoading) {
     return (
       <div
@@ -239,6 +242,8 @@ export default function ItemsPage() {
         isDeleting={isDeleting}
         deleteDisabled={isBulkDeleting}
         confirmingDelete={confirmingDeleteId === item.id}
+        showCode={showCode}
+        showPrice={showPrice}
         onDragStart={() => setDraggedId(item.id)}
         onDragEnd={() => setDraggedId(null)}
         onDragOver={(e) => e.preventDefault()}
@@ -343,7 +348,8 @@ export default function ItemsPage() {
           progress={uploadProgress}
           onSubmit={handleCreateItem}
           marginBottomClassName="mb-3"
-          codeEnabled
+          codeEnabled={showCode}
+          priceEnabled={showPrice}
         />
 
         <UploadCreateForm
@@ -442,6 +448,7 @@ export default function ItemsPage() {
           generationProgress={generationProgress}
           onGenerate={handleGenerateCatalog}
           catalogResult={catalogResult}
+          priceEnabled={showPrice}
           showPrices={showPrices}
           onToggleShowPrices={handleToggleShowPrices}
           missingPriceCount={missingPriceCount}
