@@ -20,4 +20,10 @@ public class CompanySubscription
     public virtual bool IsExempt { get; set; }
     public virtual DateTime CreatedAt { get; set; }
     public virtual DateTime UpdatedAt { get; set; }
+
+    public virtual string? PendingPlan { get; set; }
+    public virtual decimal? PendingPlanAmountUsd { get; set; }
+    public virtual decimal? PendingUsdArsRate { get; set; }
+    public virtual decimal? PendingAmountArs { get; set; }
+    public virtual string? PendingPreapprovalId { get; set; }
 }

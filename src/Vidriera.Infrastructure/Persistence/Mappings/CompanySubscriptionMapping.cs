@@ -66,5 +66,19 @@ public class CompanySubscriptionMapping : ClassMapping<CompanySubscription>
         Property(x => x.IsExempt, m => m.Column("is_exempt"));
         Property(x => x.CreatedAt, m => m.Column("created_at"));
         Property(x => x.UpdatedAt, m => m.Column("updated_at"));
+
+        Property(x => x.PendingPlan, m =>
+        {
+            m.Column("pending_plan");
+            m.Length(20);
+        });
+        Property(x => x.PendingPlanAmountUsd, m => m.Column("pending_plan_amount_usd"));
+        Property(x => x.PendingUsdArsRate, m => m.Column("pending_usd_ars_rate"));
+        Property(x => x.PendingAmountArs, m => m.Column("pending_amount_ars"));
+        Property(x => x.PendingPreapprovalId, m =>
+        {
+            m.Column("pending_preapproval_id");
+            m.Length(100);
+        });
     }
 }

@@ -34,7 +34,7 @@ public class ProcessMercadoPagoWebhookCommandHandler : IRequestHandler<ProcessMe
         var preapproval = await _mercadoPagoClient.GetPreapprovalAsync(preapprovalId, cancellationToken);
 
         var subscription = await _session.Query<CompanySubscription>()
-            .FirstOrDefaultAsync(s => s.PreapprovalId == preapproval.Id, cancellationToken);
+            .FirstOrDefaultAsync(s => s.PreapprovalId == preapproval.Id || s.PendingPreapprovalId == preapproval.Id, cancellationToken);
         if (subscription is null)
         {
             return;
@@ -42,15 +42,24 @@ public class ProcessMercadoPagoWebhookCommandHandler : IRequestHandler<ProcessMe
 
         using var transaction = _session.BeginTransaction();
 
-        subscription.Status = preapproval.Status;
-        subscription.UpdatedAt = DateTime.UtcNow;
-        await _session.UpdateAsync(subscription, cancellationToken);
-
-        if (preapproval.Status.Equals("cancelled", StringComparison.OrdinalIgnoreCase)
-            || preapproval.Status.Equals("paused", StringComparison.OrdinalIgnoreCase))
+        if (subscription.PendingPreapprovalId == preapproval.Id)
         {
-            subscription.Company.IsActive = false;
-            await _session.UpdateAsync(subscription.Company, cancellationToken);
+            PendingPlanPromoter.TryPromoteIfAuthorized(subscription, preapproval);
+            subscription.UpdatedAt = DateTime.UtcNow;
+            await _session.UpdateAsync(subscription, cancellationToken);
+        }
+        else
+        {
+            subscription.Status = preapproval.Status;
+            subscription.UpdatedAt = DateTime.UtcNow;
+            await _session.UpdateAsync(subscription, cancellationToken);
+
+            if (preapproval.Status.Equals("cancelled", StringComparison.OrdinalIgnoreCase)
+                || preapproval.Status.Equals("paused", StringComparison.OrdinalIgnoreCase))
+            {
+                subscription.Company.IsActive = false;
+                await _session.UpdateAsync(subscription.Company, cancellationToken);
+            }
         }
 
         await transaction.CommitAsync(cancellationToken);

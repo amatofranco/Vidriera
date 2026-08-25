@@ -63,12 +63,13 @@ public class ChangeCompanyPlanCommandHandler : IRequestHandler<ChangeCompanyPlan
 
         using var transaction = _session.BeginTransaction();
 
-        subscription.Plan = request.NewPlan;
-        subscription.PlanAmountUsd = amountUsd;
-        subscription.UsdArsRate = rate;
-        subscription.AmountArs = amountArs;
-        subscription.PreapprovalId = preapproval.Id;
-        subscription.Status = preapproval.Status;
+        // El plan actual (y sus límites) no cambian todavía — solo queda "pendiente" hasta que
+        // el cliente autorice esta preapproval nueva (confirmado por webhook o /sync).
+        subscription.PendingPlan = request.NewPlan;
+        subscription.PendingPlanAmountUsd = amountUsd;
+        subscription.PendingUsdArsRate = rate;
+        subscription.PendingAmountArs = amountArs;
+        subscription.PendingPreapprovalId = preapproval.Id;
         subscription.UpdatedAt = DateTime.UtcNow;
         await _session.UpdateAsync(subscription, cancellationToken);
 
