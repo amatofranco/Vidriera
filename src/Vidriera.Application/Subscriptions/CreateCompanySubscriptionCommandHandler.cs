@@ -55,19 +55,8 @@ public class CreateCompanySubscriptionCommandHandler : IRequestHandler<CreateCom
             .FirstOrDefaultAsync(s => s.Company.Id == request.CompanyId, cancellationToken);
 
         var now = DateTime.UtcNow;
-
-        using var transaction = _session.BeginTransaction();
-
-        if (subscription is null)
-        {
-            subscription = new CompanySubscription
-            {
-                Id = Guid.NewGuid(),
-                Company = company,
-                CreatedAt = now
-            };
-            await _session.SaveAsync(subscription, cancellationToken);
-        }
+        var isNew = subscription is null;
+        subscription ??= new CompanySubscription { Id = Guid.NewGuid(), Company = company, CreatedAt = now };
 
         subscription.Plan = request.Plan;
         subscription.PlanAmountUsd = amountUsd;
@@ -77,7 +66,17 @@ public class CreateCompanySubscriptionCommandHandler : IRequestHandler<CreateCom
         subscription.Status = preapproval.Status;
         subscription.UpdatedAt = now;
 
-        await _session.UpdateAsync(subscription, cancellationToken);
+        using var transaction = _session.BeginTransaction();
+
+        if (isNew)
+        {
+            await _session.SaveAsync(subscription, cancellationToken);
+        }
+        else
+        {
+            await _session.UpdateAsync(subscription, cancellationToken);
+        }
+
         await transaction.CommitAsync(cancellationToken);
 
         return new CreateCompanySubscriptionResult(preapproval.InitPoint);
