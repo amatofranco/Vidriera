@@ -60,6 +60,15 @@ public class AdminController : ControllerBase
         await _mediator.Send(new SetCompanySubscriptionExemptCommand(companyId, request.IsExempt), cancellationToken);
         return NoContent();
     }
+
+    [HttpPost("companies/{companyId:guid}/subscription/sync")]
+    public async Task<ActionResult<SyncCompanySubscriptionResult>> SyncSubscription(
+        Guid companyId,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new SyncCompanySubscriptionCommand(companyId), cancellationToken);
+        return Ok(result);
+    }
 }
 
 public record AddUserRequest(string Email, string Name, string Password);

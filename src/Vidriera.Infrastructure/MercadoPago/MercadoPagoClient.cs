@@ -50,7 +50,21 @@ public class MercadoPagoClient : IMercadoPagoClient
         var response = await _httpClient.GetAsync($"v1/payments/{paymentId}", cancellationToken);
         var result = await ReadOrThrowAsync<PaymentResponse>(response, cancellationToken);
 
-        return new MercadoPagoPayment(result.Id, result.Status, result.ExternalReference);
+        return new MercadoPagoPayment(result.Id.ToString(), result.Status, result.ExternalReference);
+    }
+
+    public async Task<IReadOnlyList<MercadoPagoPayment>> SearchPaymentsByExternalReferenceAsync(
+        string externalReference,
+        CancellationToken cancellationToken)
+    {
+        var response = await _httpClient.GetAsync(
+            $"v1/payments/search?external_reference={Uri.EscapeDataString(externalReference)}&sort=date_created&criteria=desc",
+            cancellationToken);
+        var result = await ReadOrThrowAsync<PaymentSearchResponse>(response, cancellationToken);
+
+        return result.Results
+            .Select(r => new MercadoPagoPayment(r.Id.ToString(), r.Status, r.ExternalReference))
+            .ToList();
     }
 
     private static readonly System.Text.Json.JsonSerializerOptions JsonOptions = new(System.Text.Json.JsonSerializerDefaults.Web);
@@ -89,7 +103,9 @@ public class MercadoPagoClient : IMercadoPagoClient
         [property: JsonPropertyName("init_point")] string? InitPoint);
 
     private record PaymentResponse(
-        string Id,
+        long Id,
         string Status,
         [property: JsonPropertyName("external_reference")] string? ExternalReference);
+
+    private record PaymentSearchResponse([property: JsonPropertyName("results")] List<PaymentResponse> Results);
 }

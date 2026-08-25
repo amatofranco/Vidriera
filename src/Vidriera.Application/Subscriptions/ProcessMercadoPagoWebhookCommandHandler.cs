@@ -59,19 +59,8 @@ public class ProcessMercadoPagoWebhookCommandHandler : IRequestHandler<ProcessMe
     private async Task HandlePaymentNotificationAsync(string paymentId, CancellationToken cancellationToken)
     {
         var payment = await _mercadoPagoClient.GetPaymentAsync(paymentId, cancellationToken);
-        if (!payment.Status.Equals("approved", StringComparison.OrdinalIgnoreCase))
-        {
-            return;
-        }
 
         if (payment.ExternalReference is null || !Guid.TryParse(payment.ExternalReference, out var companyId))
-        {
-            return;
-        }
-
-        var alreadyProcessed = await _session.Query<ProcessedMercadoPagoPayment>()
-            .AnyAsync(p => p.PaymentId == payment.Id, cancellationToken);
-        if (alreadyProcessed)
         {
             return;
         }
@@ -83,26 +72,8 @@ public class ProcessMercadoPagoWebhookCommandHandler : IRequestHandler<ProcessMe
             return;
         }
 
-        var now = DateTime.UtcNow;
-        var extendFrom = subscription.AccessExpiresAt.HasValue && subscription.AccessExpiresAt.Value > now
-            ? subscription.AccessExpiresAt.Value
-            : now;
-
         using var transaction = _session.BeginTransaction();
-
-        subscription.AccessExpiresAt = extendFrom.AddMonths(1);
-        subscription.UpdatedAt = now;
-        subscription.Company.IsActive = true;
-        await _session.UpdateAsync(subscription, cancellationToken);
-        await _session.UpdateAsync(subscription.Company, cancellationToken);
-
-        await _session.SaveAsync(new ProcessedMercadoPagoPayment
-        {
-            Id = Guid.NewGuid(),
-            PaymentId = payment.Id,
-            ProcessedAt = now
-        }, cancellationToken);
-
+        await SubscriptionPaymentApplier.ApplyIfApprovedAndNewAsync(_session, subscription, payment, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
     }
 }
