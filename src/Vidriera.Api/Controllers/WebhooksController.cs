@@ -11,10 +11,12 @@ namespace Vidriera.Api.Controllers;
 public class WebhooksController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ILogger<WebhooksController> _logger;
 
-    public WebhooksController(IMediator mediator)
+    public WebhooksController(IMediator mediator, ILogger<WebhooksController> logger)
     {
         _mediator = mediator;
+        _logger = logger;
     }
 
     [HttpPost("mercadopago")]
@@ -30,7 +32,14 @@ public class WebhooksController : ControllerBase
 
         if (!string.IsNullOrEmpty(eventType) && !string.IsNullOrEmpty(resourceId))
         {
-            await _mediator.Send(new ProcessMercadoPagoWebhookCommand(eventType, resourceId), cancellationToken);
+            try
+            {
+                await _mediator.Send(new ProcessMercadoPagoWebhookCommand(eventType, resourceId), cancellationToken);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                _logger.LogError(ex, "Error procesando webhook de MercadoPago: type={Type} id={ResourceId}", eventType, resourceId);
+            }
         }
 
         return Ok();
