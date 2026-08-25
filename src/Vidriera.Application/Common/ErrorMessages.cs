@@ -59,4 +59,6 @@ public static class ErrorMessages
     public static string UserLimitReached(int max) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(UserLimitReached)), max);
 
     public static string CannotChangePlanWithoutPayment => Get(nameof(CannotChangePlanWithoutPayment));
+
+    public static string InvalidOrExpiredResetToken => Get(nameof(InvalidOrExpiredResetToken));
 }

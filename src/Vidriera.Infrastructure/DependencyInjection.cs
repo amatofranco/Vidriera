@@ -12,6 +12,8 @@ using Vidriera.Infrastructure.Excel;
 using Vidriera.Application.Subscriptions;
 using Vidriera.Infrastructure.MercadoPago;
 using Vidriera.Infrastructure.ExchangeRate;
+using Vidriera.Infrastructure.Email;
+using Vidriera.Application.Auth;
 
 namespace Vidriera.Infrastructure;
 
@@ -48,6 +50,16 @@ public static class DependencyInjection
         services.AddHttpClient<IExchangeRateService, DolarApiExchangeRateService>(client =>
         {
             client.BaseAddress = new Uri("https://dolarapi.com/");
+        });
+
+        services.Configure<FrontendOptions>(configuration.GetSection("Frontend"));
+
+        services.Configure<ResendOptions>(configuration.GetSection("Resend"));
+        services.AddHttpClient<IEmailSender, ResendEmailSender>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<ResendOptions>>().Value;
+            client.BaseAddress = new Uri("https://api.resend.com/");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", options.ApiKey);
         });
 
         return services;

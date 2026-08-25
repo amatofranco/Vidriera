@@ -17,6 +17,21 @@ export const Labels = {
   passwordFieldLabel: "Contraseña",
   loginSubmitting: "Ingresando...",
   loginSubmit: "Ingresar",
+  forgotPasswordLink: "¿Olvidaste tu contraseña?",
+
+  forgotPasswordTitle: "Recuperar contraseña",
+  forgotPasswordHint: "Ingresá tu email y, si está registrado, te vamos a mandar un link para elegir una contraseña nueva.",
+  forgotPasswordSubmitting: "Enviando...",
+  forgotPasswordSubmit: "Enviar link",
+  forgotPasswordSent: "Si el email está registrado, te llegó un mail con el link para restablecer tu contraseña.",
+  backToLoginLink: "Volver a ingresar",
+
+  resetPasswordTitle: "Elegir contraseña nueva",
+  newPasswordFieldLabel: "Contraseña nueva",
+  confirmPasswordFieldLabel: "Confirmar contraseña",
+  resetPasswordSubmitting: "Guardando...",
+  resetPasswordSubmit: "Guardar contraseña",
+  resetPasswordSuccess: "Contraseña actualizada. Ya podés ingresar con la nueva.",
 
   loadingProducts: "Cargando productos...",
   noProductsOrSectionsYet: "Todavía no hay productos ni carátulas cargadas.",

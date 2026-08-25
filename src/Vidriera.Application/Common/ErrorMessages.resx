@@ -154,4 +154,7 @@
   <data name="CannotChangePlanWithoutPayment" xml:space="preserve">
     <value>La empresa todavía no tuvo ningún pago aprobado — usá el alta de suscripción normal en vez de cambiar de plan.</value>
   </data>
+  <data name="InvalidOrExpiredResetToken" xml:space="preserve">
+    <value>El link venció o ya se usó. Pedí uno nuevo.</value>
+  </data>
 </root>

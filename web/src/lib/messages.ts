@@ -18,6 +18,9 @@ export const Messages = {
   priceImportFailed: "No se pudo importar el archivo de precios.",
   templateDownloadFailed: "No se pudo descargar la plantilla.",
   unknownError: "Error desconocido",
+  forgotPasswordFailed: "No se pudo enviar el mail. Intentá de nuevo.",
+  resetPasswordFailed: "No se pudo actualizar la contraseña.",
+  passwordsDontMatch: "Las contraseñas no coinciden.",
 } as const;
 
 export function fileTooLarge(fileName: string, sizeLabel: string, maxLabel: string) {

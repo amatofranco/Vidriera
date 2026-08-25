@@ -55,6 +55,22 @@ export function login(email: string, password: string) {
   });
 }
 
+export function requestPasswordReset(email: string) {
+  return request<void>("/api/auth/forgot-password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+}
+
+export function resetPassword(token: string, newPassword: string) {
+  return request<void>("/api/auth/reset-password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token, newPassword }),
+  });
+}
+
 export interface Product {
   id: string;
   name: string;
