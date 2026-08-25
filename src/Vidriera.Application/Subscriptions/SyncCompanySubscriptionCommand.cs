@@ -4,4 +4,11 @@ namespace Vidriera.Application.Subscriptions;
 
 public record SyncCompanySubscriptionCommand(Guid CompanyId) : IRequest<SyncCompanySubscriptionResult>;
 
-public record SyncCompanySubscriptionResult(string Status, DateTime? AccessExpiresAt, bool CompanyIsActive, string? PendingPlan);
+public record SyncCompanySubscriptionResult(
+    string Status,
+    DateTime? AccessExpiresAt,
+    bool CompanyIsActive,
+    string? PendingPlan,
+    DateTimeOffset? PreapprovalStartDate,
+    DateTimeOffset? PreapprovalEndDate,
+    DateTimeOffset? PendingPreapprovalStartDate);

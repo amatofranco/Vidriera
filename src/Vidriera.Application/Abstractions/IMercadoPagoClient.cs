@@ -1,6 +1,6 @@
 namespace Vidriera.Application.Abstractions;
 
-public record MercadoPagoPreapproval(string Id, string Status, string InitPoint);
+public record MercadoPagoPreapproval(string Id, string Status, string InitPoint, DateTimeOffset? StartDate = null, DateTimeOffset? EndDate = null);
 
 public record MercadoPagoPayment(string Id, string Status, string? ExternalReference);
 

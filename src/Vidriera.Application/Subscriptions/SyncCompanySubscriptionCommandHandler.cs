@@ -48,9 +48,10 @@ public class SyncCompanySubscriptionCommandHandler : IRequestHandler<SyncCompany
             await SubscriptionPaymentApplier.ApplyIfApprovedAndNewAsync(_session, subscription, payment, cancellationToken);
         }
 
+        MercadoPagoPreapproval? pendingPreapproval = null;
         if (subscription.PendingPreapprovalId is not null)
         {
-            var pendingPreapproval = await _mercadoPagoClient.GetPreapprovalAsync(subscription.PendingPreapprovalId, cancellationToken);
+            pendingPreapproval = await _mercadoPagoClient.GetPreapprovalAsync(subscription.PendingPreapprovalId, cancellationToken);
             if (PendingPlanPromoter.TryPromoteIfAuthorized(subscription, pendingPreapproval))
             {
                 await _session.UpdateAsync(subscription, cancellationToken);
@@ -63,6 +64,9 @@ public class SyncCompanySubscriptionCommandHandler : IRequestHandler<SyncCompany
             subscription.Status,
             subscription.AccessExpiresAt,
             subscription.Company.IsActive,
-            subscription.PendingPlan);
+            subscription.PendingPlan,
+            preapproval.StartDate,
+            preapproval.EndDate,
+            pendingPreapproval?.StartDate);
     }
 }

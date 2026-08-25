@@ -35,7 +35,7 @@ public class MercadoPagoClient : IMercadoPagoClient
         var response = await _httpClient.PostAsJsonAsync("preapproval", request, cancellationToken);
         var result = await ReadOrThrowAsync<PreapprovalResponse>(response, cancellationToken);
 
-        return new MercadoPagoPreapproval(result.Id, result.Status, result.InitPoint ?? string.Empty);
+        return ToPreapproval(result);
     }
 
     public async Task<MercadoPagoPreapproval> GetPreapprovalAsync(string preapprovalId, CancellationToken cancellationToken)
@@ -43,7 +43,7 @@ public class MercadoPagoClient : IMercadoPagoClient
         var response = await _httpClient.GetAsync($"preapproval/{preapprovalId}", cancellationToken);
         var result = await ReadOrThrowAsync<PreapprovalResponse>(response, cancellationToken);
 
-        return new MercadoPagoPreapproval(result.Id, result.Status, result.InitPoint ?? string.Empty);
+        return ToPreapproval(result);
     }
 
     public async Task<MercadoPagoPreapproval> CancelPreapprovalAsync(string preapprovalId, CancellationToken cancellationToken)
@@ -52,7 +52,7 @@ public class MercadoPagoClient : IMercadoPagoClient
         var response = await _httpClient.PutAsJsonAsync($"preapproval/{preapprovalId}", request, cancellationToken);
         var result = await ReadOrThrowAsync<PreapprovalResponse>(response, cancellationToken);
 
-        return new MercadoPagoPreapproval(result.Id, result.Status, result.InitPoint ?? string.Empty);
+        return ToPreapproval(result);
     }
 
     public async Task<MercadoPagoPreapproval> ScheduleEndDateAsync(string preapprovalId, DateTime endDate, CancellationToken cancellationToken)
@@ -61,7 +61,7 @@ public class MercadoPagoClient : IMercadoPagoClient
         var response = await _httpClient.PutAsJsonAsync($"preapproval/{preapprovalId}", request, cancellationToken);
         var result = await ReadOrThrowAsync<PreapprovalResponse>(response, cancellationToken);
 
-        return new MercadoPagoPreapproval(result.Id, result.Status, result.InitPoint ?? string.Empty);
+        return ToPreapproval(result);
     }
 
     public async Task<MercadoPagoPayment> GetPaymentAsync(string paymentId, CancellationToken cancellationToken)
@@ -85,6 +85,9 @@ public class MercadoPagoClient : IMercadoPagoClient
             .Select(r => new MercadoPagoPayment(r.Id.ToString(), r.Status, r.ExternalReference))
             .ToList();
     }
+
+    private static MercadoPagoPreapproval ToPreapproval(PreapprovalResponse result) =>
+        new(result.Id, result.Status, result.InitPoint ?? string.Empty, result.AutoRecurring?.StartDate, result.AutoRecurring?.EndDate);
 
     private static readonly System.Text.Json.JsonSerializerOptions JsonOptions = new(System.Text.Json.JsonSerializerDefaults.Web);
 
@@ -130,7 +133,12 @@ public class MercadoPagoClient : IMercadoPagoClient
     private record PreapprovalResponse(
         string Id,
         string Status,
-        [property: JsonPropertyName("init_point")] string? InitPoint);
+        [property: JsonPropertyName("init_point")] string? InitPoint,
+        [property: JsonPropertyName("auto_recurring")] AutoRecurringResponse? AutoRecurring);
+
+    private record AutoRecurringResponse(
+        [property: JsonPropertyName("start_date")] DateTimeOffset? StartDate,
+        [property: JsonPropertyName("end_date")] DateTimeOffset? EndDate);
 
     private record PaymentResponse(
         long Id,
