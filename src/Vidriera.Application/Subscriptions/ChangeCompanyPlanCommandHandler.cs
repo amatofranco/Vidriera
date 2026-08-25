@@ -52,7 +52,9 @@ public class ChangeCompanyPlanCommandHandler : IRequestHandler<ChangeCompanyPlan
         var rate = await _exchangeRateService.GetUsdToArsOficialRateAsync(cancellationToken);
         var amountArs = Math.Round(amountUsd * rate, 2, MidpointRounding.AwayFromZero);
 
-        await _mercadoPagoClient.ScheduleEndDateAsync(subscription.PreapprovalId, effectiveDate, cancellationToken);
+        // Un día antes, no el mismo día: evita cualquier ambigüedad sobre si el límite de MP
+        // es inclusive y termina cobrando la vieja el mismo día que arranca la nueva.
+        await _mercadoPagoClient.ScheduleEndDateAsync(subscription.PreapprovalId, effectiveDate.AddDays(-1), cancellationToken);
 
         var preapproval = await _mercadoPagoClient.CreatePreapprovalAsync(
             request.PayerEmail,
