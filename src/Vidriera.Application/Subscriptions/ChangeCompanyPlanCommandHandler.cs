@@ -52,10 +52,24 @@ public class ChangeCompanyPlanCommandHandler : IRequestHandler<ChangeCompanyPlan
         var rate = await _exchangeRateService.GetUsdToArsOficialRateAsync(cancellationToken);
         var amountArs = Math.Round(amountUsd * rate, 2, MidpointRounding.AwayFromZero);
 
+        // PendingPlan se guarda ANTES de tocar MercadoPago — es la señal que usan el webhook y
+        // el /sync para saber que una cancelación es parte de un cambio de plan en curso, no una
+        // cancelación real. Si se guardara después de cancelar, el webhook de esa cancelación
+        // podría llegar y procesarse en el medio, antes de que quede guardado, y cortar el acceso
+        // por error (pasó en producción: race condition real, no hipotética).
+        using (var markPendingTransaction = _session.BeginTransaction())
+        {
+            subscription.PendingPlan = request.NewPlan;
+            subscription.PendingPlanAmountUsd = amountUsd;
+            subscription.PendingUsdArsRate = rate;
+            subscription.PendingAmountArs = amountArs;
+            subscription.UpdatedAt = DateTime.UtcNow;
+            await _session.UpdateAsync(subscription, cancellationToken);
+            await markPendingTransaction.CommitAsync(cancellationToken);
+        }
+
         // end_date en una preapproval ya autorizada no lo respeta MercadoPago (confirmado en
-        // pruebas: no tira error pero tampoco lo aplica). Cancelarla sí es confiable — y como
-        // PendingPreapprovalId queda seteado, el webhook/sync no corta el acceso por esto,
-        // solo por una cancelación real e independiente.
+        // pruebas: no tira error pero tampoco lo aplica). Cancelarla sí es confiable.
         var oldPreapprovalCancelled = await _mercadoPagoClient.CancelPreapprovalAsync(subscription.PreapprovalId, cancellationToken);
 
         var preapproval = await _mercadoPagoClient.CreatePreapprovalAsync(
@@ -67,12 +81,6 @@ public class ChangeCompanyPlanCommandHandler : IRequestHandler<ChangeCompanyPlan
 
         using var transaction = _session.BeginTransaction();
 
-        // El plan actual (y sus límites) no cambian todavía — solo queda "pendiente" hasta que
-        // el cliente autorice esta preapproval nueva (confirmado por webhook o /sync).
-        subscription.PendingPlan = request.NewPlan;
-        subscription.PendingPlanAmountUsd = amountUsd;
-        subscription.PendingUsdArsRate = rate;
-        subscription.PendingAmountArs = amountArs;
         subscription.PendingPreapprovalId = preapproval.Id;
         subscription.Status = oldPreapprovalCancelled.Status;
         subscription.UpdatedAt = DateTime.UtcNow;

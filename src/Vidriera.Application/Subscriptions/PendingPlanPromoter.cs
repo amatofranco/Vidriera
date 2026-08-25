@@ -24,6 +24,11 @@ internal static class PendingPlanPromoter
         subscription.PreapprovalId = subscription.PendingPreapprovalId;
         subscription.Status = preapproval.Status;
 
+        // Por si la cancelación de la preapproval vieja (parte de este mismo cambio de plan)
+        // llegó a cortar el acceso por la race condition que existía antes — al confirmarse el
+        // cambio, el acceso queda restablecido.
+        subscription.Company.IsActive = true;
+
         subscription.PendingPlan = null;
         subscription.PendingPlanAmountUsd = null;
         subscription.PendingUsdArsRate = null;

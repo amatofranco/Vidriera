@@ -44,7 +44,11 @@ public class ProcessMercadoPagoWebhookCommandHandler : IRequestHandler<ProcessMe
 
         if (subscription.PendingPreapprovalId == preapproval.Id)
         {
-            PendingPlanPromoter.TryPromoteIfAuthorized(subscription, preapproval);
+            if (PendingPlanPromoter.TryPromoteIfAuthorized(subscription, preapproval))
+            {
+                await _session.UpdateAsync(subscription.Company, cancellationToken);
+            }
+
             subscription.UpdatedAt = DateTime.UtcNow;
             await _session.UpdateAsync(subscription, cancellationToken);
         }
@@ -56,8 +60,10 @@ public class ProcessMercadoPagoWebhookCommandHandler : IRequestHandler<ProcessMe
 
             // Si hay un cambio de plan en curso, esta preapproval se canceló a propósito como
             // parte del cambio (ver ChangeCompanyPlanCommandHandler) — no es que el cliente
-            // canceló de verdad, así que no hay que cortarle el acceso.
-            var isCancellationPartOfPlanChange = subscription.PendingPreapprovalId is not null;
+            // canceló de verdad, así que no hay que cortarle el acceso. Se chequea PendingPlan
+            // (se guarda ANTES de cancelar en MP) y no PendingPreapprovalId (se guarda después,
+            // y este webhook puede llegar en el medio).
+            var isCancellationPartOfPlanChange = subscription.PendingPlan is not null;
 
             if (!isCancellationPartOfPlanChange
                 && (preapproval.Status.Equals("cancelled", StringComparison.OrdinalIgnoreCase)
