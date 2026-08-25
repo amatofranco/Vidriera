@@ -4,6 +4,7 @@ using NHibernate.Linq;
 using Vidriera.Application.Abstractions;
 using Vidriera.Application.Common;
 using Vidriera.Application.Common.Exceptions;
+using Vidriera.Application.Subscriptions;
 using Vidriera.Domain.Entities;
 
 namespace Vidriera.Application.Admin;
@@ -34,6 +35,8 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Creat
         {
             throw new ValidationException(ErrorMessages.EmailAlreadyRegistered(request.Email));
         }
+
+        await PlanLimitEnforcer.EnsureCanAddUserAsync(_session, request.CompanyId, cancellationToken);
 
         var user = new User
         {

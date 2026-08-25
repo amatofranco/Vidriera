@@ -2,6 +2,7 @@ using MediatR;
 using NHibernate;
 using Vidriera.Application.Abstractions;
 using Vidriera.Application.Common;
+using Vidriera.Application.Subscriptions;
 using Vidriera.Domain.Entities;
 
 namespace Vidriera.Application.Products;
@@ -25,6 +26,8 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
             request.CompanyId,
             $"No existe la empresa {request.CompanyId}.",
             cancellationToken);
+
+        await PlanLimitEnforcer.EnsureCanAddProductAsync(_session, request.CompanyId, cancellationToken);
 
         await using var validatedFileContent = await PdfUploadValidation.BufferAndValidatePageCountAsync(
             request.FileContent, _pdfMergeService, cancellationToken);

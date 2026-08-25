@@ -54,4 +54,7 @@ public static class ErrorMessages
     public static string SubscriptionAccessExpired => Get(nameof(SubscriptionAccessExpired));
 
     public static string CompanySubscriptionNotFound(Guid companyId) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(CompanySubscriptionNotFound)), companyId);
+
+    public static string ProductLimitReached(int max) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(ProductLimitReached)), max);
+    public static string UserLimitReached(int max) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(UserLimitReached)), max);
 }
