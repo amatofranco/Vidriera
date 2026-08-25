@@ -61,7 +61,10 @@ export function CompanyHeader({
             </div>
             <div className="flex flex-col leading-tight">
               <span className="text-sm font-semibold text-zinc-50">{auth.name}</span>
-              <span className="text-xs text-zinc-300">{auth.companyName}</span>
+              <span className="text-xs text-zinc-300">
+                {auth.companyName}
+                {auth.plan && <span className="text-zinc-400"> · {Labels.planLabel(auth.plan)}</span>}
+              </span>
             </div>
           </div>
           <div className="flex items-center gap-2">

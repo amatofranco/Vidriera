@@ -6,6 +6,8 @@ function filteredOrAll(isFiltered: boolean) {
   return isFiltered ? "filtrados" : "todos";
 }
 
+const planNames: Record<string, string> = { Basic: "Básico", Premium: "Premium" };
+
 export const Labels = {
   appTitle: "Vidriera",
   appDescription: "Catálogo y stock de Vidriera",
@@ -93,6 +95,8 @@ export const Labels = {
   hasStockTitle: "Tiene stock",
   selectAllSectionMembersTitle: "Seleccionar todos los productos de esta carátula",
   toggleSectionStockTitle: "Marcar/desmarcar stock de todos los productos de esta carátula",
+
+  planLabel: (plan: string) => `Plan ${planNames[plan] ?? plan}`,
 
   bannerAlt: (companyName: string) => `Banner de ${companyName}`,
   uploadingBanner: "Subiendo...",

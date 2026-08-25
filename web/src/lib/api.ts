@@ -44,6 +44,7 @@ export interface LoginResult {
   companyName: string;
   name: string;
   email: string;
+  plan: string | null;
 }
 
 export function login(email: string, password: string) {
