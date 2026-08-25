@@ -52,10 +52,11 @@ public class ChangeCompanyPlanCommandHandler : IRequestHandler<ChangeCompanyPlan
         var rate = await _exchangeRateService.GetUsdToArsOficialRateAsync(cancellationToken);
         var amountArs = Math.Round(amountUsd * rate, 2, MidpointRounding.AwayFromZero);
 
-        // Un día antes, no el mismo día: evita cualquier ambigüedad sobre si el límite de MP
-        // es inclusive y termina cobrando la vieja el mismo día que arranca la nueva.
-        var oldPreapprovalUpdated = await _mercadoPagoClient.ScheduleEndDateAsync(
-            subscription.PreapprovalId, effectiveDate.AddDays(-1), cancellationToken);
+        // end_date en una preapproval ya autorizada no lo respeta MercadoPago (confirmado en
+        // pruebas: no tira error pero tampoco lo aplica). Cancelarla sí es confiable — y como
+        // PendingPreapprovalId queda seteado, el webhook/sync no corta el acceso por esto,
+        // solo por una cancelación real e independiente.
+        var oldPreapprovalCancelled = await _mercadoPagoClient.CancelPreapprovalAsync(subscription.PreapprovalId, cancellationToken);
 
         var preapproval = await _mercadoPagoClient.CreatePreapprovalAsync(
             request.PayerEmail,
@@ -73,11 +74,12 @@ public class ChangeCompanyPlanCommandHandler : IRequestHandler<ChangeCompanyPlan
         subscription.PendingUsdArsRate = rate;
         subscription.PendingAmountArs = amountArs;
         subscription.PendingPreapprovalId = preapproval.Id;
+        subscription.Status = oldPreapprovalCancelled.Status;
         subscription.UpdatedAt = DateTime.UtcNow;
         await _session.UpdateAsync(subscription, cancellationToken);
 
         await transaction.CommitAsync(cancellationToken);
 
-        return new ChangeCompanyPlanResult(preapproval.InitPoint, effectiveDate, oldPreapprovalUpdated.EndDate);
+        return new ChangeCompanyPlanResult(preapproval.InitPoint, effectiveDate, oldPreapprovalCancelled.Status);
     }
 }

@@ -55,15 +55,6 @@ public class MercadoPagoClient : IMercadoPagoClient
         return ToPreapproval(result);
     }
 
-    public async Task<MercadoPagoPreapproval> ScheduleEndDateAsync(string preapprovalId, DateTime endDate, CancellationToken cancellationToken)
-    {
-        var request = new UpdatePreapprovalAutoRecurringRequest(new EndDateOnlyAutoRecurring(ToMercadoPagoDate(endDate)));
-        var response = await _httpClient.PutAsJsonAsync($"preapproval/{preapprovalId}", request, cancellationToken);
-        var result = await ReadOrThrowAsync<PreapprovalResponse>(response, cancellationToken);
-
-        return ToPreapproval(result);
-    }
-
     public async Task<MercadoPagoPayment> GetPaymentAsync(string paymentId, CancellationToken cancellationToken)
     {
         var response = await _httpClient.GetAsync($"v1/payments/{paymentId}", cancellationToken);
@@ -124,11 +115,6 @@ public class MercadoPagoClient : IMercadoPagoClient
         [property: JsonPropertyName("start_date")] string? StartDate = null);
 
     private record UpdatePreapprovalStatusRequest([property: JsonPropertyName("status")] string Status);
-
-    private record UpdatePreapprovalAutoRecurringRequest(
-        [property: JsonPropertyName("auto_recurring")] EndDateOnlyAutoRecurring AutoRecurring);
-
-    private record EndDateOnlyAutoRecurring([property: JsonPropertyName("end_date")] string EndDate);
 
     private record PreapprovalResponse(
         string Id,
