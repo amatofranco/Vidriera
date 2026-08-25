@@ -70,6 +70,7 @@ public class CatalogsController : ControllerBase
     }
 
     [HttpGet("company/{companyId:guid}")]
+    [HttpGet("/{companyId:guid}")]
     [AllowAnonymous]
     public async Task<ContentResult> ViewByCompany(Guid companyId, CancellationToken cancellationToken)
     {

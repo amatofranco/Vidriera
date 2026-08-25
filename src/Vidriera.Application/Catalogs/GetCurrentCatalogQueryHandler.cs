@@ -25,7 +25,7 @@ public class GetCurrentCatalogQueryHandler : IRequestHandler<GetCurrentCatalogQu
             return null;
         }
 
-        var url = $"{_options.PublicBaseUrl.TrimEnd('/')}/api/catalogs/company/{request.CompanyId}";
+        var url = $"{_options.PublicBaseUrl.TrimEnd('/')}/{request.CompanyId}";
         return new GenerateCatalogResult(catalogId, url);
     }
 }
