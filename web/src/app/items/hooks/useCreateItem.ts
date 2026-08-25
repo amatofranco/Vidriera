@@ -4,7 +4,7 @@ import { runWithConcurrency } from "@/lib/concurrency";
 import { MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_LABEL, formatFileSize } from "@/lib/file-size";
 import { ApiError, createItem, type Item } from "@/lib/api";
 import { Messages, bulkUploadFailed, fileTooLargeReason } from "@/lib/messages";
-import { parseItemFileName } from "@/lib/parseItemFileName";
+import { baseName, parseItemFileName } from "@/lib/parseItemFileName";
 
 export function useCreateItem({
   auth,
@@ -36,11 +36,15 @@ export function useCreateItem({
       files.map((file, index) => {
         if (customNames) return [file, customNames[index]?.trim() || undefined];
         if (files.length === 1) return [file, name || undefined];
-        return [file, parseItemFileName(file.name).name || undefined];
+        return [
+          file,
+          (auth.showCode ? parseItemFileName(file.name).name : baseName(file.name)) || undefined,
+        ];
       })
     );
     const codeByFile = new Map<File, string | undefined>(
       files.map((file, index) => {
+        if (!auth.showCode) return [file, undefined];
         if (customCodes) return [file, customCodes[index]?.trim() || undefined];
         if (files.length === 1) return [file, code || undefined];
         return [file, parseItemFileName(file.name).code || undefined];
