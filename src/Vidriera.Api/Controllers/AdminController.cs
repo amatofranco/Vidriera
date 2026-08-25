@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Vidriera.Api.Common;
+using Vidriera.Application.Abstractions;
 using Vidriera.Application.Admin;
 using Vidriera.Application.Subscriptions;
 
@@ -87,6 +88,13 @@ public class AdminController : ControllerBase
             new ChangeCompanyPlanCommand(companyId, request.PayerEmail, request.NewPlan),
             cancellationToken);
 
+        return Ok(result);
+    }
+
+    [HttpGet("mercadopago/preapproval/{preapprovalId}")]
+    public async Task<ActionResult<MercadoPagoPreapproval>> GetPreapprovalDetails(string preapprovalId, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new GetPreapprovalDetailsQuery(preapprovalId), cancellationToken);
         return Ok(result);
     }
 }
