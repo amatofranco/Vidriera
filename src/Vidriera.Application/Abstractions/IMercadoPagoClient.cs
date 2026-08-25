@@ -14,6 +14,8 @@ public interface IMercadoPagoClient
 
     Task<MercadoPagoPreapproval> GetPreapprovalAsync(string preapprovalId, CancellationToken cancellationToken);
 
+    Task<MercadoPagoPreapproval> CancelPreapprovalAsync(string preapprovalId, CancellationToken cancellationToken);
+
     Task<MercadoPagoPayment> GetPaymentAsync(string paymentId, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<MercadoPagoPayment>> SearchPaymentsByExternalReferenceAsync(string externalReference, CancellationToken cancellationToken);

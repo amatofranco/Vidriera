@@ -69,6 +69,13 @@ public class AdminController : ControllerBase
         var result = await _mediator.Send(new SyncCompanySubscriptionCommand(companyId), cancellationToken);
         return Ok(result);
     }
+
+    [HttpPost("companies/{companyId:guid}/subscription/cancel")]
+    public async Task<IActionResult> CancelSubscription(Guid companyId, CancellationToken cancellationToken)
+    {
+        await _mediator.Send(new CancelCompanySubscriptionCommand(companyId), cancellationToken);
+        return NoContent();
+    }
 }
 
 public record AddUserRequest(string Email, string Name, string Password);

@@ -45,6 +45,15 @@ public class MercadoPagoClient : IMercadoPagoClient
         return new MercadoPagoPreapproval(result.Id, result.Status, result.InitPoint ?? string.Empty);
     }
 
+    public async Task<MercadoPagoPreapproval> CancelPreapprovalAsync(string preapprovalId, CancellationToken cancellationToken)
+    {
+        var request = new UpdatePreapprovalStatusRequest("cancelled");
+        var response = await _httpClient.PutAsJsonAsync($"preapproval/{preapprovalId}", request, cancellationToken);
+        var result = await ReadOrThrowAsync<PreapprovalResponse>(response, cancellationToken);
+
+        return new MercadoPagoPreapproval(result.Id, result.Status, result.InitPoint ?? string.Empty);
+    }
+
     public async Task<MercadoPagoPayment> GetPaymentAsync(string paymentId, CancellationToken cancellationToken)
     {
         var response = await _httpClient.GetAsync($"v1/payments/{paymentId}", cancellationToken);
@@ -96,6 +105,8 @@ public class MercadoPagoClient : IMercadoPagoClient
         [property: JsonPropertyName("frequency_type")] string FrequencyType,
         [property: JsonPropertyName("transaction_amount")] decimal TransactionAmount,
         [property: JsonPropertyName("currency_id")] string CurrencyId);
+
+    private record UpdatePreapprovalStatusRequest([property: JsonPropertyName("status")] string Status);
 
     private record PreapprovalResponse(
         string Id,
