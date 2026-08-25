@@ -54,7 +54,8 @@ public class ChangeCompanyPlanCommandHandler : IRequestHandler<ChangeCompanyPlan
 
         // Un día antes, no el mismo día: evita cualquier ambigüedad sobre si el límite de MP
         // es inclusive y termina cobrando la vieja el mismo día que arranca la nueva.
-        await _mercadoPagoClient.ScheduleEndDateAsync(subscription.PreapprovalId, effectiveDate.AddDays(-1), cancellationToken);
+        var oldPreapprovalUpdated = await _mercadoPagoClient.ScheduleEndDateAsync(
+            subscription.PreapprovalId, effectiveDate.AddDays(-1), cancellationToken);
 
         var preapproval = await _mercadoPagoClient.CreatePreapprovalAsync(
             request.PayerEmail,
@@ -77,6 +78,6 @@ public class ChangeCompanyPlanCommandHandler : IRequestHandler<ChangeCompanyPlan
 
         await transaction.CommitAsync(cancellationToken);
 
-        return new ChangeCompanyPlanResult(preapproval.InitPoint, effectiveDate);
+        return new ChangeCompanyPlanResult(preapproval.InitPoint, effectiveDate, oldPreapprovalUpdated.EndDate);
     }
 }
