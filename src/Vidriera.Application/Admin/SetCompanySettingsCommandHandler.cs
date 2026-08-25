@@ -23,6 +23,7 @@ public class SetCompanySettingsCommandHandler : IRequestHandler<SetCompanySettin
 
         company.ShowCode = request.ShowCode;
         company.ShowPrice = request.ShowPrice;
+        company.ShowOrders = request.ShowOrders;
 
         await _session.UpdateInTransactionAsync(company, cancellationToken);
     }

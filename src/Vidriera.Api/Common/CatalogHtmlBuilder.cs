@@ -40,7 +40,7 @@ public static class CatalogHtmlBuilder
         var indexPanelHtml = hasSections
             ? IndexPanelTemplate.Replace("{{SECTIONS_JSON}}", sectionsJsonEncoded)
             : "";
-        var orderPanelHtml = hasSections ? OrderPanelTemplate : "";
+        var orderPanelHtml = hasSections && dto.ShowOrders ? OrderPanelTemplate : "";
 
         return ViewerPageTemplate
             .Replace("{{FILE_URL}}", fileUrl)

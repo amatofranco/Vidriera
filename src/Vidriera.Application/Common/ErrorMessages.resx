@@ -127,6 +127,9 @@
   <data name="CatalogPageNotFound" xml:space="preserve">
     <value>El catálogo {0} no tiene la página {1}.</value>
   </data>
+  <data name="OrdersNotEnabled" xml:space="preserve">
+    <value>Esta empresa no tiene habilitados los pedidos.</value>
+  </data>
   <data name="MustSelectAtLeastOneOrderItem" xml:space="preserve">
     <value>Hay que agregar al menos un item al pedido.</value>
   </data>

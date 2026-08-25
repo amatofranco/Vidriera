@@ -41,6 +41,7 @@ public class CompanyMapping : ClassMapping<Company>
         Property(x => x.CurrentCatalogId, m => m.Column("current_catalog_id"));
         Property(x => x.ShowCode, m => m.Column("show_code"));
         Property(x => x.ShowPrice, m => m.Column("show_price"));
+        Property(x => x.ShowOrders, m => m.Column("show_orders"));
 
         Bag(x => x.Users, m =>
         {

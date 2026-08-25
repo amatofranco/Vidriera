@@ -17,6 +17,8 @@ export default function OrdersPage() {
   useEffect(() => {
     if (!authLoading && !auth) {
       router.replace("/login");
+    } else if (!authLoading && auth && !auth.showOrders) {
+      router.replace("/items");
     }
   }, [auth, authLoading, router]);
 
@@ -24,7 +26,7 @@ export default function OrdersPage() {
   const { orders, isLoading, error } = useOrdersData(auth, logout);
   const [logoError, setLogoError] = useState<string | null>(null);
 
-  if (authLoading || !auth) {
+  if (authLoading || !auth || !auth.showOrders) {
     return null;
   }
 

@@ -11,4 +11,5 @@ public record GeneratedCatalogViewDto(
     string FileUrl,
     string CompanyName,
     IReadOnlyList<CatalogIndexEntry> IndexEntries,
-    int RasterizedPageCount);
+    int RasterizedPageCount,
+    bool ShowOrders);

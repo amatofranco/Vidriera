@@ -58,7 +58,8 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResult>
             user.Email,
             subscription?.Plan,
             user.Company.ShowCode,
-            user.Company.ShowPrice);
+            user.Company.ShowPrice,
+            user.Company.ShowOrders);
     }
 
     private bool HasAccess(Company company, CompanySubscription subscription)

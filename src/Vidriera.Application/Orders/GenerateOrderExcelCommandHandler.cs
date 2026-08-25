@@ -34,6 +34,11 @@ public class GenerateOrderExcelCommandHandler : IRequestHandler<GenerateOrderExc
             ErrorMessages.CompanyNotFound(request.CompanyId),
             cancellationToken);
 
+        if (!company.ShowOrders)
+        {
+            throw new ValidationException(ErrorMessages.OrdersNotEnabled);
+        }
+
         var itemIds = request.Items.Select(i => i.ItemId).Distinct().ToList();
         var items = await _session.Query<Item>()
             .Where(p => p.Company.Id == request.CompanyId && itemIds.Contains(p.Id))

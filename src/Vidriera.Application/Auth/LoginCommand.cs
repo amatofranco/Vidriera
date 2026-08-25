@@ -13,4 +13,5 @@ public record LoginResult(
     string Email,
     string? Plan,
     bool ShowCode,
-    bool ShowPrice);
+    bool ShowPrice,
+    bool ShowOrders);

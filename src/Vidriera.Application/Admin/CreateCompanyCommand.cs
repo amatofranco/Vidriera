@@ -8,6 +8,7 @@ public record CreateCompanyCommand(
     string UserName,
     string UserPassword,
     bool ShowCode = true,
-    bool ShowPrice = true) : IRequest<CreateCompanyResult>;
+    bool ShowPrice = true,
+    bool ShowOrders = true) : IRequest<CreateCompanyResult>;
 
 public record CreateCompanyResult(Guid CompanyId, Guid UserId);
