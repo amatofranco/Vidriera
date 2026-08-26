@@ -50,6 +50,7 @@ public static class ErrorMessages
     public static string CatalogPageNotFound(Guid catalogId, int pageNumber) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(CatalogPageNotFound)), catalogId, pageNumber);
 
     public static string OrdersNotEnabled => Get(nameof(OrdersNotEnabled));
+    public static string OrderNotFound(Guid orderId) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(OrderNotFound)), orderId);
     public static string MustSelectAtLeastOneOrderItem => Get(nameof(MustSelectAtLeastOneOrderItem));
     public static string OrderContainsInvalidItems => Get(nameof(OrderContainsInvalidItems));
     public static string OrderCustomerDataIncomplete => Get(nameof(OrderCustomerDataIncomplete));

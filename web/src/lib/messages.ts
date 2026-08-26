@@ -17,6 +17,7 @@ export const Messages = {
   sectionCreateFailed: "No se pudo crear la carátula.",
   priceImportFailed: "No se pudo importar el archivo de precios.",
   templateDownloadFailed: "No se pudo descargar la plantilla.",
+  orderExcelDownloadFailed: "No se pudo descargar el Excel del pedido.",
   unknownError: "Error desconocido",
   forgotPasswordFailed: "No se pudo enviar el mail. Intentá de nuevo.",
   resetPasswordFailed: "No se pudo actualizar la contraseña.",

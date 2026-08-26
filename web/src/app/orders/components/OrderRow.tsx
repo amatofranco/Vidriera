@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import type { Order } from "@/lib/api";
+import { downloadOrderExcel, type Order } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 import { Labels } from "@/lib/labels";
+import { Messages, apiErrorMessage } from "@/lib/messages";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleString("es-AR", {
@@ -24,31 +26,67 @@ function DetailField({ label, value }: { label: string; value: string | null }) 
 }
 
 export function OrderRow({ order }: { order: Order }) {
+  const { auth } = useAuth();
   const [expanded, setExpanded] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+
+  async function handleDownload() {
+    if (!auth) return;
+    setIsDownloading(true);
+    setDownloadError(null);
+    try {
+      const { blob, fileName } = await downloadOrderExcel(auth.token, order.id);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setDownloadError(apiErrorMessage(err, Messages.orderExcelDownloadFailed));
+    } finally {
+      setIsDownloading(false);
+    }
+  }
 
   return (
     <div className="rounded-xl border border-black/10 bg-[#ecdcc0] px-4 py-3 shadow-lg dark:border-white/10 dark:bg-zinc-900">
-      <button
-        type="button"
-        onClick={() => setExpanded((prev) => !prev)}
-        className="flex w-full flex-wrap items-center justify-between gap-2 text-left"
-      >
-        <div className="flex flex-col">
-          <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">{order.businessName}</span>
-          <span className="text-xs text-zinc-600 dark:text-zinc-400">
-            {order.storeName ? `${order.storeName} · ` : ""}
-            {formatDate(order.createdAt)}
-          </span>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-zinc-600 dark:text-zinc-400">
-            {Labels.orderItemsCount(order.items.length)}
-          </span>
-          <span className="rounded-md border border-zinc-300 px-2 py-1 text-xs font-medium text-zinc-700 dark:border-zinc-700 dark:text-zinc-300">
-            {expanded ? Labels.hideOrderDetail : Labels.viewOrderDetail}
-          </span>
-        </div>
-      </button>
+      <div className="flex w-full flex-wrap items-center justify-between gap-2">
+        <button
+          type="button"
+          onClick={() => setExpanded((prev) => !prev)}
+          className="flex flex-1 flex-wrap items-center justify-between gap-2 text-left"
+        >
+          <div className="flex flex-col">
+            <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">{order.businessName}</span>
+            <span className="text-xs text-zinc-600 dark:text-zinc-400">
+              {order.storeName ? `${order.storeName} · ` : ""}
+              {formatDate(order.createdAt)}
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-zinc-600 dark:text-zinc-400">
+              {Labels.orderItemsCount(order.items.length)}
+            </span>
+            <span className="rounded-md border border-zinc-300 px-2 py-1 text-xs font-medium text-zinc-700 dark:border-zinc-700 dark:text-zinc-300">
+              {expanded ? Labels.hideOrderDetail : Labels.viewOrderDetail}
+            </span>
+          </div>
+        </button>
+        <button
+          type="button"
+          onClick={handleDownload}
+          disabled={isDownloading}
+          className="rounded-md border border-zinc-300 px-2 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+        >
+          {isDownloading ? Labels.downloadingOrderExcel : Labels.downloadOrderExcelButton}
+        </button>
+      </div>
+
+      {downloadError && (
+        <p className="mt-2 text-xs text-red-600 dark:text-red-400">{downloadError}</p>
+      )}
 
       {expanded && (
         <div className="mt-4 flex flex-col gap-4 border-t border-black/10 pt-4 dark:border-white/10">

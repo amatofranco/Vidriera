@@ -147,6 +147,8 @@ export const Labels = {
   orderItemsCount: (count: number) => `${count} item${plural(count)}`,
   viewOrderDetail: "Ver detalle",
   hideOrderDetail: "Ocultar detalle",
+  downloadOrderExcelButton: "Descargar Excel",
+  downloadingOrderExcel: "Descargando...",
   orderBusinessNameLabel: "Razón Social",
   orderStoreNameLabel: "Nombre del local",
   orderCuitLabel: "CUIT",

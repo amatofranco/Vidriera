@@ -26,6 +26,18 @@ public class OrdersController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("{orderId:guid}/excel")]
+    public async Task<IActionResult> DownloadOrderExcel(Guid orderId, CancellationToken cancellationToken)
+    {
+        var companyId = User.GetCompanyId();
+        var result = await _mediator.Send(new GetOrderExcelQuery(companyId, orderId), cancellationToken);
+
+        return File(
+            result.Content,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            result.FileName);
+    }
+
     [HttpPost("excel")]
     [AllowAnonymous]
     public async Task<IActionResult> GenerateExcel([FromBody] GenerateOrderExcelRequest request, CancellationToken cancellationToken)

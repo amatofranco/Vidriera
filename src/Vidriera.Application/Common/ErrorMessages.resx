@@ -136,6 +136,9 @@
   <data name="OrdersNotEnabled" xml:space="preserve">
     <value>Esta empresa no tiene habilitados los pedidos.</value>
   </data>
+  <data name="OrderNotFound" xml:space="preserve">
+    <value>No se encontró el pedido {0} para esta empresa.</value>
+  </data>
   <data name="MustSelectAtLeastOneOrderItem" xml:space="preserve">
     <value>Hay que agregar al menos un item al pedido.</value>
   </data>

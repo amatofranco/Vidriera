@@ -366,3 +366,19 @@ export interface Order {
 export function getOrders(token: string) {
   return request<Order[]>("/api/orders", { token });
 }
+
+export async function downloadOrderExcel(token: string, orderId: string): Promise<{ blob: Blob; fileName: string }> {
+  const response = await fetch(`${API_URL}/api/orders/${orderId}/excel`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!response.ok) {
+    throw new ApiError(`Error ${response.status}`, response.status);
+  }
+
+  const disposition = response.headers.get("content-disposition") || "";
+  const match = disposition.match(/filename="?([^";]+)"?/i);
+  const fileName = match ? match[1] : "Pedido.xlsx";
+  const blob = await response.blob();
+  return { blob, fileName };
+}
