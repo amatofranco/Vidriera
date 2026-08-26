@@ -205,7 +205,9 @@ export default function OrderFormPage() {
                 <DragHandle onDragStart={() => setDraggedId(field.id)} onDragEnd={() => setDraggedId(null)} />
                 <div className="flex flex-1 flex-col">
                   <span className="text-sm text-zinc-900 dark:text-zinc-50">{field.label}</span>
-                  <span className="text-xs text-zinc-600 dark:text-zinc-400">{fieldTypeLabel(field.fieldType)}</span>
+                  <span className="text-xs text-zinc-600 dark:text-zinc-400">
+                    {Labels.fieldTypeLabel}: {fieldTypeLabel(field.fieldType)}
+                  </span>
                 </div>
                 <label className="flex items-center gap-1.5 text-xs text-zinc-700 dark:text-zinc-300">
                   <input
