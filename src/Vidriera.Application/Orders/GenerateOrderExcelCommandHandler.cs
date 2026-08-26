@@ -103,6 +103,8 @@ public class GenerateOrderExcelCommandHandler : IRequestHandler<GenerateOrderExc
                         throw new ValidationException(ErrorMessages.InvalidName);
                     case OrderFieldTypes.Email when !EmailValidation.IsValid(value):
                         throw new ValidationException(ErrorMessages.InvalidEmail);
+                    case OrderFieldTypes.Phone when !PhoneValidation.IsValid(value):
+                        throw new ValidationException(ErrorMessages.InvalidPhone);
                 }
             }
 

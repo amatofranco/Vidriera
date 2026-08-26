@@ -23,6 +23,7 @@ const FIELD_TYPES: { value: string; label: string }[] = [
   { value: "Name", label: Labels.orderFieldTypeName },
   { value: "Email", label: Labels.orderFieldTypeEmail },
   { value: "Cuit", label: Labels.orderFieldTypeCuit },
+  { value: "Phone", label: Labels.orderFieldTypePhone },
   { value: "Province", label: Labels.orderFieldTypeProvince },
   { value: "VatCondition", label: Labels.orderFieldTypeVatCondition },
 ];
@@ -189,12 +190,6 @@ export default function OrderFormPage() {
         {error && (
           <p className="mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
             {error}
-          </p>
-        )}
-
-        {fields.length === 0 && (
-          <p className="mb-4 rounded-xl border border-black/10 bg-[#ecdcc0] px-4 py-3 text-sm text-zinc-700 shadow-lg dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-300">
-            {Labels.noCustomOrderFormFieldsHint}
           </p>
         )}
 

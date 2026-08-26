@@ -31,7 +31,7 @@ function buildFieldInput(field) {
     }
 
     const input = document.createElement("input");
-    input.type = field.fieldType === "Email" ? "email" : "text";
+    input.type = field.fieldType === "Email" ? "email" : field.fieldType === "Phone" ? "tel" : "text";
     input.autocomplete = "off";
 
     if (field.fieldType === "Cuit") {
@@ -42,6 +42,10 @@ function buildFieldInput(field) {
     } else if (field.fieldType === "Name") {
         input.pattern = "[\\p{L}\\s'-]+";
         input.title = "Solo letras, sin números";
+    } else if (field.fieldType === "Phone") {
+        input.pattern = "\\d+";
+        input.inputMode = "numeric";
+        input.title = "Solo números";
     }
 
     return input;

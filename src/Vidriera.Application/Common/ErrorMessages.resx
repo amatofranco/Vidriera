@@ -169,6 +169,9 @@
   <data name="InvalidEmail" xml:space="preserve">
     <value>El email no es válido.</value>
   </data>
+  <data name="InvalidPhone" xml:space="preserve">
+    <value>El teléfono solo puede tener números.</value>
+  </data>
   <data name="InvalidSubscriptionPlan" xml:space="preserve">
     <value>El plan indicado no es válido.</value>
   </data>

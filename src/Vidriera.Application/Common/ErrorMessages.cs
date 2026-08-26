@@ -61,6 +61,7 @@ public static class ErrorMessages
     public static string InvalidCuit => Get(nameof(InvalidCuit));
     public static string InvalidName => Get(nameof(InvalidName));
     public static string InvalidEmail => Get(nameof(InvalidEmail));
+    public static string InvalidPhone => Get(nameof(InvalidPhone));
 
     public static string InvalidSubscriptionPlan => Get(nameof(InvalidSubscriptionPlan));
     public static string SubscriptionAccessExpired => Get(nameof(SubscriptionAccessExpired));

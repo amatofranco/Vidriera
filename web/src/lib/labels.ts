@@ -159,8 +159,6 @@ export const Labels = {
   loadingOrderFormFields: "Cargando formulario...",
   orderFormFieldsHint:
     "Elegí qué campos le vas a pedir a tus clientes al hacer un pedido, cuáles son obligatorios, y en qué orden aparecen.",
-  noCustomOrderFormFieldsHint:
-    "Todavía no personalizaste el formulario de pedido — se está usando el formulario estándar (Razón Social, CUIT, Email, Provincia, Ciudad, Dirección de entrega, Nombre del local, Condición IVA, Teléfono, Expreso).",
   addOrderFormFieldTitle: "Agregar campo",
   fieldLabelPlaceholder: "Nombre del campo",
   fieldTypeLabel: "Tipo",
@@ -172,6 +170,7 @@ export const Labels = {
   orderFieldTypeName: "Nombre (sin números)",
   orderFieldTypeEmail: "Email",
   orderFieldTypeCuit: "CUIT",
+  orderFieldTypePhone: "Teléfono (solo números)",
   orderFieldTypeProvince: "Provincia",
   orderFieldTypeVatCondition: "Condición frente al IVA",
 } as const;
