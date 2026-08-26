@@ -1,4 +1,5 @@
 import { renderDrawerItems, renderDrawerTotal, updateBadge } from "./order-cart-ui.js";
+import { ARGENTINA_PROVINCES } from "./argentina-provinces.js";
 
 async function shareOrDownload(blob, fileName) {
     const file = new File([blob], fileName, {
@@ -32,6 +33,16 @@ function parseFileName(response, fallback) {
 
 export function setupOrderUi(dom, cart, renderPageBar) {
     if (!dom.orderBadgeWrap) return;
+
+    const provinceSelect = dom.orderCheckoutForm ? dom.orderCheckoutForm.elements.province : null;
+    if (provinceSelect) {
+        ARGENTINA_PROVINCES.forEach((name) => {
+            const option = document.createElement("option");
+            option.value = name;
+            option.textContent = name;
+            provinceSelect.appendChild(option);
+        });
+    }
 
     dom.orderBadgeWrap.addEventListener("click", () => {
         dom.orderDrawer.style.display = "flex";
