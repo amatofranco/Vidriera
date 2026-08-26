@@ -89,7 +89,8 @@ public class GenerateOrderExcelCommandHandler : IRequestHandler<GenerateOrderExc
             customer.BusinessName,
             customer.Cuit,
             customer.Email,
-            customer.Province
+            customer.Province,
+            customer.City
         };
 
         if (requiredFields.Any(string.IsNullOrWhiteSpace))

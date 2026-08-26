@@ -28,11 +28,11 @@ public class ClosedXmlOrderService : IExcelOrderService
             ("Email", customer.Email),
             ("Provincia", customer.Province),
             ("Ciudad", customer.City),
+            ("Dirección de entrega", customer.DeliveryAddress),
             ("Nombre del local", customer.StoreName),
             ("Condición frente al IVA", customer.VatCondition),
             ("Teléfono", customer.Phone),
             ("Expreso", customer.Carrier),
-            ("Dirección de entrega", customer.DeliveryAddress),
         };
 
         foreach (var (label, value) in customerFields)
