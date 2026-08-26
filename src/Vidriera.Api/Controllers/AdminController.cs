@@ -19,6 +19,13 @@ public class AdminController : ControllerBase
         _mediator = mediator;
     }
 
+    [HttpGet("companies")]
+    public async Task<ActionResult<IReadOnlyList<CompanyListItemDto>>> GetCompanies(CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new GetCompaniesQuery(), cancellationToken);
+        return Ok(result);
+    }
+
     [HttpPost("companies")]
     public async Task<ActionResult<CreateCompanyResult>> CreateCompany(CreateCompanyCommand command, CancellationToken cancellationToken)
     {
