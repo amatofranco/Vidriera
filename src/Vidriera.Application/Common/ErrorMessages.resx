@@ -145,6 +145,9 @@
   <data name="OrderCustomerDataIncomplete" xml:space="preserve">
     <value>Faltan completar datos obligatorios del cliente.</value>
   </data>
+  <data name="InvalidCuit" xml:space="preserve">
+    <value>El CUIT debe tener 11 números, sin guiones ni espacios.</value>
+  </data>
   <data name="InvalidSubscriptionPlan" xml:space="preserve">
     <value>El plan indicado no es válido.</value>
   </data>

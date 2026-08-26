@@ -53,6 +53,7 @@ public static class ErrorMessages
     public static string MustSelectAtLeastOneOrderItem => Get(nameof(MustSelectAtLeastOneOrderItem));
     public static string OrderContainsInvalidItems => Get(nameof(OrderContainsInvalidItems));
     public static string OrderCustomerDataIncomplete => Get(nameof(OrderCustomerDataIncomplete));
+    public static string InvalidCuit => Get(nameof(InvalidCuit));
 
     public static string InvalidSubscriptionPlan => Get(nameof(InvalidSubscriptionPlan));
     public static string SubscriptionAccessExpired => Get(nameof(SubscriptionAccessExpired));

@@ -31,10 +31,42 @@
                 <input type="text" name="businessName" required autocomplete="off" />
             </label>
             <label>CUIT
-                <input type="text" name="cuit" required autocomplete="off" />
+                <input type="text" name="cuit" required autocomplete="off" pattern="\d{11}" maxlength="11" inputmode="numeric" title="11 números, sin guiones ni espacios" />
             </label>
             <label>Email
                 <input type="email" name="email" required autocomplete="off" />
+            </label>
+            <label>Provincia
+                <select name="province" required>
+                    <option value="" selected>Seleccionar...</option>
+                    <option value="Buenos Aires">Buenos Aires</option>
+                    <option value="Ciudad Autónoma de Buenos Aires">Ciudad Autónoma de Buenos Aires</option>
+                    <option value="Catamarca">Catamarca</option>
+                    <option value="Chaco">Chaco</option>
+                    <option value="Chubut">Chubut</option>
+                    <option value="Córdoba">Córdoba</option>
+                    <option value="Corrientes">Corrientes</option>
+                    <option value="Entre Ríos">Entre Ríos</option>
+                    <option value="Formosa">Formosa</option>
+                    <option value="Jujuy">Jujuy</option>
+                    <option value="La Pampa">La Pampa</option>
+                    <option value="La Rioja">La Rioja</option>
+                    <option value="Mendoza">Mendoza</option>
+                    <option value="Misiones">Misiones</option>
+                    <option value="Neuquén">Neuquén</option>
+                    <option value="Río Negro">Río Negro</option>
+                    <option value="Salta">Salta</option>
+                    <option value="San Juan">San Juan</option>
+                    <option value="San Luis">San Luis</option>
+                    <option value="Santa Cruz">Santa Cruz</option>
+                    <option value="Santa Fe">Santa Fe</option>
+                    <option value="Santiago del Estero">Santiago del Estero</option>
+                    <option value="Tierra del Fuego, Antártida e Islas del Atlántico Sur">Tierra del Fuego, Antártida e Islas del Atlántico Sur</option>
+                    <option value="Tucumán">Tucumán</option>
+                </select>
+            </label>
+            <label>Ciudad
+                <input type="text" name="city" placeholder="Opcional" autocomplete="off" />
             </label>
             <label>Nombre del local
                 <input type="text" name="storeName" placeholder="Opcional" autocomplete="off" />
@@ -51,12 +83,6 @@
             </label>
             <label>Teléfono
                 <input type="tel" name="phone" placeholder="Opcional" autocomplete="off" />
-            </label>
-            <label>Ciudad
-                <input type="text" name="city" placeholder="Opcional" autocomplete="off" />
-            </label>
-            <label>Provincia
-                <input type="text" name="province" placeholder="Opcional" autocomplete="off" />
             </label>
             <label>Expreso
                 <input type="text" name="carrier" placeholder="Opcional" autocomplete="off" />

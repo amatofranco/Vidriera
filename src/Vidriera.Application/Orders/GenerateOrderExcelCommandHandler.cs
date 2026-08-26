@@ -88,12 +88,18 @@ public class GenerateOrderExcelCommandHandler : IRequestHandler<GenerateOrderExc
         {
             customer.BusinessName,
             customer.Cuit,
-            customer.Email
+            customer.Email,
+            customer.Province
         };
 
         if (requiredFields.Any(string.IsNullOrWhiteSpace))
         {
             throw new ValidationException(ErrorMessages.OrderCustomerDataIncomplete);
+        }
+
+        if (!CuitValidation.IsValid(customer.Cuit))
+        {
+            throw new ValidationException(ErrorMessages.InvalidCuit);
         }
     }
 

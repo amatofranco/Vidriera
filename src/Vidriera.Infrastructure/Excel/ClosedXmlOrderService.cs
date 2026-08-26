@@ -26,11 +26,11 @@ public class ClosedXmlOrderService : IExcelOrderService
             ("Razón Social", customer.BusinessName),
             ("CUIT", customer.Cuit),
             ("Email", customer.Email),
+            ("Provincia", customer.Province),
+            ("Ciudad", customer.City),
             ("Nombre del local", customer.StoreName),
             ("Condición frente al IVA", customer.VatCondition),
             ("Teléfono", customer.Phone),
-            ("Ciudad", customer.City),
-            ("Provincia", customer.Province),
             ("Expreso", customer.Carrier),
             ("Dirección de entrega", customer.DeliveryAddress),
         };
