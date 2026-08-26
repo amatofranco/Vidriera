@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Vidriera.Api.Common;
 using Vidriera.Application.Catalogs;
+using Vidriera.Application.Common;
 using Vidriera.Application.Common.Exceptions;
 
 namespace Vidriera.Api.Controllers;
@@ -77,6 +78,30 @@ public class CatalogsController : ControllerBase
         try
         {
             var dto = await _mediator.Send(new GetCompanyCatalogQuery(companyId), cancellationToken);
+            return HtmlPage(CatalogHtmlBuilder.BuildViewerPage(dto), StatusCodes.Status200OK);
+        }
+        catch (NotFoundException)
+        {
+            return HtmlPage(
+                CatalogHtmlBuilder.BuildMessagePage("Catálogo no disponible", "Todavía no se generó un catálogo para esta empresa."),
+                StatusCodes.Status404NotFound);
+        }
+    }
+
+    [HttpGet("/{slug}")]
+    [AllowAnonymous]
+    public async Task<ContentResult> ViewBySlug(string slug, CancellationToken cancellationToken)
+    {
+        if (!CompanySlug.IsValid(slug))
+        {
+            return HtmlPage(
+                CatalogHtmlBuilder.BuildMessagePage("Catálogo no disponible", "Todavía no se generó un catálogo para esta empresa."),
+                StatusCodes.Status404NotFound);
+        }
+
+        try
+        {
+            var dto = await _mediator.Send(new GetCompanyCatalogBySlugQuery(slug), cancellationToken);
             return HtmlPage(CatalogHtmlBuilder.BuildViewerPage(dto), StatusCodes.Status200OK);
         }
         catch (NotFoundException)

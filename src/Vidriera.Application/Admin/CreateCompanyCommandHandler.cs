@@ -29,6 +29,21 @@ public class CreateCompanyCommandHandler : IRequestHandler<CreateCompanyCommand,
             throw new ValidationException(ErrorMessages.EmailAlreadyRegistered(request.UserEmail));
         }
 
+        var slug = CompanySlug.Normalize(request.Slug);
+        if (slug is not null)
+        {
+            if (!CompanySlug.IsValid(slug))
+            {
+                throw new ValidationException(ErrorMessages.InvalidCompanySlug);
+            }
+
+            var slugTaken = await _session.Query<Company>().AnyAsync(c => c.Slug == slug, cancellationToken);
+            if (slugTaken)
+            {
+                throw new ValidationException(ErrorMessages.CompanySlugTaken(slug));
+            }
+        }
+
         var company = new Company
         {
             Id = Guid.NewGuid(),
@@ -37,7 +52,8 @@ public class CreateCompanyCommandHandler : IRequestHandler<CreateCompanyCommand,
             CreatedAt = DateTime.UtcNow,
             ShowCode = request.ShowCode,
             ShowPrice = request.ShowPrice,
-            ShowOrders = request.ShowOrders
+            ShowOrders = request.ShowOrders,
+            Slug = slug
         };
 
         var user = new User

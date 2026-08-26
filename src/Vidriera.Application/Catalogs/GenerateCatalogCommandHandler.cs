@@ -84,7 +84,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             await DeleteCatalogAsync(request.CompanyId, previousCatalogId.Value, CancellationToken.None);
         }
 
-        var url = $"{_options.PublicBaseUrl.TrimEnd('/')}/{request.CompanyId}";
+        var url = CatalogShareUrl.Build(_options.PublicBaseUrl, request.CompanyId, company.Slug);
         return new GenerateCatalogResult(catalog.Id, url);
     }
 
@@ -238,7 +238,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         existingCatalog.User = await _session.GetAsync<User>(request.UserId, cancellationToken);
         await _session.UpdateInTransactionAsync(existingCatalog, cancellationToken);
 
-        var url = $"{_options.PublicBaseUrl.TrimEnd('/')}/{request.CompanyId}";
+        var url = CatalogShareUrl.Build(_options.PublicBaseUrl, request.CompanyId, existingCatalog.Company.Slug);
         return new GenerateCatalogResult(existingCatalog.Id, url);
     }
 

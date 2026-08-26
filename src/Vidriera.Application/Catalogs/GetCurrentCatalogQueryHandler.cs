@@ -25,7 +25,7 @@ public class GetCurrentCatalogQueryHandler : IRequestHandler<GetCurrentCatalogQu
             return null;
         }
 
-        var url = $"{_options.PublicBaseUrl.TrimEnd('/')}/{request.CompanyId}";
+        var url = CatalogShareUrl.Build(_options.PublicBaseUrl, request.CompanyId, company.Slug);
         return new GenerateCatalogResult(catalogId, url);
     }
 }

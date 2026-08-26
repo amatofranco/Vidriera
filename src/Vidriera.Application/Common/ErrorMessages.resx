@@ -106,6 +106,12 @@
   <data name="EmailAlreadyRegistered" xml:space="preserve">
     <value>Ya existe un usuario con el email '{0}'.</value>
   </data>
+  <data name="InvalidCompanySlug" xml:space="preserve">
+    <value>El slug solo puede tener minúsculas, números y guiones.</value>
+  </data>
+  <data name="CompanySlugTaken" xml:space="preserve">
+    <value>Ya existe una empresa con el slug '{0}'.</value>
+  </data>
   <data name="CatalogNotFound" xml:space="preserve">
     <value>No existe el catálogo {0}.</value>
   </data>

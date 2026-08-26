@@ -43,6 +43,13 @@ public class CompanyMapping : ClassMapping<Company>
         Property(x => x.ShowPrice, m => m.Column("show_price"));
         Property(x => x.ShowOrders, m => m.Column("show_orders"));
 
+        Property(x => x.Slug, m =>
+        {
+            m.Column("slug");
+            m.Length(100);
+            m.Unique(true);
+        });
+
         Bag(x => x.Users, m =>
         {
             m.Key(k => k.Column("company_id"));

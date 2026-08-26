@@ -36,6 +36,9 @@ public static class ErrorMessages
 
     public static string EmailAlreadyRegistered(string email) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(EmailAlreadyRegistered)), email);
 
+    public static string InvalidCompanySlug => Get(nameof(InvalidCompanySlug));
+    public static string CompanySlugTaken(string slug) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(CompanySlugTaken)), slug);
+
     public static string CatalogNotFound(Guid catalogId) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(CatalogNotFound)), catalogId);
 
     public static string ItemNotFound(Guid itemId) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(ItemNotFound)), itemId);
