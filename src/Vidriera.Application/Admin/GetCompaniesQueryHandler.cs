@@ -18,7 +18,8 @@ public class GetCompaniesQueryHandler : IRequestHandler<GetCompaniesQuery, IRead
     {
         return await _session.Query<Company>()
             .OrderBy(c => c.Name)
-            .Select(c => new CompanyListItemDto(c.Id, c.Name, c.Slug, c.IsActive, c.CreatedAt))
+            .Select(c => new CompanyListItemDto(
+                c.Id, c.Name, c.Slug, c.IsActive, c.CreatedAt, c.ShowCode, c.ShowPrice, c.ShowOrders))
             .ToListAsync(cancellationToken);
     }
 }
