@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Vidriera.Api.Common;
 using Vidriera.Application.Abstractions;
 using Vidriera.Application.Admin;
+using Vidriera.Application.Orders;
 using Vidriera.Application.Subscriptions;
 
 namespace Vidriera.Api.Controllers;
@@ -112,6 +113,60 @@ public class AdminController : ControllerBase
         CancellationToken cancellationToken)
     {
         await _mediator.Send(new SetCompanySettingsCommand(companyId, request.ShowCode, request.ShowPrice, request.ShowOrders, request.Slug), cancellationToken);
+        return NoContent();
+    }
+
+    [HttpGet("companies/{companyId:guid}/order-form-fields")]
+    public async Task<ActionResult<IReadOnlyList<OrderFormFieldDto>>> GetCompanyOrderFormFields(
+        Guid companyId,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new GetOrderFormFieldsQuery(companyId), cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPost("companies/{companyId:guid}/order-form-fields")]
+    public async Task<ActionResult<OrderFormFieldDto>> CreateCompanyOrderFormField(
+        Guid companyId,
+        [FromBody] CreateOrderFormFieldRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new CreateOrderFormFieldCommand(companyId, request.Label, request.FieldType, request.IsRequired),
+            cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPut("companies/{companyId:guid}/order-form-fields/{fieldId:guid}")]
+    public async Task<IActionResult> UpdateCompanyOrderFormField(
+        Guid companyId,
+        Guid fieldId,
+        [FromBody] UpdateOrderFormFieldRequest request,
+        CancellationToken cancellationToken)
+    {
+        await _mediator.Send(
+            new UpdateOrderFormFieldCommand(companyId, fieldId, request.Label, request.FieldType, request.IsRequired),
+            cancellationToken);
+        return NoContent();
+    }
+
+    [HttpDelete("companies/{companyId:guid}/order-form-fields/{fieldId:guid}")]
+    public async Task<IActionResult> DeleteCompanyOrderFormField(
+        Guid companyId,
+        Guid fieldId,
+        CancellationToken cancellationToken)
+    {
+        await _mediator.Send(new DeleteOrderFormFieldCommand(companyId, fieldId), cancellationToken);
+        return NoContent();
+    }
+
+    [HttpPut("companies/{companyId:guid}/order-form-fields/reorder")]
+    public async Task<IActionResult> ReorderCompanyOrderFormFields(
+        Guid companyId,
+        [FromBody] ReorderOrderFormFieldsRequest request,
+        CancellationToken cancellationToken)
+    {
+        await _mediator.Send(new ReorderOrderFormFieldsCommand(companyId, request.OrderedFieldIds), cancellationToken);
         return NoContent();
     }
 }
