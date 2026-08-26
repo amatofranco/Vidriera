@@ -1,5 +1,72 @@
 import { renderDrawerItems, renderDrawerTotal, updateBadge } from "./order-cart-ui.js";
 import { ARGENTINA_PROVINCES } from "./argentina-provinces.js";
+import { VAT_CONDITIONS } from "./vat-conditions.js";
+
+function appendOptions(select, values) {
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = "Seleccionar...";
+    placeholder.selected = true;
+    select.appendChild(placeholder);
+
+    values.forEach((value) => {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = value;
+        select.appendChild(option);
+    });
+}
+
+function buildFieldInput(field) {
+    if (field.fieldType === "Province") {
+        const select = document.createElement("select");
+        appendOptions(select, ARGENTINA_PROVINCES);
+        return select;
+    }
+
+    if (field.fieldType === "VatCondition") {
+        const select = document.createElement("select");
+        appendOptions(select, VAT_CONDITIONS);
+        return select;
+    }
+
+    const input = document.createElement("input");
+    input.type = field.fieldType === "Email" ? "email" : "text";
+    input.autocomplete = "off";
+
+    if (field.fieldType === "Cuit") {
+        input.pattern = "\\d{11}";
+        input.maxLength = 11;
+        input.inputMode = "numeric";
+        input.title = "11 números, sin guiones ni espacios";
+    } else if (field.fieldType === "Name") {
+        input.pattern = "[\\p{L}\\s'-]+";
+        input.title = "Solo letras, sin números";
+    }
+
+    return input;
+}
+
+function renderOrderFields(dom) {
+    if (!dom.orderCheckoutFields) return;
+    dom.orderCheckoutFields.innerHTML = "";
+
+    dom.orderFormFields.forEach((field) => {
+        const label = document.createElement("label");
+        label.append(field.label);
+
+        const input = buildFieldInput(field);
+        input.name = field.id;
+        if (field.isRequired) {
+            input.required = true;
+        } else if (input.tagName === "INPUT") {
+            input.placeholder = "Opcional";
+        }
+
+        label.appendChild(input);
+        dom.orderCheckoutFields.appendChild(label);
+    });
+}
 
 async function shareOrDownload(blob, fileName) {
     const file = new File([blob], fileName, {
@@ -34,15 +101,7 @@ function parseFileName(response, fallback) {
 export function setupOrderUi(dom, cart, renderPageBar) {
     if (!dom.orderBadgeWrap) return;
 
-    const provinceSelect = dom.orderCheckoutForm ? dom.orderCheckoutForm.elements.province : null;
-    if (provinceSelect) {
-        ARGENTINA_PROVINCES.forEach((name) => {
-            const option = document.createElement("option");
-            option.value = name;
-            option.textContent = name;
-            provinceSelect.appendChild(option);
-        });
-    }
+    renderOrderFields(dom);
 
     dom.orderBadgeWrap.addEventListener("click", () => {
         dom.orderDrawer.style.display = "flex";
@@ -75,7 +134,11 @@ export function setupOrderUi(dom, cart, renderPageBar) {
             if (dom.orderFormError) dom.orderFormError.textContent = "";
 
             const form = dom.orderCheckoutForm;
-            const customer = Object.fromEntries(new FormData(form));
+            const formData = new FormData(form);
+            const customerFields = dom.orderFormFields.map((field) => ({
+                fieldId: field.id,
+                value: formData.get(field.id) || "",
+            }));
             const items = cart.getItems().map((i) => ({ itemId: i.itemId, quantity: i.quantity }));
             const showPrices = cart.getTotalPrice() !== null;
 
@@ -88,7 +151,7 @@ export function setupOrderUi(dom, cart, renderPageBar) {
                 const response = await fetch("/api/orders/excel", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ companyId: dom.companyId, items, customer, showPrices }),
+                    body: JSON.stringify({ companyId: dom.companyId, items, customerFields, showPrices }),
                 });
 
                 if (!response.ok) {

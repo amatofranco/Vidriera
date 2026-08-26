@@ -6,5 +6,5 @@ public record OrderExcelLine(string ItemName, string? Code, int Quantity, decima
 
 public interface IExcelOrderService
 {
-    byte[] GenerateOrderWorkbook(string companyName, CustomerOrderInfo customer, IReadOnlyList<OrderExcelLine> lines);
+    byte[] GenerateOrderWorkbook(string companyName, IReadOnlyList<CustomerFieldSnapshotEntry> customerFields, IReadOnlyList<OrderExcelLine> lines);
 }

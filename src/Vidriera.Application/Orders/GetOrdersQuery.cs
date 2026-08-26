@@ -7,16 +7,7 @@ public record OrderItemDto(string ItemName, string? Code, int Quantity);
 public record OrderDto(
     Guid Id,
     DateTime CreatedAt,
-    string BusinessName,
-    string? StoreName,
-    string Cuit,
-    string? VatCondition,
-    string? Phone,
-    string Email,
-    string? City,
-    string? Province,
-    string? Carrier,
-    string? DeliveryAddress,
+    IReadOnlyList<CustomerFieldSnapshotEntry> CustomerFields,
     IReadOnlyList<OrderItemDto> Items);
 
 public record GetOrdersQuery(Guid CompanyId) : IRequest<IReadOnlyList<OrderDto>>;

@@ -4,22 +4,14 @@ namespace Vidriera.Application.Orders;
 
 public record OrderLineItem(Guid ItemId, int Quantity);
 
-public record CustomerOrderInfo(
-    string BusinessName,
-    string StoreName,
-    string Cuit,
-    string VatCondition,
-    string Phone,
-    string Email,
-    string City,
-    string Province,
-    string? Carrier,
-    string DeliveryAddress);
+public record CustomerFieldSubmission(Guid FieldId, string Value);
+
+public record CustomerFieldSnapshotEntry(string Label, string Value);
 
 public record GenerateOrderExcelCommand(
     Guid CompanyId,
     IReadOnlyList<OrderLineItem> Items,
-    CustomerOrderInfo Customer,
+    IReadOnlyList<CustomerFieldSubmission> CustomerFields,
     bool ShowPrices = false) : IRequest<OrderExcelResult>;
 
 public record OrderExcelResult(byte[] Content, string FileName);

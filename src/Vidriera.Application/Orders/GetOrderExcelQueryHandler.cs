@@ -31,20 +31,10 @@ public class GetOrderExcelQueryHandler : IRequestHandler<GetOrderExcelQuery, Ord
         }
 
         var lines = JsonSerializer.Deserialize<List<OrderExcelLine>>(order.ItemsSnapshotJson) ?? [];
-        var customer = new CustomerOrderInfo(
-            order.BusinessName,
-            order.StoreName ?? "",
-            order.Cuit,
-            order.VatCondition ?? "",
-            order.Phone ?? "",
-            order.Email,
-            order.City ?? "",
-            order.Province ?? "",
-            order.Carrier,
-            order.DeliveryAddress ?? "");
+        var customerFields = OrderCustomerFieldsResolver.Resolve(order);
 
-        var content = _excelOrderService.GenerateOrderWorkbook(order.Company.Name, customer, lines);
-        var fileName = OrderExcelFileName.Build(order.BusinessName, order.CreatedAt);
+        var content = _excelOrderService.GenerateOrderWorkbook(order.Company.Name, customerFields, lines);
+        var fileName = OrderExcelFileName.Build(order.CreatedAt);
 
         return new OrderExcelResult(content, fileName);
     }

@@ -27,45 +27,7 @@
             <button id="order-modal-close" class="order-drawer-close" title="Cerrar">&times;</button>
         </div>
         <form id="order-checkout-form" class="order-form">
-            <label>Razón Social
-                <input type="text" name="businessName" required autocomplete="off" />
-            </label>
-            <label>CUIT
-                <input type="text" name="cuit" required autocomplete="off" pattern="\d{11}" maxlength="11" inputmode="numeric" title="11 números, sin guiones ni espacios" />
-            </label>
-            <label>Email
-                <input type="email" name="email" required autocomplete="off" />
-            </label>
-            <label>Provincia
-                <select name="province" required>
-                    <option value="" selected>Seleccionar...</option>
-                </select>
-            </label>
-            <label>Ciudad
-                <input type="text" name="city" required autocomplete="off" />
-            </label>
-            <label>Dirección de entrega
-                <input type="text" name="deliveryAddress" placeholder="Opcional" autocomplete="off" />
-            </label>
-            <label>Nombre del local
-                <input type="text" name="storeName" placeholder="Opcional" autocomplete="off" />
-            </label>
-            <label>Condición frente al IVA
-                <select name="vatCondition">
-                    <option value="" selected>Seleccionar...</option>
-                    <option value="Responsable Inscripto">Responsable Inscripto</option>
-                    <option value="Monotributista">Monotributista</option>
-                    <option value="Exento">Exento</option>
-                    <option value="Consumidor Final">Consumidor Final</option>
-                    <option value="No Responsable">No Responsable</option>
-                </select>
-            </label>
-            <label>Teléfono
-                <input type="tel" name="phone" placeholder="Opcional" autocomplete="off" />
-            </label>
-            <label>Expreso
-                <input type="text" name="carrier" placeholder="Opcional" autocomplete="off" />
-            </label>
+            <div id="order-checkout-fields"></div>
             <div class="order-form-actions">
                 <span id="order-form-error" class="order-form-error"></span>
                 <button type="submit" id="order-submit-btn" class="order-primary-btn">Generar pedido</button>

@@ -347,24 +347,66 @@ export interface OrderItem {
   quantity: number;
 }
 
+export interface OrderCustomerField {
+  label: string;
+  value: string;
+}
+
 export interface Order {
   id: string;
   createdAt: string;
-  businessName: string;
-  storeName: string | null;
-  cuit: string;
-  vatCondition: string | null;
-  phone: string | null;
-  email: string;
-  city: string | null;
-  province: string | null;
-  carrier: string | null;
-  deliveryAddress: string | null;
+  customerFields: OrderCustomerField[];
   items: OrderItem[];
 }
 
 export function getOrders(token: string) {
   return request<Order[]>("/api/orders", { token });
+}
+
+export interface OrderFormField {
+  id: string;
+  label: string;
+  fieldType: string;
+  isRequired: boolean;
+  sortOrder: number;
+}
+
+export function getOrderFormFields(token: string) {
+  return request<OrderFormField[]>("/api/order-form-fields", { token });
+}
+
+export function createOrderFormField(token: string, label: string, fieldType: string, isRequired: boolean) {
+  return request<OrderFormField>("/api/order-form-fields", {
+    method: "POST",
+    token,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ label, fieldType, isRequired }),
+  });
+}
+
+export function updateOrderFormField(token: string, fieldId: string, label: string, fieldType: string, isRequired: boolean) {
+  return request<void>(`/api/order-form-fields/${fieldId}`, {
+    method: "PUT",
+    token,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ label, fieldType, isRequired }),
+  });
+}
+
+export function deleteOrderFormField(token: string, fieldId: string) {
+  return request<void>(`/api/order-form-fields/${fieldId}`, {
+    method: "DELETE",
+    token,
+  });
+}
+
+export function reorderOrderFormFields(token: string, orderedFieldIds: string[]) {
+  return request<void>("/api/order-form-fields/reorder", {
+    method: "PUT",
+    token,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ orderedFieldIds }),
+  });
 }
 
 export async function downloadOrderExcel(token: string, orderId: string): Promise<{ blob: Blob; fileName: string }> {

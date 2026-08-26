@@ -27,8 +27,6 @@ public class GenerateOrderExcelCommandHandler : IRequestHandler<GenerateOrderExc
             throw new ValidationException(ErrorMessages.MustSelectAtLeastOneOrderItem);
         }
 
-        ValidateCustomer(request.Customer);
-
         var company = await _session.GetOrThrowAsync<Company>(
             request.CompanyId,
             ErrorMessages.CompanyNotFound(request.CompanyId),
@@ -38,6 +36,9 @@ public class GenerateOrderExcelCommandHandler : IRequestHandler<GenerateOrderExc
         {
             throw new ValidationException(ErrorMessages.OrdersNotEnabled);
         }
+
+        var customerSnapshot = await ValidateAndBuildCustomerSnapshotAsync(
+            _session, request.CompanyId, request.CustomerFields, cancellationToken);
 
         var itemIds = request.Items.Select(i => i.ItemId).Distinct().ToList();
         var items = await _session.Query<Item>()
@@ -61,47 +62,53 @@ public class GenerateOrderExcelCommandHandler : IRequestHandler<GenerateOrderExc
         var order = new Order
         {
             Company = company,
-            BusinessName = request.Customer.BusinessName,
-            StoreName = request.Customer.StoreName,
-            Cuit = request.Customer.Cuit,
-            VatCondition = request.Customer.VatCondition,
-            Phone = request.Customer.Phone,
-            Email = request.Customer.Email,
-            City = request.Customer.City,
-            Province = request.Customer.Province,
-            Carrier = request.Customer.Carrier,
-            DeliveryAddress = request.Customer.DeliveryAddress,
             ItemsSnapshotJson = JsonSerializer.Serialize(lines),
+            CustomerFieldsJson = JsonSerializer.Serialize(customerSnapshot),
             CreatedAt = DateTime.UtcNow,
         };
         await _session.SaveInTransactionAsync(order, cancellationToken);
 
-        var content = _excelOrderService.GenerateOrderWorkbook(company.Name, request.Customer, lines);
-        var fileName = OrderExcelFileName.Build(request.Customer.BusinessName, DateTime.UtcNow);
+        var content = _excelOrderService.GenerateOrderWorkbook(company.Name, customerSnapshot, lines);
+        var fileName = OrderExcelFileName.Build(DateTime.UtcNow);
 
         return new OrderExcelResult(content, fileName);
     }
 
-    private static void ValidateCustomer(CustomerOrderInfo customer)
+    private static async Task<IReadOnlyList<CustomerFieldSnapshotEntry>> ValidateAndBuildCustomerSnapshotAsync(
+        ISession session,
+        Guid companyId,
+        IReadOnlyList<CustomerFieldSubmission> submissions,
+        CancellationToken cancellationToken)
     {
-        var requiredFields = new[]
-        {
-            customer.BusinessName,
-            customer.Cuit,
-            customer.Email,
-            customer.Province,
-            customer.City
-        };
+        var fields = await OrderFormFieldResolver.ResolveAsync(session, companyId, cancellationToken);
+        var valuesByFieldId = submissions.ToDictionary(s => s.FieldId, s => (s.Value ?? "").Trim());
 
-        if (requiredFields.Any(string.IsNullOrWhiteSpace))
+        var snapshot = new List<CustomerFieldSnapshotEntry>();
+        foreach (var field in fields)
         {
-            throw new ValidationException(ErrorMessages.OrderCustomerDataIncomplete);
+            var value = valuesByFieldId.TryGetValue(field.Id, out var v) ? v : "";
+
+            if (field.IsRequired && string.IsNullOrWhiteSpace(value))
+            {
+                throw new ValidationException(ErrorMessages.OrderCustomerDataIncomplete);
+            }
+
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                switch (field.FieldType)
+                {
+                    case OrderFieldTypes.Cuit when !CuitValidation.IsValid(value):
+                        throw new ValidationException(ErrorMessages.InvalidCuit);
+                    case OrderFieldTypes.Name when !NameValidation.IsValid(value):
+                        throw new ValidationException(ErrorMessages.InvalidName);
+                    case OrderFieldTypes.Email when !EmailValidation.IsValid(value):
+                        throw new ValidationException(ErrorMessages.InvalidEmail);
+                }
+            }
+
+            snapshot.Add(new CustomerFieldSnapshotEntry(field.Label, value));
         }
 
-        if (!CuitValidation.IsValid(customer.Cuit))
-        {
-            throw new ValidationException(ErrorMessages.InvalidCuit);
-        }
+        return snapshot;
     }
-
 }

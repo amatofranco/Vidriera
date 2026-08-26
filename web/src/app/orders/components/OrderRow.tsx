@@ -16,7 +16,7 @@ function formatDate(iso: string) {
   });
 }
 
-function DetailField({ label, value }: { label: string; value: string | null }) {
+function DetailField({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col gap-0.5">
       <span className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">{label}</span>
@@ -27,6 +27,7 @@ function DetailField({ label, value }: { label: string; value: string | null }) 
 
 export function OrderRow({ order }: { order: Order }) {
   const { auth } = useAuth();
+  const title = order.customerFields[0]?.value || Labels.untitledOrder;
   const [expanded, setExpanded] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
@@ -59,11 +60,8 @@ export function OrderRow({ order }: { order: Order }) {
           className="flex flex-1 flex-wrap items-center justify-between gap-2 text-left"
         >
           <div className="flex flex-col">
-            <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">{order.businessName}</span>
-            <span className="text-xs text-zinc-600 dark:text-zinc-400">
-              {order.storeName ? `${order.storeName} · ` : ""}
-              {formatDate(order.createdAt)}
-            </span>
+            <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">{title}</span>
+            <span className="text-xs text-zinc-600 dark:text-zinc-400">{formatDate(order.createdAt)}</span>
           </div>
           <div className="flex items-center gap-3">
             <span className="text-xs text-zinc-600 dark:text-zinc-400">
@@ -91,16 +89,9 @@ export function OrderRow({ order }: { order: Order }) {
       {expanded && (
         <div className="mt-4 flex flex-col gap-4 border-t border-black/10 pt-4 dark:border-white/10">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <DetailField label={Labels.orderBusinessNameLabel} value={order.businessName} />
-            <DetailField label={Labels.orderStoreNameLabel} value={order.storeName} />
-            <DetailField label={Labels.orderCuitLabel} value={order.cuit} />
-            <DetailField label={Labels.orderVatConditionLabel} value={order.vatCondition} />
-            <DetailField label={Labels.orderPhoneLabel} value={order.phone} />
-            <DetailField label={Labels.emailFieldLabel} value={order.email} />
-            <DetailField label={Labels.orderCityLabel} value={order.city} />
-            <DetailField label={Labels.orderProvinceLabel} value={order.province} />
-            <DetailField label={Labels.orderCarrierLabel} value={order.carrier} />
-            <DetailField label={Labels.orderDeliveryAddressLabel} value={order.deliveryAddress} />
+            {order.customerFields.map((field, index) => (
+              <DetailField key={index} label={field.label} value={field.value} />
+            ))}
           </div>
 
           <div className="overflow-x-auto rounded-md border border-zinc-300 dark:border-zinc-700">

@@ -1,4 +1,5 @@
 using MediatR;
+using Vidriera.Application.Orders;
 
 namespace Vidriera.Application.Catalogs;
 
@@ -12,4 +13,5 @@ public record GeneratedCatalogViewDto(
     string CompanyName,
     IReadOnlyList<CatalogIndexEntry> IndexEntries,
     int RasterizedPageCount,
-    bool ShowOrders);
+    bool ShowOrders,
+    IReadOnlyList<OrderFormFieldDto> OrderFormFields);

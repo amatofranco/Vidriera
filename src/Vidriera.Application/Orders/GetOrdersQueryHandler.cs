@@ -30,20 +30,8 @@ public class GetOrdersQueryHandler : IRequestHandler<GetOrdersQuery, IReadOnlyLi
     {
         var lines = JsonSerializer.Deserialize<List<OrderExcelLine>>(order.ItemsSnapshotJson) ?? [];
         var items = lines.Select(l => new OrderItemDto(l.ItemName, l.Code, l.Quantity)).ToList();
+        var customerFields = OrderCustomerFieldsResolver.Resolve(order);
 
-        return new OrderDto(
-            order.Id,
-            order.CreatedAt,
-            order.BusinessName,
-            order.StoreName,
-            order.Cuit,
-            order.VatCondition,
-            order.Phone,
-            order.Email,
-            order.City,
-            order.Province,
-            order.Carrier,
-            order.DeliveryAddress,
-            items);
+        return new OrderDto(order.Id, order.CreatedAt, customerFields, items);
     }
 }

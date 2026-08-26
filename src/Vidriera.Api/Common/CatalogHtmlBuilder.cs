@@ -40,7 +40,11 @@ public static class CatalogHtmlBuilder
         var indexPanelHtml = hasSections
             ? IndexPanelTemplate.Replace("{{SECTIONS_JSON}}", sectionsJsonEncoded)
             : "";
-        var orderPanelHtml = hasSections && dto.ShowOrders ? OrderPanelTemplate : "";
+        var showOrderPanel = hasSections && dto.ShowOrders;
+        var orderPanelHtml = showOrderPanel ? OrderPanelTemplate : "";
+        var orderFieldsJsonEncoded = showOrderPanel
+            ? WebUtility.HtmlEncode(JsonSerializer.Serialize(dto.OrderFormFields, SectionsJsonOptions))
+            : "[]";
 
         return ViewerPageTemplate
             .Replace("{{FILE_URL}}", fileUrl)
@@ -51,7 +55,8 @@ public static class CatalogHtmlBuilder
             .Replace("{{ORDER_PANEL}}", orderPanelHtml)
             .Replace("{{CATALOG_ID}}", dto.Id.ToString())
             .Replace("{{COMPANY_ID}}", dto.CompanyId.ToString())
-            .Replace("{{PAGE_COUNT}}", dto.RasterizedPageCount.ToString());
+            .Replace("{{PAGE_COUNT}}", dto.RasterizedPageCount.ToString())
+            .Replace("{{ORDER_FIELDS_JSON}}", orderFieldsJsonEncoded);
     }
 
     public static string BuildMessagePage(string title, string message)

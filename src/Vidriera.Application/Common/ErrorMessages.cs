@@ -51,10 +51,16 @@ public static class ErrorMessages
 
     public static string OrdersNotEnabled => Get(nameof(OrdersNotEnabled));
     public static string OrderNotFound(Guid orderId) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(OrderNotFound)), orderId);
+    public static string OrderFormFieldNotFound(Guid fieldId) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(OrderFormFieldNotFound)), fieldId);
+    public static string InvalidOrderFieldType => Get(nameof(InvalidOrderFieldType));
+    public static string OrderFormFieldLabelRequired => Get(nameof(OrderFormFieldLabelRequired));
+    public static string InvalidOrderFormFieldReorderItems => Get(nameof(InvalidOrderFormFieldReorderItems));
     public static string MustSelectAtLeastOneOrderItem => Get(nameof(MustSelectAtLeastOneOrderItem));
     public static string OrderContainsInvalidItems => Get(nameof(OrderContainsInvalidItems));
     public static string OrderCustomerDataIncomplete => Get(nameof(OrderCustomerDataIncomplete));
     public static string InvalidCuit => Get(nameof(InvalidCuit));
+    public static string InvalidName => Get(nameof(InvalidName));
+    public static string InvalidEmail => Get(nameof(InvalidEmail));
 
     public static string InvalidSubscriptionPlan => Get(nameof(InvalidSubscriptionPlan));
     public static string SubscriptionAccessExpired => Get(nameof(SubscriptionAccessExpired));

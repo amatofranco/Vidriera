@@ -139,6 +139,18 @@
   <data name="OrderNotFound" xml:space="preserve">
     <value>No se encontró el pedido {0} para esta empresa.</value>
   </data>
+  <data name="OrderFormFieldNotFound" xml:space="preserve">
+    <value>No se encontró el campo {0} para esta empresa.</value>
+  </data>
+  <data name="InvalidOrderFieldType" xml:space="preserve">
+    <value>El tipo de campo no es válido.</value>
+  </data>
+  <data name="OrderFormFieldLabelRequired" xml:space="preserve">
+    <value>El nombre del campo no puede quedar vacío.</value>
+  </data>
+  <data name="InvalidOrderFormFieldReorderItems" xml:space="preserve">
+    <value>Alguno de los campos no existe o no pertenece a esta empresa.</value>
+  </data>
   <data name="MustSelectAtLeastOneOrderItem" xml:space="preserve">
     <value>Hay que agregar al menos un item al pedido.</value>
   </data>
@@ -150,6 +162,12 @@
   </data>
   <data name="InvalidCuit" xml:space="preserve">
     <value>El CUIT debe tener 11 números, sin guiones ni espacios.</value>
+  </data>
+  <data name="InvalidName" xml:space="preserve">
+    <value>Este campo no puede tener números.</value>
+  </data>
+  <data name="InvalidEmail" xml:space="preserve">
+    <value>El email no es válido.</value>
   </data>
   <data name="InvalidSubscriptionPlan" xml:space="preserve">
     <value>El plan indicado no es válido.</value>

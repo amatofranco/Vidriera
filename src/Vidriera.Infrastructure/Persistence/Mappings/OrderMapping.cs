@@ -25,7 +25,6 @@ public class OrderMapping : ClassMapping<Order>
         Property(x => x.BusinessName, m =>
         {
             m.Column("business_name");
-            m.NotNullable(true);
             m.Length(300);
         });
 
@@ -38,7 +37,6 @@ public class OrderMapping : ClassMapping<Order>
         Property(x => x.Cuit, m =>
         {
             m.Column("cuit");
-            m.NotNullable(true);
             m.Length(50);
         });
 
@@ -57,7 +55,6 @@ public class OrderMapping : ClassMapping<Order>
         Property(x => x.Email, m =>
         {
             m.Column("email");
-            m.NotNullable(true);
             m.Length(300);
         });
 
@@ -88,6 +85,12 @@ public class OrderMapping : ClassMapping<Order>
         Property(x => x.ItemsSnapshotJson, m =>
         {
             m.Column("items_snapshot_json");
+            m.NotNullable(true);
+        });
+
+        Property(x => x.CustomerFieldsJson, m =>
+        {
+            m.Column("customer_fields_json");
             m.NotNullable(true);
         });
 

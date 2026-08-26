@@ -6,7 +6,7 @@ namespace Vidriera.Infrastructure.Excel;
 
 public class ClosedXmlOrderService : IExcelOrderService
 {
-    public byte[] GenerateOrderWorkbook(string companyName, CustomerOrderInfo customer, IReadOnlyList<OrderExcelLine> lines)
+    public byte[] GenerateOrderWorkbook(string companyName, IReadOnlyList<CustomerFieldSnapshotEntry> customerFields, IReadOnlyList<OrderExcelLine> lines)
     {
         using var workbook = new XLWorkbook();
         var sheet = workbook.Worksheets.Add("Pedido");
@@ -21,25 +21,11 @@ public class ClosedXmlOrderService : IExcelOrderService
         sheet.Cell(row, 2).Value = DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm");
         row += 2;
 
-        var customerFields = new (string Label, string? Value)[]
+        foreach (var field in customerFields)
         {
-            ("Razón Social", customer.BusinessName),
-            ("CUIT", customer.Cuit),
-            ("Email", customer.Email),
-            ("Provincia", customer.Province),
-            ("Ciudad", customer.City),
-            ("Dirección de entrega", customer.DeliveryAddress),
-            ("Nombre del local", customer.StoreName),
-            ("Condición frente al IVA", customer.VatCondition),
-            ("Teléfono", customer.Phone),
-            ("Expreso", customer.Carrier),
-        };
-
-        foreach (var (label, value) in customerFields)
-        {
-            sheet.Cell(row, 1).Value = label;
+            sheet.Cell(row, 1).Value = field.Label;
             sheet.Cell(row, 1).Style.Font.Bold = true;
-            sheet.Cell(row, 2).Value = value ?? "";
+            sheet.Cell(row, 2).Value = field.Value;
             row++;
         }
 

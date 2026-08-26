@@ -45,17 +45,7 @@ public class OrdersController : ControllerBase
         var command = new GenerateOrderExcelCommand(
             request.CompanyId,
             request.Items.Select(i => new OrderLineItem(i.ItemId, i.Quantity)).ToList(),
-            new CustomerOrderInfo(
-                request.Customer.BusinessName,
-                request.Customer.StoreName,
-                request.Customer.Cuit,
-                request.Customer.VatCondition,
-                request.Customer.Phone,
-                request.Customer.Email,
-                request.Customer.City,
-                request.Customer.Province,
-                request.Customer.Carrier,
-                request.Customer.DeliveryAddress),
+            request.CustomerFields.Select(f => new CustomerFieldSubmission(f.FieldId, f.Value)).ToList(),
             request.ShowPrices);
 
         var result = await _mediator.Send(command, cancellationToken);
@@ -69,20 +59,10 @@ public class OrdersController : ControllerBase
 
 public record GenerateOrderExcelItemRequest(Guid ItemId, int Quantity);
 
-public record GenerateOrderExcelCustomerRequest(
-    string BusinessName,
-    string StoreName,
-    string Cuit,
-    string VatCondition,
-    string Phone,
-    string Email,
-    string City,
-    string Province,
-    string? Carrier,
-    string DeliveryAddress);
+public record GenerateOrderExcelCustomerFieldRequest(Guid FieldId, string Value);
 
 public record GenerateOrderExcelRequest(
     Guid CompanyId,
     IReadOnlyList<GenerateOrderExcelItemRequest> Items,
-    GenerateOrderExcelCustomerRequest Customer,
+    IReadOnlyList<GenerateOrderExcelCustomerFieldRequest> CustomerFields,
     bool ShowPrices = false);

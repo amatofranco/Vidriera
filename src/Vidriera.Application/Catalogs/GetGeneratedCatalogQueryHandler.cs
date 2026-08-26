@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using NHibernate;
 using Vidriera.Application.Common;
 using Vidriera.Application.Common.Exceptions;
+using Vidriera.Application.Orders;
 using Vidriera.Domain.Entities;
 
 namespace Vidriera.Application.Catalogs;
@@ -41,6 +42,8 @@ public class GetGeneratedCatalogQueryHandler : IRequestHandler<GetGeneratedCatal
             snapshot = new CatalogSnapshot([], []);
         }
 
+        var orderFormFields = await OrderFormFieldResolver.ResolveAsync(_session, catalog.Company.Id, cancellationToken);
+
         return new GeneratedCatalogViewDto(
             catalog.Id,
             catalog.Company.Id,
@@ -49,6 +52,7 @@ public class GetGeneratedCatalogQueryHandler : IRequestHandler<GetGeneratedCatal
             catalog.Company.Name,
             snapshot.IndexEntries,
             catalog.RasterizedPageCount,
-            catalog.Company.ShowOrders);
+            catalog.Company.ShowOrders,
+            orderFormFields);
     }
 }
