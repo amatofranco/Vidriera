@@ -69,6 +69,7 @@ function shrinkToFit(nameEl, maxWidth) {
 export function positionCoverInfo(referenceEl, dom) {
     const nameElCheck = dom.coverInfoEl.querySelector(".cover-info-company");
     if (nameElCheck && nameElCheck.offsetParent === null) {
+        console.log("[DEBUG] positionCoverInfo deferred: offsetParent null");
         requestAnimationFrame(() => positionCoverInfo(referenceEl, dom));
         return;
     }
