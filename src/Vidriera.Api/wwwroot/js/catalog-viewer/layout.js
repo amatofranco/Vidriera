@@ -65,6 +65,18 @@ function shrinkToFit(nameEl, maxWidth) {
     }
 }
 
+function getVisibleBookLeft(flipbookEl) {
+    const pages = flipbookEl.querySelectorAll(".page-content");
+    let minLeft = null;
+    pages.forEach((page) => {
+        const pageRect = page.getBoundingClientRect();
+        if (pageRect.width > 0 && (minLeft === null || pageRect.left < minLeft)) {
+            minLeft = pageRect.left;
+        }
+    });
+    return minLeft !== null ? minLeft : flipbookEl.getBoundingClientRect().left;
+}
+
 export function positionCoverInfo(referenceEl, dom) {
     const nameElCheck = dom.coverInfoEl.querySelector(".cover-info-company");
     if (nameElCheck && nameElCheck.offsetParent === null) {
@@ -72,7 +84,7 @@ export function positionCoverInfo(referenceEl, dom) {
         return;
     }
 
-    const rect = referenceEl.getBoundingClientRect();
+    const rect = { left: getVisibleBookLeft(referenceEl) };
     const gap = 20;
     const indexPanelOpen = dom.indexPanel && !dom.indexPanel.classList.contains("closed");
     const minLeft = indexPanelOpen ? 90 + INDEX_PANEL_MAX_WIDTH : 90;
