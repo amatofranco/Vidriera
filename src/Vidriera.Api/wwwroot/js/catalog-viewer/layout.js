@@ -54,20 +54,16 @@ export function positionSideNav(referenceEl, dom) {
 }
 
 const COMPANY_NAME_BASE_FONT_SIZE = 27;
+const COMPANY_NAME_TARGET_FONT_SIZE = 22;
 const COMPANY_NAME_MIN_FONT_SIZE = 16;
 
-function fitCompanyNameFont(dom, maxWidth) {
-    const nameEl = dom.coverInfoEl.querySelector(".cover-info-company");
-    if (!nameEl) return;
-
-    nameEl.style.fontSize = `${COMPANY_NAME_BASE_FONT_SIZE}px`;
-    nameEl.style.whiteSpace = "nowrap";
+function shrinkToFit(nameEl, maxWidth) {
     let fontSize = COMPANY_NAME_BASE_FONT_SIZE;
+    nameEl.style.fontSize = `${fontSize}px`;
     while (nameEl.scrollWidth > maxWidth && fontSize > COMPANY_NAME_MIN_FONT_SIZE) {
         fontSize -= 1;
         nameEl.style.fontSize = `${fontSize}px`;
     }
-    nameEl.style.whiteSpace = "";
 }
 
 export function positionCoverInfo(referenceEl, dom) {
@@ -76,11 +72,27 @@ export function positionCoverInfo(referenceEl, dom) {
     const padding = 32;
     const indexPanelOpen = dom.indexPanel && !dom.indexPanel.classList.contains("closed");
     const minLeft = indexPanelOpen ? 90 + INDEX_PANEL_MAX_WIDTH : 90;
-    const left = Math.max(niche.left + padding, minLeft);
+    const preferredLeft = Math.max(niche.left + padding, minLeft);
+
+    const nameEl = dom.coverInfoEl.querySelector(".cover-info-company");
+    let left = preferredLeft;
+    if (nameEl) {
+        nameEl.style.whiteSpace = "nowrap";
+        nameEl.style.fontSize = `${COMPANY_NAME_BASE_FONT_SIZE}px`;
+        const naturalWidth = nameEl.scrollWidth;
+        const widthAtTarget = naturalWidth * (COMPANY_NAME_TARGET_FONT_SIZE / COMPANY_NAME_BASE_FONT_SIZE);
+        const neededLeftForTarget = rect.left - widthAtTarget - 20;
+        left = Math.max(minLeft, Math.min(preferredLeft, neededLeftForTarget));
+    }
+
     const maxWidth = Math.min(Math.max(rect.left - left - 20, 120), 420);
     dom.coverInfoEl.style.left = `${left}px`;
     dom.coverInfoEl.style.maxWidth = `${maxWidth}px`;
-    fitCompanyNameFont(dom, maxWidth);
+
+    if (nameEl) {
+        shrinkToFit(nameEl, maxWidth);
+        nameEl.style.whiteSpace = "";
+    }
 }
 
 export function positionIndexPanel(dom) {
