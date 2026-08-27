@@ -16,6 +16,8 @@ import {
 import { CompanyHeader } from "../items/components/CompanyHeader";
 import { useCompanyLogo } from "../items/hooks/useCompanyLogo";
 
+const COVER_LOGO_PREVIEW_HEIGHT = 140;
+
 export default function CatalogCoverPage() {
   const router = useRouter();
   const { auth, isLoading: authLoading, logout } = useAuth();
@@ -156,7 +158,8 @@ export default function CatalogCoverPage() {
             <img
               src={coverLogoUrl}
               alt={Labels.catalogCoverLogoAlt}
-              className="mb-3 h-20 w-auto max-w-full rounded-md bg-white object-contain p-2"
+              style={{ height: COVER_LOGO_PREVIEW_HEIGHT }}
+              className="mb-3 w-auto max-w-full rounded-md bg-white object-contain p-2"
             />
           )}
           <div className="flex items-center gap-2">
