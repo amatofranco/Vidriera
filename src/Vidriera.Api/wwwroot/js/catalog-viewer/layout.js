@@ -55,7 +55,7 @@ export function positionSideNav(referenceEl, dom) {
 
 const COMPANY_NAME_BASE_FONT_SIZE = 27;
 const COMPANY_NAME_MIN_FONT_SIZE = 16;
-const COVER_LOGO_TARGET_HEIGHT = 70;
+const COVER_LOGO_TARGET_HEIGHT = 140;
 
 function shrinkToFit(nameEl, maxWidth) {
     const safeWidth = maxWidth - 4;
