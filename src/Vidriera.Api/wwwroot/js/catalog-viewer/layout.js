@@ -1,4 +1,4 @@
-import { getNicheMaxWidth, getNicheRect } from "./niche.js";
+import { getNicheMaxWidth } from "./niche.js";
 
 const INDEX_PANEL_MAX_WIDTH = 210;
 
@@ -54,7 +54,6 @@ export function positionSideNav(referenceEl, dom) {
 }
 
 const COMPANY_NAME_BASE_FONT_SIZE = 27;
-const COMPANY_NAME_TARGET_FONT_SIZE = 22;
 const COMPANY_NAME_MIN_FONT_SIZE = 16;
 
 function shrinkToFit(nameEl, maxWidth) {
@@ -74,24 +73,20 @@ export function positionCoverInfo(referenceEl, dom) {
     }
 
     const rect = referenceEl.getBoundingClientRect();
-    const niche = getNicheRect();
-    const padding = 32;
+    const gap = 20;
     const indexPanelOpen = dom.indexPanel && !dom.indexPanel.classList.contains("closed");
     const minLeft = indexPanelOpen ? 90 + INDEX_PANEL_MAX_WIDTH : 90;
-    const preferredLeft = Math.max(niche.left + padding, minLeft);
 
     const nameEl = dom.coverInfoEl.querySelector(".cover-info-company");
-    let left = preferredLeft;
+    let left = minLeft;
     if (nameEl) {
         nameEl.style.whiteSpace = "nowrap";
         nameEl.style.fontSize = `${COMPANY_NAME_BASE_FONT_SIZE}px`;
         const naturalWidth = nameEl.scrollWidth;
-        const widthAtTarget = naturalWidth * (COMPANY_NAME_TARGET_FONT_SIZE / COMPANY_NAME_BASE_FONT_SIZE);
-        const neededLeftForTarget = rect.left - widthAtTarget - 20;
-        left = Math.max(minLeft, Math.min(preferredLeft, neededLeftForTarget));
+        left = Math.max(minLeft, rect.left - naturalWidth - gap);
     }
 
-    const maxWidth = Math.min(Math.max(rect.left - left - 20, 120), 420);
+    const maxWidth = Math.min(Math.max(rect.left - left - gap, 100), 420);
     dom.coverInfoEl.style.left = `${left}px`;
     dom.coverInfoEl.style.maxWidth = `${maxWidth}px`;
 
