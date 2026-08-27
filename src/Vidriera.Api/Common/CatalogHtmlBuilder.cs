@@ -12,6 +12,7 @@ public static class CatalogHtmlBuilder
 
     private static readonly string ViewerPageTemplate = LoadTemplate("viewer-page.html");
     private static readonly string IndexPanelTemplate = LoadTemplate("index-panel.html");
+    private static readonly string SectionsDataTemplate = LoadTemplate("sections-data.html");
     private static readonly string OrderPanelTemplate = LoadTemplate("order-panel.html");
     private static readonly string MessagePageTemplate = LoadTemplate("message-page.html");
 
@@ -30,17 +31,19 @@ public static class CatalogHtmlBuilder
         var companyName = WebUtility.HtmlEncode(dto.CompanyName);
         var generatedAt = WebUtility.HtmlEncode(dto.GeneratedAt.ToString("dd/MM/yyyy"));
 
-        var hasSections = dto.IndexEntries.Count > 0;
-        var sectionsJsonEncoded = hasSections
+        var hasIndexData = dto.IndexEntries.Count > 0;
+        var showIndexUi = dto.IndexEntries.Count > 1;
+        var sectionsJsonEncoded = hasIndexData
             ? WebUtility.HtmlEncode(JsonSerializer.Serialize(dto.IndexEntries, SectionsJsonOptions))
             : "";
-        var indexButtonHtml = hasSections
+        var indexButtonHtml = showIndexUi
             ? "<button id=\"index-btn\" title=\"Índice\">&#128209;</button>"
             : "";
-        var indexPanelHtml = hasSections
-            ? IndexPanelTemplate.Replace("{{SECTIONS_JSON}}", sectionsJsonEncoded)
+        var indexPanelHtml = showIndexUi ? IndexPanelTemplate : "";
+        var sectionsDataHtml = hasIndexData
+            ? SectionsDataTemplate.Replace("{{SECTIONS_JSON}}", sectionsJsonEncoded)
             : "";
-        var showOrderPanel = hasSections && dto.ShowOrders;
+        var showOrderPanel = hasIndexData && dto.ShowOrders;
         var orderPanelHtml = showOrderPanel ? OrderPanelTemplate : "";
         var orderFieldsJsonEncoded = showOrderPanel
             ? WebUtility.HtmlEncode(JsonSerializer.Serialize(dto.OrderFormFields, SectionsJsonOptions))
@@ -52,6 +55,7 @@ public static class CatalogHtmlBuilder
             .Replace("{{GENERATED_AT}}", generatedAt)
             .Replace("{{INDEX_BUTTON}}", indexButtonHtml)
             .Replace("{{INDEX_PANEL}}", indexPanelHtml)
+            .Replace("{{SECTIONS_DATA}}", sectionsDataHtml)
             .Replace("{{ORDER_PANEL}}", orderPanelHtml)
             .Replace("{{CATALOG_ID}}", dto.Id.ToString())
             .Replace("{{COMPANY_ID}}", dto.CompanyId.ToString())
