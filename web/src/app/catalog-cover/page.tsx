@@ -158,8 +158,8 @@ export default function CatalogCoverPage() {
             <img
               src={coverLogoUrl}
               alt={Labels.catalogCoverLogoAlt}
-              style={{ maxHeight: COVER_LOGO_PREVIEW_HEIGHT }}
-              className="mb-3 h-auto w-auto max-w-full rounded-md bg-white object-contain p-2"
+              style={{ maxHeight: COVER_LOGO_PREVIEW_HEIGHT, backgroundColor: "#1c1c1e" }}
+              className="mb-3 h-auto w-auto max-w-full rounded-md object-contain p-2"
             />
           )}
           <div className="flex items-center gap-2">
