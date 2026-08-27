@@ -53,15 +53,36 @@ export function positionSideNav(referenceEl, dom) {
     dom.nextBtn.style.right = `${Math.max(window.innerWidth - rect.right - gap - btnSize, 8)}px`;
 }
 
+const COMPANY_NAME_BASE_FONT_SIZE = 27;
+const COMPANY_NAME_MIN_FONT_SIZE = 16;
+
+function fitCompanyNameFont(dom, maxWidth) {
+    const nameEl = dom.coverInfoEl.querySelector(".cover-info-company");
+    if (!nameEl) return;
+
+    nameEl.style.fontSize = `${COMPANY_NAME_BASE_FONT_SIZE}px`;
+    nameEl.style.whiteSpace = "nowrap";
+    let fontSize = COMPANY_NAME_BASE_FONT_SIZE;
+    while (nameEl.scrollWidth > maxWidth && fontSize > COMPANY_NAME_MIN_FONT_SIZE) {
+        fontSize -= 1;
+        nameEl.style.fontSize = `${fontSize}px`;
+    }
+    nameEl.style.whiteSpace = "";
+}
+
 export function positionCoverInfo(referenceEl, dom) {
     const rect = referenceEl.getBoundingClientRect();
     const niche = getNicheRect();
     const padding = 32;
     const indexPanelOpen = dom.indexPanel && !dom.indexPanel.classList.contains("closed");
     const minLeft = indexPanelOpen ? 90 + INDEX_PANEL_MAX_WIDTH : 90;
-    const left = Math.max(niche.left + padding, minLeft);
+    const preferredLeft = Math.max(niche.left + padding, minLeft);
+    const maxWidthCap = 420;
+    const left = Math.max(minLeft, Math.min(preferredLeft, rect.left - maxWidthCap - 20));
+    const maxWidth = Math.min(Math.max(rect.left - left - 20, 120), maxWidthCap);
     dom.coverInfoEl.style.left = `${left}px`;
-    dom.coverInfoEl.style.maxWidth = `${Math.min(Math.max(rect.left - left - 20, 120), 420)}px`;
+    dom.coverInfoEl.style.maxWidth = `${maxWidth}px`;
+    fitCompanyNameFont(dom, maxWidth);
 }
 
 export function positionIndexPanel(dom) {
