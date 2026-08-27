@@ -1,4 +1,4 @@
-import { getNicheMaxWidth } from "./niche.js";
+import { getNicheMaxWidth, getNicheRect } from "./niche.js";
 
 const INDEX_PANEL_MAX_WIDTH = 210;
 
@@ -93,8 +93,8 @@ export function positionCoverInfo(referenceEl, dom) {
     }
 
     const spineLeft = getVisibleBookLeft(referenceEl);
-    const containerLeft = referenceEl.getBoundingClientRect().left;
-    const blankAreaCenter = (containerLeft + spineLeft) / 2;
+    const niche = getNicheRect();
+    const nicheLeftHalfCenter = niche.left + (niche.right - niche.left) * 0.25;
     const gap = 20;
     const indexPanelOpen = dom.indexPanel && !dom.indexPanel.classList.contains("closed");
     const minLeft = indexPanelOpen ? 90 + INDEX_PANEL_MAX_WIDTH : 90;
@@ -113,7 +113,7 @@ export function positionCoverInfo(referenceEl, dom) {
     const maxAllowedWidth = Math.max(spineLeft - minLeft - gap, 100);
     boxWidth = Math.min(boxWidth, maxAllowedWidth, 420);
 
-    let left = blankAreaCenter - boxWidth / 2;
+    let left = nicheLeftHalfCenter - boxWidth / 2;
     left = Math.max(minLeft, Math.min(left, spineLeft - boxWidth - gap));
 
     const maxWidth = boxWidth;
