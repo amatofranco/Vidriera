@@ -76,10 +76,8 @@ export function positionCoverInfo(referenceEl, dom) {
     const padding = 32;
     const indexPanelOpen = dom.indexPanel && !dom.indexPanel.classList.contains("closed");
     const minLeft = indexPanelOpen ? 90 + INDEX_PANEL_MAX_WIDTH : 90;
-    const preferredLeft = Math.max(niche.left + padding, minLeft);
-    const maxWidthCap = 420;
-    const left = Math.max(minLeft, Math.min(preferredLeft, rect.left - maxWidthCap - 20));
-    const maxWidth = Math.min(Math.max(rect.left - left - 20, 120), maxWidthCap);
+    const left = Math.max(niche.left + padding, minLeft);
+    const maxWidth = Math.min(Math.max(rect.left - left - 20, 120), 420);
     dom.coverInfoEl.style.left = `${left}px`;
     dom.coverInfoEl.style.maxWidth = `${maxWidth}px`;
     fitCompanyNameFont(dom, maxWidth);
