@@ -134,6 +134,31 @@ export function positionCoverInfo(referenceEl, dom) {
     }
 }
 
+const COVER_META_WIDTH = 260;
+
+export function positionCoverMeta(dom) {
+    const metaEl = dom.coverInfoMetaEl;
+    if (!metaEl) return;
+
+    if (dom.coverInfoEl.offsetParent === null) {
+        requestAnimationFrame(() => positionCoverMeta(dom));
+        return;
+    }
+
+    const niche = getNicheRect();
+    const centerX = niche.left + (niche.right - niche.left) * 0.25;
+    const gap = 14;
+    const indexPanelOpen = dom.indexPanel && !dom.indexPanel.classList.contains("closed");
+    const minLeft = indexPanelOpen ? 90 + INDEX_PANEL_MAX_WIDTH : 90;
+
+    const left = Math.max(minLeft, centerX - COVER_META_WIDTH / 2);
+    const headingRect = dom.coverInfoEl.getBoundingClientRect();
+
+    metaEl.style.left = `${left}px`;
+    metaEl.style.width = `${COVER_META_WIDTH}px`;
+    metaEl.style.top = `${headingRect.bottom + gap}px`;
+}
+
 export function positionIndexPanel(dom) {
     if (!dom.indexPanel) return;
     if (isMobileViewport()) return;

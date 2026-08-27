@@ -79,16 +79,20 @@ body { overflow: auto; }
     pointer-events: none;
 }
 #cover-info .cover-info-company {
-    font-size: 27px; font-weight: 600; color: #f5f5f7; margin-bottom: 12px;
+    font-size: 27px; font-weight: 600; color: #f5f5f7;
 }
 #cover-info .cover-info-logo {
-    display: block; height: auto; margin-bottom: 12px;
+    display: block; height: auto;
 }
-#cover-info .cover-info-label {
+#cover-info-meta {
+    position: fixed; text-align: center; z-index: 10; display: none;
+    pointer-events: none;
+}
+#cover-info-meta .cover-info-label {
     font-size: 16px; letter-spacing: .12em; text-transform: uppercase;
     color: #c9a86a; margin-bottom: 8px;
 }
-#cover-info .cover-info-date {
+#cover-info-meta .cover-info-date {
     font-size: 14px; color: #a1a1a6;
 }
 
@@ -343,7 +347,7 @@ body { overflow: auto; }
     .page-info-scrubbable::after { content: " \21D4"; opacity: .55; font-size: 16px; }
     .update-banner { bottom: auto; top: 54px; }
 
-    #cover-info { display: none !important; }
+    #cover-info, #cover-info-meta { display: none !important; }
 
     .index-panel {
         left: 10px; right: 10px; top: 10px;

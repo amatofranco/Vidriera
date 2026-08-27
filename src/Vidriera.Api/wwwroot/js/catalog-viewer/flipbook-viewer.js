@@ -1,4 +1,4 @@
-import { computeFitSize, positionSideNav, positionCoverInfo, positionIndexPanel } from "./layout.js";
+import { computeFitSize, positionSideNav, positionCoverInfo, positionCoverMeta, positionIndexPanel } from "./layout.js";
 import { renderIndexPanel } from "./index-panel.js";
 
 const INITIAL_LOAD_COUNT = 5;
@@ -89,6 +89,7 @@ export async function renderFlipbookViewer({ catalogId, pageCount, pageAspect, d
         dom.prevBtn.disabled = current <= 1;
         dom.nextBtn.disabled = current >= pageCount;
         dom.coverInfoEl.style.display = current === 1 ? "block" : "none";
+        if (dom.coverInfoMetaEl) dom.coverInfoMetaEl.style.display = current === 1 ? "block" : "none";
         updatePageOrderBar(current);
     }
 
@@ -125,6 +126,7 @@ export async function renderFlipbookViewer({ catalogId, pageCount, pageAspect, d
             document.body.style.overflow = e.data === "read" ? "auto" : "hidden";
             if (e.data !== "read") {
                 dom.coverInfoEl.style.display = "none";
+                if (dom.coverInfoMetaEl) dom.coverInfoMetaEl.style.display = "none";
             }
         });
         if (wasOpenIndex > 0) pageFlip.turnToPage(wasOpenIndex);
@@ -132,6 +134,7 @@ export async function renderFlipbookViewer({ catalogId, pageCount, pageAspect, d
         requestAnimationFrame(() => {
             positionSideNav(flipbookEl, dom);
             positionCoverInfo(flipbookEl, dom);
+            positionCoverMeta(dom);
             measureStage();
             updateInfo();
         });

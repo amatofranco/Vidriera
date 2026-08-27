@@ -7,6 +7,7 @@ export const dom = {
     stageEl: document.querySelector(".stage"),
     pageInfoEl: document.getElementById("page-info"),
     coverInfoEl: document.getElementById("cover-info"),
+    coverInfoMetaEl: document.getElementById("cover-info-meta"),
     prevBtn: document.getElementById("prev"),
     nextBtn: document.getElementById("next"),
     toolbarEl: document.getElementById("toolbar"),

@@ -61,6 +61,7 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
         dom.prevBtn.disabled = currentPage <= 1;
         dom.nextBtn.disabled = currentPage >= pageCount;
         dom.coverInfoEl.style.display = currentPage === 1 ? "block" : "none";
+        if (dom.coverInfoMetaEl) dom.coverInfoMetaEl.style.display = currentPage === 1 ? "block" : "none";
         if (dom.orderCart) {
             const rect = viewport.getBoundingClientRect();
             dom.orderCart.setCurrentPages([{ pageNumber: currentPage, centerX: rect.left + rect.width / 2 }]);
