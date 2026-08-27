@@ -67,6 +67,12 @@ function shrinkToFit(nameEl, maxWidth) {
 }
 
 export function positionCoverInfo(referenceEl, dom) {
+    const nameElCheck = dom.coverInfoEl.querySelector(".cover-info-company");
+    if (nameElCheck && nameElCheck.offsetParent === null) {
+        requestAnimationFrame(() => positionCoverInfo(referenceEl, dom));
+        return;
+    }
+
     const rect = referenceEl.getBoundingClientRect();
     const niche = getNicheRect();
     const padding = 32;
