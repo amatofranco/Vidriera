@@ -86,7 +86,7 @@ export function positionCoverInfo(referenceEl, dom) {
     }
 
     const rect = { left: getVisibleBookLeft(referenceEl) };
-    const gap = 20;
+    const gap = 50;
     const indexPanelOpen = dom.indexPanel && !dom.indexPanel.classList.contains("closed");
     const minLeft = indexPanelOpen ? 90 + INDEX_PANEL_MAX_WIDTH : 90;
 
