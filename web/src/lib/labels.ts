@@ -195,4 +195,11 @@ export const Labels = {
   changeBackgroundButton: "Cambiar fondo",
   uploadBackgroundButton: "Subir fondo",
   removeBackgroundButton: "Quitar fondo",
+
+  catalogValidityDateLabel: "Fecha de vigencia",
+  catalogValidityDateHint: (defaultDate: string) =>
+    `Por defecto es la fecha de la última actualización del catálogo (${defaultDate}). Dejá el campo vacío para usar esa fecha automáticamente.`,
+  showValidityDateCheckbox: "Mostrar fecha de vigencia en la tapa",
+  saveValidityDateButton: "Guardar",
+  savingValidityDate: "Guardando...",
 } as const;

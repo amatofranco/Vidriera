@@ -285,6 +285,9 @@ export interface CatalogCoverSettings {
   hasCoverLogo: boolean;
   catalogSubtitle: string | null;
   hasCustomBackground: boolean;
+  customValidityDate: string | null;
+  showValidityDate: boolean;
+  lastCatalogGeneratedAt: string | null;
 }
 
 export function getCatalogCoverSettings(token: string) {
@@ -328,6 +331,15 @@ export function setCatalogSubtitle(token: string, subtitle: string | null) {
     token,
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ subtitle }),
+  });
+}
+
+export function setCatalogValidityDate(token: string, customDate: string | null, show: boolean) {
+  return request<void>("/api/company/catalog-validity-date", {
+    method: "PUT",
+    token,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ customDate, show }),
   });
 }
 

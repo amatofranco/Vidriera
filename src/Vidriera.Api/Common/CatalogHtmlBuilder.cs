@@ -29,7 +29,7 @@ public static class CatalogHtmlBuilder
     {
         var fileUrl = WebUtility.HtmlEncode(dto.FileUrl);
         var companyName = WebUtility.HtmlEncode(dto.CompanyName);
-        var generatedAt = WebUtility.HtmlEncode(dto.GeneratedAt.ToString("dd/MM/yyyy"));
+        var validityDate = WebUtility.HtmlEncode(dto.ValidityDate.ToString("dd/MM/yyyy"));
 
         var hasIndexData = dto.IndexEntries.Count > 0;
         var showIndexUi = dto.IndexEntries.Count > 1;
@@ -49,9 +49,13 @@ public static class CatalogHtmlBuilder
             ? WebUtility.HtmlEncode(JsonSerializer.Serialize(dto.OrderFormFields, SectionsJsonOptions))
             : "[]";
         var catalogSubtitle = WebUtility.HtmlEncode(dto.CatalogSubtitle);
-        var catalogLabelDateHtml = !string.IsNullOrWhiteSpace(dto.CatalogSubtitle)
-            ? $"<div class=\"cover-info-label\">{catalogSubtitle}</div><div class=\"cover-info-date\">{generatedAt}</div>"
+        var catalogLabelHtml = !string.IsNullOrWhiteSpace(dto.CatalogSubtitle)
+            ? $"<div class=\"cover-info-label\">{catalogSubtitle}</div>"
             : "";
+        var catalogDateHtml = dto.ShowValidityDate
+            ? $"<div class=\"cover-info-date\">{validityDate}</div>"
+            : "";
+        var catalogLabelDateHtml = catalogLabelHtml + catalogDateHtml;
         var coverInfoHeadingHtml = dto.HasCoverLogo
             ? $"<img class=\"cover-info-logo\" src=\"/api/catalogs/company/{dto.CompanyId}/cover-logo\" alt=\"{companyName}\" />"
             : $"<div class=\"cover-info-company\">{companyName}</div>";

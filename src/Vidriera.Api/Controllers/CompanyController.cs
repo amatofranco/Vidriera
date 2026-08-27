@@ -109,6 +109,16 @@ public class CompanyController : ControllerBase
         await _mediator.Send(new SetCatalogSubtitleCommand(companyId, request.Subtitle), cancellationToken);
         return NoContent();
     }
+
+    [HttpPut("catalog-validity-date")]
+    public async Task<IActionResult> SetCatalogValidityDate([FromBody] SetCatalogValidityDateRequest request, CancellationToken cancellationToken)
+    {
+        var companyId = User.GetCompanyId();
+        await _mediator.Send(new SetCatalogValidityDateCommand(companyId, request.CustomDate, request.Show), cancellationToken);
+        return NoContent();
+    }
 }
 
 public record SetCatalogSubtitleRequest(string? Subtitle);
+
+public record SetCatalogValidityDateRequest(DateTime? CustomDate, bool Show);

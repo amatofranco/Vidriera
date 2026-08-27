@@ -19,6 +19,8 @@ public class Company
     public virtual string? BackgroundContentType { get; set; }
     public virtual string? Slug { get; set; }
     public virtual string? CustomDomain { get; set; }
+    public virtual DateTime? CustomValidityDate { get; set; }
+    public virtual bool ShowValidityDate { get; set; } = true;
 
     public virtual IList<User> Users { get; set; } = new List<User>();
     public virtual IList<Item> Items { get; set; } = new List<Item>();

@@ -32,6 +32,7 @@ export const Messages = {
   catalogSubtitleSaveFailed: "No se pudo guardar el subtítulo.",
   backgroundUploadFailed: "No se pudo subir el fondo.",
   backgroundDeleteFailed: "No se pudo quitar el fondo.",
+  validityDateSaveFailed: "No se pudo guardar la fecha de vigencia.",
 } as const;
 
 export function fileTooLarge(fileName: string, sizeLabel: string, maxLabel: string) {

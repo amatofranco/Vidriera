@@ -87,6 +87,10 @@ public class CompanyMapping : ClassMapping<Company>
             m.Unique(true);
         });
 
+        Property(x => x.CustomValidityDate, m => m.Column("custom_validity_date"));
+
+        Property(x => x.ShowValidityDate, m => m.Column("show_validity_date"));
+
         Bag(x => x.Users, m =>
         {
             m.Key(k => k.Column("company_id"));

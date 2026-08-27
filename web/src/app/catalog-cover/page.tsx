@@ -13,6 +13,7 @@ import {
   fetchCatalogCoverLogoUrl,
   getCatalogCoverSettings,
   setCatalogSubtitle,
+  setCatalogValidityDate,
   uploadCatalogBackground,
   uploadCatalogCoverLogo,
 } from "@/lib/api";
@@ -20,6 +21,17 @@ import { CompanyHeader } from "../items/components/CompanyHeader";
 import { useCompanyLogo } from "../items/hooks/useCompanyLogo";
 
 const COVER_LOGO_PREVIEW_HEIGHT = 140;
+
+function toDateInputValue(iso: string | null): string {
+  if (!iso) return "";
+  return iso.slice(0, 10);
+}
+
+function toDisplayDate(iso: string | null): string {
+  if (!iso) return "";
+  const [year, month, day] = iso.slice(0, 10).split("-");
+  return `${day}/${month}/${year}`;
+}
 
 export default function CatalogCoverPage() {
   const router = useRouter();
@@ -36,11 +48,15 @@ export default function CatalogCoverPage() {
   const [coverLogoUrl, setCoverLogoUrl] = useState<string | null>(null);
   const [backgroundUrl, setBackgroundUrl] = useState<string | null>(null);
   const [subtitle, setSubtitle] = useState("");
+  const [validityDate, setValidityDate] = useState("");
+  const [showValidityDate, setShowValidityDate] = useState(true);
+  const [defaultValidityDateLabel, setDefaultValidityDateLabel] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isUploadingCoverLogo, setIsUploadingCoverLogo] = useState(false);
   const [isUploadingBackground, setIsUploadingBackground] = useState(false);
   const [isSavingSubtitle, setIsSavingSubtitle] = useState(false);
+  const [isSavingValidityDate, setIsSavingValidityDate] = useState(false);
 
   useEffect(() => {
     if (!auth) return;
@@ -56,6 +72,9 @@ export default function CatalogCoverPage() {
         setSubtitle(settings.catalogSubtitle ?? "");
         setCoverLogoUrl(logoUrl);
         setBackgroundUrl(bgUrl);
+        setValidityDate(toDateInputValue(settings.customValidityDate));
+        setShowValidityDate(settings.showValidityDate);
+        setDefaultValidityDateLabel(toDisplayDate(settings.lastCatalogGeneratedAt));
       } catch (err) {
         setError(apiErrorMessage(err, Messages.catalogCoverSettingsLoadFailed));
       } finally {
@@ -134,6 +153,19 @@ export default function CatalogCoverPage() {
       setError(apiErrorMessage(err, Messages.catalogSubtitleSaveFailed));
     } finally {
       setIsSavingSubtitle(false);
+    }
+  }
+
+  async function handleSaveValidityDate() {
+    if (!auth) return;
+    setIsSavingValidityDate(true);
+    setError(null);
+    try {
+      await setCatalogValidityDate(auth.token, validityDate || null, showValidityDate);
+    } catch (err) {
+      setError(apiErrorMessage(err, Messages.validityDateSaveFailed));
+    } finally {
+      setIsSavingValidityDate(false);
     }
   }
 
@@ -270,7 +302,7 @@ export default function CatalogCoverPage() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-black/10 bg-[#ecdcc0] p-4 shadow-lg dark:border-white/10 dark:bg-zinc-900">
+        <div className="mb-6 rounded-xl border border-black/10 bg-[#ecdcc0] p-4 shadow-lg dark:border-white/10 dark:bg-zinc-900">
           <span className="mb-2 block text-xs font-medium text-zinc-600 dark:text-zinc-400">
             {Labels.catalogSubtitleLabel}
           </span>
@@ -289,6 +321,41 @@ export default function CatalogCoverPage() {
               className="rounded-md bg-[#8a5a35] px-4 py-1.5 text-sm text-white transition-colors hover:bg-[#a06b41] disabled:opacity-50"
             >
               {isSavingSubtitle ? Labels.savingSubtitle : Labels.saveSubtitleButton}
+            </button>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-black/10 bg-[#ecdcc0] p-4 shadow-lg dark:border-white/10 dark:bg-zinc-900">
+          <span className="mb-2 block text-xs font-medium text-zinc-600 dark:text-zinc-400">
+            {Labels.catalogValidityDateLabel}
+          </span>
+          {defaultValidityDateLabel && (
+            <p className="mb-2 text-xs text-zinc-600 dark:text-zinc-400">
+              {Labels.catalogValidityDateHint(defaultValidityDateLabel)}
+            </p>
+          )}
+          <div className="flex flex-wrap items-center gap-3">
+            <input
+              type="date"
+              value={validityDate}
+              onChange={(e) => setValidityDate(e.target.value)}
+              className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+            />
+            <label className="flex items-center gap-1.5 text-xs text-zinc-700 dark:text-zinc-300">
+              <input
+                type="checkbox"
+                checked={showValidityDate}
+                onChange={(e) => setShowValidityDate(e.target.checked)}
+                style={{ accentColor: "#c9a86a" }}
+              />
+              {Labels.showValidityDateCheckbox}
+            </label>
+            <button
+              onClick={handleSaveValidityDate}
+              disabled={isSavingValidityDate}
+              className="rounded-md bg-[#8a5a35] px-4 py-1.5 text-sm text-white transition-colors hover:bg-[#a06b41] disabled:opacity-50"
+            >
+              {isSavingValidityDate ? Labels.savingValidityDate : Labels.saveValidityDateButton}
             </button>
           </div>
         </div>

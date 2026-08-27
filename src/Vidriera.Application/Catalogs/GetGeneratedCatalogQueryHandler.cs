@@ -56,6 +56,8 @@ public class GetGeneratedCatalogQueryHandler : IRequestHandler<GetGeneratedCatal
             catalog.Company.CoverLogoBlobKey is not null,
             catalog.Company.CatalogSubtitle,
             catalog.Company.BackgroundBlobKey is not null,
+            catalog.Company.CustomValidityDate ?? catalog.GeneratedAt,
+            catalog.Company.ShowValidityDate,
             orderFormFields);
     }
 }

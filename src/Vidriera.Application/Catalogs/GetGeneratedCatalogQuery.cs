@@ -17,4 +17,6 @@ public record GeneratedCatalogViewDto(
     bool HasCoverLogo,
     string? CatalogSubtitle,
     bool HasCustomBackground,
+    DateTime ValidityDate,
+    bool ShowValidityDate,
     IReadOnlyList<OrderFormFieldDto> OrderFormFields);
