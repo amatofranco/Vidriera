@@ -55,11 +55,15 @@ public static class CatalogHtmlBuilder
         var coverInfoHeadingHtml = dto.HasCoverLogo
             ? $"<img class=\"cover-info-logo\" src=\"/api/catalogs/company/{dto.CompanyId}/cover-logo\" alt=\"{companyName}\" />"
             : $"<div class=\"cover-info-company\">{companyName}</div>";
+        var sceneBgStyle = dto.HasCustomBackground
+            ? $" style=\"background-image: url('/api/catalogs/company/{dto.CompanyId}/background')\""
+            : "";
 
         return ViewerPageTemplate
             .Replace("{{FILE_URL}}", fileUrl)
             .Replace("{{COVER_INFO_HEADING}}", coverInfoHeadingHtml)
             .Replace("{{CATALOG_LABEL_DATE}}", catalogLabelDateHtml)
+            .Replace("{{SCENE_BG_STYLE}}", sceneBgStyle)
             .Replace("{{INDEX_BUTTON}}", indexButtonHtml)
             .Replace("{{INDEX_PANEL}}", indexPanelHtml)
             .Replace("{{SECTIONS_DATA}}", sectionsDataHtml)
@@ -67,6 +71,7 @@ public static class CatalogHtmlBuilder
             .Replace("{{CATALOG_ID}}", dto.Id.ToString())
             .Replace("{{COMPANY_ID}}", dto.CompanyId.ToString())
             .Replace("{{PAGE_COUNT}}", dto.RasterizedPageCount.ToString())
+            .Replace("{{HAS_CUSTOM_BACKGROUND}}", dto.HasCustomBackground ? "true" : "false")
             .Replace("{{ORDER_FIELDS_JSON}}", orderFieldsJsonEncoded);
     }
 

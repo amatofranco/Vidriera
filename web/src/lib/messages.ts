@@ -30,6 +30,8 @@ export const Messages = {
   coverLogoUploadFailed: "No se pudo subir el logo.",
   coverLogoDeleteFailed: "No se pudo quitar el logo.",
   catalogSubtitleSaveFailed: "No se pudo guardar el subtítulo.",
+  backgroundUploadFailed: "No se pudo subir el fondo.",
+  backgroundDeleteFailed: "No se pudo quitar el fondo.",
 } as const;
 
 export function fileTooLarge(fileName: string, sizeLabel: string, maxLabel: string) {

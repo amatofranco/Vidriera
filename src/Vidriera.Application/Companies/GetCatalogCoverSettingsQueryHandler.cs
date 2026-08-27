@@ -21,6 +21,6 @@ public class GetCatalogCoverSettingsQueryHandler : IRequestHandler<GetCatalogCov
             $"No existe la empresa {request.CompanyId}.",
             cancellationToken);
 
-        return new CatalogCoverSettingsDto(company.CoverLogoBlobKey is not null, company.CatalogSubtitle);
+        return new CatalogCoverSettingsDto(company.CoverLogoBlobKey is not null, company.CatalogSubtitle, company.BackgroundBlobKey is not null);
     }
 }

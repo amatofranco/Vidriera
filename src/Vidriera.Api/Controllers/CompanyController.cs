@@ -66,6 +66,34 @@ public class CompanyController : ControllerBase
         return NoContent();
     }
 
+    [HttpPost("catalog-background")]
+    [RequestSizeLimit(8_000_000)]
+    public async Task<IActionResult> UpdateCatalogBackground(IFormFile file, CancellationToken cancellationToken)
+    {
+        var companyId = User.GetCompanyId();
+
+        await using var stream = file.OpenReadStream();
+        await _mediator.Send(new UpdateCompanyBackgroundCommand(companyId, stream, file.ContentType), cancellationToken);
+
+        return NoContent();
+    }
+
+    [HttpGet("catalog-background")]
+    public async Task<IActionResult> GetCatalogBackground(CancellationToken cancellationToken)
+    {
+        var companyId = User.GetCompanyId();
+        var result = await _mediator.Send(new GetCompanyBackgroundQuery(companyId), cancellationToken);
+        return File(result.Content, result.ContentType);
+    }
+
+    [HttpDelete("catalog-background")]
+    public async Task<IActionResult> DeleteCatalogBackground(CancellationToken cancellationToken)
+    {
+        var companyId = User.GetCompanyId();
+        await _mediator.Send(new DeleteCompanyBackgroundCommand(companyId), cancellationToken);
+        return NoContent();
+    }
+
     [HttpGet("catalog-cover-settings")]
     public async Task<ActionResult<CatalogCoverSettingsDto>> GetCatalogCoverSettings(CancellationToken cancellationToken)
     {

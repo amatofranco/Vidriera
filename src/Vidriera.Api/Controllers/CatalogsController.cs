@@ -151,6 +151,21 @@ public class CatalogsController : ControllerBase
         }
     }
 
+    [HttpGet("company/{companyId:guid}/background")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetCatalogBackground(Guid companyId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await _mediator.Send(new GetCompanyBackgroundQuery(companyId), cancellationToken);
+            return File(result.Content, result.ContentType);
+        }
+        catch (NotFoundException)
+        {
+            return NotFound();
+        }
+    }
+
     [HttpGet("{id:guid}/pages/{pageNumber:int}")]
     [AllowAnonymous]
     public async Task<IActionResult> GetPage(Guid id, int pageNumber, CancellationToken cancellationToken)

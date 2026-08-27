@@ -24,7 +24,7 @@ export function computeFitSize(pageAspect, dom) {
     } else {
         const indexPanelOpen = dom.indexPanel && !dom.indexPanel.classList.contains("closed");
         const toolbarSpace = indexPanelOpen ? 90 + INDEX_PANEL_MAX_WIDTH : 90;
-        if (inFullscreen) {
+        if (inFullscreen || dom.hasCustomBackground) {
             availW = Math.max(window.innerWidth - toolbarSpace - margin * 2, 100);
         } else {
             const nicheW = getNicheMaxWidth() * 0.94;
@@ -93,8 +93,14 @@ export function positionCoverInfo(referenceEl, dom) {
     }
 
     const spineLeft = getVisibleBookLeft(referenceEl);
-    const niche = getNicheRect();
-    const nicheLeftHalfCenter = niche.left + (niche.right - niche.left) * 0.25;
+    let preferredCenter;
+    if (dom.hasCustomBackground) {
+        const containerLeft = referenceEl.getBoundingClientRect().left;
+        preferredCenter = (containerLeft + spineLeft) / 2;
+    } else {
+        const niche = getNicheRect();
+        preferredCenter = niche.left + (niche.right - niche.left) * 0.25;
+    }
     const gap = 20;
     const indexPanelOpen = dom.indexPanel && !dom.indexPanel.classList.contains("closed");
     const minLeft = indexPanelOpen ? 90 + INDEX_PANEL_MAX_WIDTH : 90;
@@ -113,7 +119,7 @@ export function positionCoverInfo(referenceEl, dom) {
     const maxAllowedWidth = Math.max(spineLeft - minLeft - gap, 100);
     boxWidth = Math.min(boxWidth, maxAllowedWidth, 420);
 
-    let left = nicheLeftHalfCenter - boxWidth / 2;
+    let left = preferredCenter - boxWidth / 2;
     left = Math.max(minLeft, Math.min(left, spineLeft - boxWidth - gap));
 
     const maxWidth = boxWidth;

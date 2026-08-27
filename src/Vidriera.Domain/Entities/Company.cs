@@ -15,6 +15,8 @@ public class Company
     public virtual string? CoverLogoBlobKey { get; set; }
     public virtual string? CoverLogoContentType { get; set; }
     public virtual string? CatalogSubtitle { get; set; } = "Catálogo";
+    public virtual string? BackgroundBlobKey { get; set; }
+    public virtual string? BackgroundContentType { get; set; }
     public virtual string? Slug { get; set; }
 
     public virtual IList<User> Users { get; set; } = new List<User>();

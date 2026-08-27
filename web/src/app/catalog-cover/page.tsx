@@ -7,10 +7,13 @@ import { useAuth } from "@/lib/auth-context";
 import { Labels } from "@/lib/labels";
 import { Messages, apiErrorMessage } from "@/lib/messages";
 import {
+  deleteCatalogBackground,
   deleteCatalogCoverLogo,
+  fetchCatalogBackgroundUrl,
   fetchCatalogCoverLogoUrl,
   getCatalogCoverSettings,
   setCatalogSubtitle,
+  uploadCatalogBackground,
   uploadCatalogCoverLogo,
 } from "@/lib/api";
 import { CompanyHeader } from "../items/components/CompanyHeader";
@@ -31,10 +34,12 @@ export default function CatalogCoverPage() {
   const { logoUrl, setLogoUrl, isLoading: isLogoLoading } = useCompanyLogo(auth);
 
   const [coverLogoUrl, setCoverLogoUrl] = useState<string | null>(null);
+  const [backgroundUrl, setBackgroundUrl] = useState<string | null>(null);
   const [subtitle, setSubtitle] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isUploadingCoverLogo, setIsUploadingCoverLogo] = useState(false);
+  const [isUploadingBackground, setIsUploadingBackground] = useState(false);
   const [isSavingSubtitle, setIsSavingSubtitle] = useState(false);
 
   useEffect(() => {
@@ -43,12 +48,14 @@ export default function CatalogCoverPage() {
     async function load(token: string) {
       setIsLoading(true);
       try {
-        const [settings, url] = await Promise.all([
+        const [settings, logoUrl, bgUrl] = await Promise.all([
           getCatalogCoverSettings(token),
           fetchCatalogCoverLogoUrl(token),
+          fetchCatalogBackgroundUrl(token),
         ]);
         setSubtitle(settings.catalogSubtitle ?? "");
-        setCoverLogoUrl(url);
+        setCoverLogoUrl(logoUrl);
+        setBackgroundUrl(bgUrl);
       } catch (err) {
         setError(apiErrorMessage(err, Messages.catalogCoverSettingsLoadFailed));
       } finally {
@@ -85,6 +92,35 @@ export default function CatalogCoverPage() {
       setError(apiErrorMessage(err, Messages.coverLogoDeleteFailed));
     } finally {
       setIsUploadingCoverLogo(false);
+    }
+  }
+
+  async function handleBackgroundChange(file: File) {
+    if (!auth) return;
+    setIsUploadingBackground(true);
+    setError(null);
+    try {
+      await uploadCatalogBackground(auth.token, file);
+      const url = await fetchCatalogBackgroundUrl(auth.token);
+      setBackgroundUrl(url);
+    } catch (err) {
+      setError(apiErrorMessage(err, Messages.backgroundUploadFailed));
+    } finally {
+      setIsUploadingBackground(false);
+    }
+  }
+
+  async function handleRemoveBackground() {
+    if (!auth) return;
+    setIsUploadingBackground(true);
+    setError(null);
+    try {
+      await deleteCatalogBackground(auth.token);
+      setBackgroundUrl(null);
+    } catch (err) {
+      setError(apiErrorMessage(err, Messages.backgroundDeleteFailed));
+    } finally {
+      setIsUploadingBackground(false);
     }
   }
 
@@ -187,6 +223,48 @@ export default function CatalogCoverPage() {
                 className="text-xs text-red-600 underline hover:text-red-500 disabled:opacity-50 dark:text-red-400"
               >
                 {Labels.removeCoverLogoButton}
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="mb-6 rounded-xl border border-black/10 bg-[#ecdcc0] p-4 shadow-lg dark:border-white/10 dark:bg-zinc-900">
+          <span className="mb-2 block text-xs font-medium text-zinc-600 dark:text-zinc-400">
+            {Labels.catalogBackgroundLabel}
+          </span>
+          {backgroundUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={backgroundUrl}
+              alt={Labels.catalogBackgroundAlt}
+              className="mb-3 h-32 w-full rounded-md object-cover"
+            />
+          )}
+          <div className="flex items-center gap-2">
+            <label className="cursor-pointer rounded-md border border-zinc-400 px-3 py-1.5 text-xs font-medium text-zinc-800 transition-colors hover:bg-black/5 dark:border-white/15 dark:text-[#e4c98a] dark:hover:bg-white/10">
+              {isUploadingBackground
+                ? Labels.uploadingBackground
+                : backgroundUrl
+                  ? Labels.changeBackgroundButton
+                  : Labels.uploadBackgroundButton}
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                disabled={isUploadingBackground}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleBackgroundChange(file);
+                }}
+              />
+            </label>
+            {backgroundUrl && (
+              <button
+                onClick={handleRemoveBackground}
+                disabled={isUploadingBackground}
+                className="text-xs text-red-600 underline hover:text-red-500 disabled:opacity-50 dark:text-red-400"
+              >
+                {Labels.removeBackgroundButton}
               </button>
             )}
           </div>

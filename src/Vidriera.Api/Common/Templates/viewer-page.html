@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/css/catalog-viewer.css" />
 </head>
 <body>
-    <div class="scene-bg"></div>
+    <div class="scene-bg"{{SCENE_BG_STYLE}}></div>
     <div id="loading" class="loading">
         <div class="spinner"></div>
         <span id="loading-text">Preparando catálogo...</span>
@@ -30,7 +30,7 @@
         {{INDEX_PANEL}}
         {{SECTIONS_DATA}}
         {{ORDER_PANEL}}
-        <div id="catalog-meta" data-catalog-id="{{CATALOG_ID}}" data-company-id="{{COMPANY_ID}}" data-page-count="{{PAGE_COUNT}}" data-order-fields="{{ORDER_FIELDS_JSON}}" style="display: none;"></div>
+        <div id="catalog-meta" data-catalog-id="{{CATALOG_ID}}" data-company-id="{{COMPANY_ID}}" data-page-count="{{PAGE_COUNT}}" data-order-fields="{{ORDER_FIELDS_JSON}}" data-has-custom-background="{{HAS_CUSTOM_BACKGROUND}}" style="display: none;"></div>
         <div id="update-banner" class="update-banner" style="display: none;">
             <span>Hay una versión nueva del catálogo.</span>
             <button id="update-banner-btn">Actualizar</button>

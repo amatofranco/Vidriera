@@ -188,4 +188,11 @@ export const Labels = {
   catalogSubtitlePlaceholder: "Catálogo",
   saveSubtitleButton: "Guardar",
   savingSubtitle: "Guardando...",
+
+  catalogBackgroundLabel: "Fondo del catálogo",
+  catalogBackgroundAlt: "Fondo del catálogo",
+  uploadingBackground: "Subiendo...",
+  changeBackgroundButton: "Cambiar fondo",
+  uploadBackgroundButton: "Subir fondo",
+  removeBackgroundButton: "Quitar fondo",
 } as const;

@@ -61,6 +61,18 @@ public class CompanyMapping : ClassMapping<Company>
             m.Length(100);
         });
 
+        Property(x => x.BackgroundBlobKey, m =>
+        {
+            m.Column("background_blob_key");
+            m.Length(500);
+        });
+
+        Property(x => x.BackgroundContentType, m =>
+        {
+            m.Column("background_content_type");
+            m.Length(100);
+        });
+
         Property(x => x.Slug, m =>
         {
             m.Column("slug");

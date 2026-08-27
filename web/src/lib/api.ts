@@ -284,6 +284,7 @@ export async function fetchCompanyLogoUrl(token: string): Promise<string | null>
 export interface CatalogCoverSettings {
   hasCoverLogo: boolean;
   catalogSubtitle: string | null;
+  hasCustomBackground: boolean;
 }
 
 export function getCatalogCoverSettings(token: string) {
@@ -328,6 +329,37 @@ export function setCatalogSubtitle(token: string, subtitle: string | null) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ subtitle }),
   });
+}
+
+export function uploadCatalogBackground(token: string, file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  return request<void>("/api/company/catalog-background", {
+    method: "POST",
+    token,
+    body: formData,
+  });
+}
+
+export function deleteCatalogBackground(token: string) {
+  return request<void>("/api/company/catalog-background", {
+    method: "DELETE",
+    token,
+  });
+}
+
+export async function fetchCatalogBackgroundUrl(token: string): Promise<string | null> {
+  const response = await fetch(`${API_URL}/api/company/catalog-background`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const blob = await response.blob();
+  return URL.createObjectURL(blob);
 }
 
 export interface GenerateCatalogResult {

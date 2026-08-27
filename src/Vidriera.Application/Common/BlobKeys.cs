@@ -14,6 +14,9 @@ internal static class BlobKeys
     public static string CompanyCoverLogo(Guid companyId) =>
         $"companies/{companyId}/cover-logo";
 
+    public static string CompanyBackground(Guid companyId) =>
+        $"companies/{companyId}/background";
+
     public static string GeneratedCatalog(Guid companyId) =>
         $"companies/{companyId}/catalogs/{Guid.NewGuid()}.pdf";
 
