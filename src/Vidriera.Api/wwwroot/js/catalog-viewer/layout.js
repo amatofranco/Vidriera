@@ -61,7 +61,7 @@ export function positionCoverInfo(referenceEl, dom) {
     const minLeft = indexPanelOpen ? 90 + INDEX_PANEL_MAX_WIDTH : 90;
     const left = Math.max(niche.left + padding, minLeft);
     dom.coverInfoEl.style.left = `${left}px`;
-    dom.coverInfoEl.style.maxWidth = `${Math.min(Math.max(rect.left - left - 20, 120), 320)}px`;
+    dom.coverInfoEl.style.maxWidth = `${Math.min(Math.max(rect.left - left - 20, 120), 420)}px`;
 }
 
 export function positionIndexPanel(dom) {

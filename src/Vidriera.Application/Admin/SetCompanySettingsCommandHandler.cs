@@ -42,6 +42,7 @@ public class SetCompanySettingsCommandHandler : IRequestHandler<SetCompanySettin
         company.ShowCode = request.ShowCode;
         company.ShowPrice = request.ShowPrice;
         company.ShowOrders = request.ShowOrders;
+        company.ShowCatalogLabel = request.ShowCatalogLabel;
         company.Slug = slug;
 
         await _session.UpdateInTransactionAsync(company, cancellationToken);

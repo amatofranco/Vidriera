@@ -14,4 +14,5 @@ public record GeneratedCatalogViewDto(
     IReadOnlyList<CatalogIndexEntry> IndexEntries,
     int RasterizedPageCount,
     bool ShowOrders,
+    bool ShowCatalogLabel,
     IReadOnlyList<OrderFormFieldDto> OrderFormFields);

@@ -48,11 +48,14 @@ public static class CatalogHtmlBuilder
         var orderFieldsJsonEncoded = showOrderPanel
             ? WebUtility.HtmlEncode(JsonSerializer.Serialize(dto.OrderFormFields, SectionsJsonOptions))
             : "[]";
+        var catalogLabelDateHtml = dto.ShowCatalogLabel
+            ? $"<div class=\"cover-info-label\">Catálogo</div><div class=\"cover-info-date\">{generatedAt}</div>"
+            : "";
 
         return ViewerPageTemplate
             .Replace("{{FILE_URL}}", fileUrl)
             .Replace("{{COMPANY_NAME}}", companyName)
-            .Replace("{{GENERATED_AT}}", generatedAt)
+            .Replace("{{CATALOG_LABEL_DATE}}", catalogLabelDateHtml)
             .Replace("{{INDEX_BUTTON}}", indexButtonHtml)
             .Replace("{{INDEX_PANEL}}", indexPanelHtml)
             .Replace("{{SECTIONS_DATA}}", sectionsDataHtml)

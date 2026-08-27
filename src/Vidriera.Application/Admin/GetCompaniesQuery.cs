@@ -12,4 +12,5 @@ public record CompanyListItemDto(
     DateTime CreatedAt,
     bool ShowCode,
     bool ShowPrice,
-    bool ShowOrders);
+    bool ShowOrders,
+    bool ShowCatalogLabel);

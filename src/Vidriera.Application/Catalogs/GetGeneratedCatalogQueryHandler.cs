@@ -53,6 +53,7 @@ public class GetGeneratedCatalogQueryHandler : IRequestHandler<GetGeneratedCatal
             snapshot.IndexEntries,
             catalog.RasterizedPageCount,
             catalog.Company.ShowOrders,
+            catalog.Company.ShowCatalogLabel,
             orderFormFields);
     }
 }
