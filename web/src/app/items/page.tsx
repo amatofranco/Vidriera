@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
-import { MAX_FILE_SIZE_LABEL } from "@/lib/file-size";
+import { MAX_FILE_SIZE_LABEL, MAX_ITEM_FILE_SIZE_LABEL } from "@/lib/file-size";
 import { Labels } from "@/lib/labels";
 import type { Item, Section } from "@/lib/api";
 
@@ -342,7 +342,7 @@ export default function ItemsPage() {
           label={Labels.itemSheetFormLabel}
           fileButtonLabel={Labels.chooseFilesPlural}
           multiple
-          maxSizeLabel={MAX_FILE_SIZE_LABEL}
+          maxSizeLabel={MAX_ITEM_FILE_SIZE_LABEL}
           isSubmitting={isCreating}
           submitTitle={(count) => (count > 1 ? Labels.uploadItemsSubmitTitle(count) : Labels.newItemSubmitTitle)}
           progress={uploadProgress}

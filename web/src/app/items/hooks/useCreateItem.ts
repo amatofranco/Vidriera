@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { AuthState } from "@/lib/auth-context";
 import { runWithConcurrency } from "@/lib/concurrency";
-import { MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_LABEL, formatFileSize } from "@/lib/file-size";
+import { MAX_ITEM_FILE_SIZE_BYTES, MAX_ITEM_FILE_SIZE_LABEL, formatFileSize } from "@/lib/file-size";
 import { ApiError, createItem, type Item } from "@/lib/api";
 import { Messages, bulkUploadFailed, fileTooLargeReason } from "@/lib/messages";
 import { baseName, parseItemFileName } from "@/lib/parseItemFileName";
@@ -58,14 +58,14 @@ export function useCreateItem({
       })
     );
     const failed: { name: string; message: string }[] = [];
-    const oversized = files.filter((f) => f.size > MAX_FILE_SIZE_BYTES);
-    const validFiles = files.filter((f) => f.size <= MAX_FILE_SIZE_BYTES);
+    const oversized = files.filter((f) => f.size > MAX_ITEM_FILE_SIZE_BYTES);
+    const validFiles = files.filter((f) => f.size <= MAX_ITEM_FILE_SIZE_BYTES);
     setUploadProgress({ done: 0, total: validFiles.length });
 
     for (const file of oversized) {
       failed.push({
         name: file.name,
-        message: fileTooLargeReason(formatFileSize(file.size), MAX_FILE_SIZE_LABEL),
+        message: fileTooLargeReason(formatFileSize(file.size), MAX_ITEM_FILE_SIZE_LABEL),
       });
     }
 

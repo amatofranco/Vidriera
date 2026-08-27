@@ -28,7 +28,7 @@ public class ItemsController : ControllerBase
     }
 
     [HttpPost]
-    [RequestSizeLimit(20_000_000)]
+    [RequestSizeLimit(60_000_000)]
     public async Task<ActionResult<ItemDto>> CreateItem([FromForm] CreateItemRequest request, CancellationToken cancellationToken)
     {
         var companyId = User.GetCompanyId();
@@ -74,7 +74,7 @@ public class ItemsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/sheet")]
-    [RequestSizeLimit(20_000_000)]
+    [RequestSizeLimit(60_000_000)]
     public async Task<IActionResult> UploadSheet(Guid id, IFormFile file, CancellationToken cancellationToken)
     {
         var companyId = User.GetCompanyId();
