@@ -9,7 +9,8 @@ public record CreateCompanyCommand(
     string UserPassword,
     bool ShowCode = true,
     bool ShowPrice = true,
-    bool ShowOrders = true,
-    string? Slug = null) : IRequest<CreateCompanyResult>;
+    bool ShowOrders = false,
+    string? Slug = null,
+    string? Preset = null) : IRequest<CreateCompanyResult>;
 
 public record CreateCompanyResult(Guid CompanyId, Guid UserId);

@@ -44,15 +44,19 @@ public class CreateCompanyCommandHandler : IRequestHandler<CreateCompanyCommand,
             }
         }
 
+        var (showCode, showPrice, showOrders) = string.IsNullOrWhiteSpace(request.Preset)
+            ? (request.ShowCode, request.ShowPrice, request.ShowOrders)
+            : CompanyPresets.Resolve(request.Preset);
+
         var company = new Company
         {
             Id = Guid.NewGuid(),
             Name = request.CompanyName,
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
-            ShowCode = request.ShowCode,
-            ShowPrice = request.ShowPrice,
-            ShowOrders = request.ShowOrders,
+            ShowCode = showCode,
+            ShowPrice = showPrice,
+            ShowOrders = showOrders,
             Slug = slug
         };
 

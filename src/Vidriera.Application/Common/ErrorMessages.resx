@@ -112,6 +112,9 @@
   <data name="CompanySlugTaken" xml:space="preserve">
     <value>Ya existe una empresa con el slug '{0}'.</value>
   </data>
+  <data name="InvalidCompanyPreset" xml:space="preserve">
+    <value>El preset '{0}' no existe.</value>
+  </data>
   <data name="CatalogNotFound" xml:space="preserve">
     <value>No existe el catálogo {0}.</value>
   </data>

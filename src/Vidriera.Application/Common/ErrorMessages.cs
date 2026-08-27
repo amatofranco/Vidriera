@@ -39,6 +39,8 @@ public static class ErrorMessages
     public static string InvalidCompanySlug => Get(nameof(InvalidCompanySlug));
     public static string CompanySlugTaken(string slug) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(CompanySlugTaken)), slug);
 
+    public static string InvalidCompanyPreset(string preset) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(InvalidCompanyPreset)), preset);
+
     public static string CatalogNotFound(Guid catalogId) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(CatalogNotFound)), catalogId);
 
     public static string ItemNotFound(Guid itemId) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(ItemNotFound)), itemId);
