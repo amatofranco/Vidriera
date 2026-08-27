@@ -88,7 +88,7 @@ public class CatalogsController : ControllerBase
         }
     }
 
-    [HttpGet("/{slug}")]
+    [HttpGet("/{slug:regex(^[[^.]]+$)}")]
     [AllowAnonymous]
     public async Task<ContentResult> ViewBySlug(string slug, CancellationToken cancellationToken)
     {
