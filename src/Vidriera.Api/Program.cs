@@ -123,4 +123,7 @@ app.MapControllers();
 
 app.MapMethods("/api/health", ["GET", "HEAD"], () => Results.Ok(new { status = "ok" }));
 
+app.MapGet("/about", (IWebHostEnvironment env) =>
+    Results.File(Path.Combine(env.WebRootPath, "about.html"), "text/html; charset=utf-8"));
+
 app.Run();
