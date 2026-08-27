@@ -140,7 +140,7 @@ export function positionCoverMeta(dom) {
     const metaEl = dom.coverInfoMetaEl;
     if (!metaEl) return;
 
-    if (dom.coverInfoEl.offsetParent === null) {
+    if (getComputedStyle(dom.coverInfoEl).display === "none") {
         requestAnimationFrame(() => positionCoverMeta(dom));
         return;
     }
