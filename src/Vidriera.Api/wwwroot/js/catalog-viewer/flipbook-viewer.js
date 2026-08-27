@@ -115,6 +115,7 @@ export async function renderFlipbookViewer({ catalogId, pageCount, pageAspect, d
             showCover: true,
             maxShadowOpacity: 0.6,
             mobileScrollSupport: false,
+            flippingTime: 600,
         });
 
         pageDivs.forEach((div) => flipbookEl.appendChild(div));
