@@ -37,4 +37,50 @@ public class CompanyController : ControllerBase
         var result = await _mediator.Send(new GetCompanyLogoQuery(companyId), cancellationToken);
         return File(result.Content, result.ContentType);
     }
+
+    [HttpPost("cover-logo")]
+    [RequestSizeLimit(5_000_000)]
+    public async Task<IActionResult> UpdateCoverLogo(IFormFile file, CancellationToken cancellationToken)
+    {
+        var companyId = User.GetCompanyId();
+
+        await using var stream = file.OpenReadStream();
+        await _mediator.Send(new UpdateCompanyCoverLogoCommand(companyId, stream, file.ContentType), cancellationToken);
+
+        return NoContent();
+    }
+
+    [HttpGet("cover-logo")]
+    public async Task<IActionResult> GetCoverLogo(CancellationToken cancellationToken)
+    {
+        var companyId = User.GetCompanyId();
+        var result = await _mediator.Send(new GetCompanyCoverLogoQuery(companyId), cancellationToken);
+        return File(result.Content, result.ContentType);
+    }
+
+    [HttpDelete("cover-logo")]
+    public async Task<IActionResult> DeleteCoverLogo(CancellationToken cancellationToken)
+    {
+        var companyId = User.GetCompanyId();
+        await _mediator.Send(new DeleteCompanyCoverLogoCommand(companyId), cancellationToken);
+        return NoContent();
+    }
+
+    [HttpGet("catalog-cover-settings")]
+    public async Task<ActionResult<CatalogCoverSettingsDto>> GetCatalogCoverSettings(CancellationToken cancellationToken)
+    {
+        var companyId = User.GetCompanyId();
+        var result = await _mediator.Send(new GetCatalogCoverSettingsQuery(companyId), cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPut("catalog-subtitle")]
+    public async Task<IActionResult> SetCatalogSubtitle([FromBody] SetCatalogSubtitleRequest request, CancellationToken cancellationToken)
+    {
+        var companyId = User.GetCompanyId();
+        await _mediator.Send(new SetCatalogSubtitleCommand(companyId, request.Subtitle), cancellationToken);
+        return NoContent();
+    }
 }
+
+public record SetCatalogSubtitleRequest(string? Subtitle);

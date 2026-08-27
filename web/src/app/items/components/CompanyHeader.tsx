@@ -8,7 +8,10 @@ import { fetchCompanyLogoUrl, uploadCompanyLogo } from "@/lib/api";
 import { Labels } from "@/lib/labels";
 import { Messages, apiErrorMessage } from "@/lib/messages";
 
-const BASE_NAV_LINKS = [{ href: "/items", label: Labels.itemsNavLabel }];
+const BASE_NAV_LINKS = [
+  { href: "/items", label: Labels.itemsNavLabel },
+  { href: "/catalog-cover", label: Labels.catalogCoverNavLabel },
+];
 const ORDERS_NAV_LINK = { href: "/orders", label: Labels.ordersNavLabel };
 const ORDER_FORM_NAV_LINK = { href: "/order-form", label: Labels.orderFormNavLabel };
 const PRICES_NAV_LINK = { href: "/import-prices", label: Labels.importPricesNavLabel };

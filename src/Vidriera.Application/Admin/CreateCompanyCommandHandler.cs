@@ -57,7 +57,7 @@ public class CreateCompanyCommandHandler : IRequestHandler<CreateCompanyCommand,
             ShowCode = showCode,
             ShowPrice = showPrice,
             ShowOrders = showOrders,
-            ShowCatalogLabel = request.ShowCatalogLabel,
+            CatalogSubtitle = request.CatalogSubtitle,
             Slug = slug
         };
 

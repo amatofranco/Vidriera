@@ -53,7 +53,8 @@ public class GetGeneratedCatalogQueryHandler : IRequestHandler<GetGeneratedCatal
             snapshot.IndexEntries,
             catalog.RasterizedPageCount,
             catalog.Company.ShowOrders,
-            catalog.Company.ShowCatalogLabel,
+            catalog.Company.CoverLogoBlobKey is not null,
+            catalog.Company.CatalogSubtitle,
             orderFormFields);
     }
 }

@@ -173,4 +173,19 @@ export const Labels = {
   orderFieldTypePhone: "Teléfono (solo números)",
   orderFieldTypeProvince: "Provincia",
   orderFieldTypeVatCondition: "Condición frente al IVA",
+
+  catalogCoverNavLabel: "Portada",
+  catalogCoverTitle: "Portada del catálogo",
+  catalogCoverHint:
+    "Subí un logo para que se muestre en la tapa del catálogo en vez del nombre de la empresa, y elegí el subtítulo que aparece debajo (por ejemplo \"Catálogo\"). Dejalo vacío para no mostrar nada ahí.",
+  catalogCoverLogoLabel: "Logo de la tapa",
+  catalogCoverLogoAlt: "Logo de la tapa del catálogo",
+  uploadingCoverLogo: "Subiendo...",
+  changeCoverLogoButton: "Cambiar logo",
+  uploadCoverLogoButton: "Subir logo",
+  removeCoverLogoButton: "Quitar logo",
+  catalogSubtitleLabel: "Subtítulo",
+  catalogSubtitlePlaceholder: "Catálogo",
+  saveSubtitleButton: "Guardar",
+  savingSubtitle: "Guardando...",
 } as const;

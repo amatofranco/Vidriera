@@ -26,6 +26,10 @@ export const Messages = {
   forgotPasswordFailed: "No se pudo enviar el mail. Intentá de nuevo.",
   resetPasswordFailed: "No se pudo actualizar la contraseña.",
   passwordsDontMatch: "Las contraseñas no coinciden.",
+  catalogCoverSettingsLoadFailed: "No se pudo cargar la configuración de la portada.",
+  coverLogoUploadFailed: "No se pudo subir el logo.",
+  coverLogoDeleteFailed: "No se pudo quitar el logo.",
+  catalogSubtitleSaveFailed: "No se pudo guardar el subtítulo.",
 } as const;
 
 export function fileTooLarge(fileName: string, sizeLabel: string, maxLabel: string) {

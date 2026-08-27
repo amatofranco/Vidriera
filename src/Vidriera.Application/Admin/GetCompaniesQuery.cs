@@ -13,4 +13,5 @@ public record CompanyListItemDto(
     bool ShowCode,
     bool ShowPrice,
     bool ShowOrders,
-    bool ShowCatalogLabel);
+    bool HasCoverLogo,
+    string? CatalogSubtitle);

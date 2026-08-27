@@ -55,6 +55,7 @@ export function positionSideNav(referenceEl, dom) {
 
 const COMPANY_NAME_BASE_FONT_SIZE = 27;
 const COMPANY_NAME_MIN_FONT_SIZE = 16;
+const COVER_LOGO_TARGET_HEIGHT = 70;
 
 function shrinkToFit(nameEl, maxWidth) {
     const safeWidth = maxWidth - 4;
@@ -79,9 +80,15 @@ function getVisibleBookLeft(flipbookEl) {
 }
 
 export function positionCoverInfo(referenceEl, dom) {
-    const nameElCheck = dom.coverInfoEl.querySelector(".cover-info-company");
-    if (nameElCheck && nameElCheck.offsetParent === null) {
+    const headingEl = dom.coverInfoEl.querySelector(".cover-info-company, .cover-info-logo");
+    if (headingEl && headingEl.offsetParent === null) {
         requestAnimationFrame(() => positionCoverInfo(referenceEl, dom));
+        return;
+    }
+
+    const isLogo = headingEl && headingEl.tagName === "IMG";
+    if (isLogo && !headingEl.complete) {
+        headingEl.addEventListener("load", () => positionCoverInfo(referenceEl, dom), { once: true });
         return;
     }
 
@@ -93,12 +100,14 @@ export function positionCoverInfo(referenceEl, dom) {
     const minLeft = indexPanelOpen ? 90 + INDEX_PANEL_MAX_WIDTH : 90;
 
     const textBuffer = 6;
-    const nameEl = dom.coverInfoEl.querySelector(".cover-info-company");
     let boxWidth = 200;
-    if (nameEl) {
-        nameEl.style.whiteSpace = "nowrap";
-        nameEl.style.fontSize = `${COMPANY_NAME_BASE_FONT_SIZE}px`;
-        boxWidth = nameEl.scrollWidth + textBuffer;
+    if (headingEl && !isLogo) {
+        headingEl.style.whiteSpace = "nowrap";
+        headingEl.style.fontSize = `${COMPANY_NAME_BASE_FONT_SIZE}px`;
+        boxWidth = headingEl.scrollWidth + textBuffer;
+    } else if (headingEl && isLogo && headingEl.naturalWidth && headingEl.naturalHeight) {
+        headingEl.style.width = "";
+        boxWidth = headingEl.naturalWidth * (COVER_LOGO_TARGET_HEIGHT / headingEl.naturalHeight);
     }
 
     const maxAllowedWidth = Math.max(spineLeft - minLeft - gap, 100);
@@ -111,9 +120,11 @@ export function positionCoverInfo(referenceEl, dom) {
     dom.coverInfoEl.style.left = `${left}px`;
     dom.coverInfoEl.style.maxWidth = `${maxWidth}px`;
 
-    if (nameEl) {
-        shrinkToFit(nameEl, maxWidth);
-        nameEl.style.whiteSpace = "";
+    if (headingEl && !isLogo) {
+        shrinkToFit(headingEl, maxWidth);
+        headingEl.style.whiteSpace = "";
+    } else if (headingEl && isLogo) {
+        headingEl.style.width = `${maxWidth}px`;
     }
 }
 

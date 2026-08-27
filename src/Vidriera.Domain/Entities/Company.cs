@@ -12,7 +12,9 @@ public class Company
     public virtual bool ShowCode { get; set; } = true;
     public virtual bool ShowPrice { get; set; } = true;
     public virtual bool ShowOrders { get; set; } = true;
-    public virtual bool ShowCatalogLabel { get; set; } = true;
+    public virtual string? CoverLogoBlobKey { get; set; }
+    public virtual string? CoverLogoContentType { get; set; }
+    public virtual string? CatalogSubtitle { get; set; } = "Catálogo";
     public virtual string? Slug { get; set; }
 
     public virtual IList<User> Users { get; set; } = new List<User>();

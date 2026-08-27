@@ -48,13 +48,17 @@ public static class CatalogHtmlBuilder
         var orderFieldsJsonEncoded = showOrderPanel
             ? WebUtility.HtmlEncode(JsonSerializer.Serialize(dto.OrderFormFields, SectionsJsonOptions))
             : "[]";
-        var catalogLabelDateHtml = dto.ShowCatalogLabel
-            ? $"<div class=\"cover-info-label\">Catálogo</div><div class=\"cover-info-date\">{generatedAt}</div>"
+        var catalogSubtitle = WebUtility.HtmlEncode(dto.CatalogSubtitle);
+        var catalogLabelDateHtml = !string.IsNullOrWhiteSpace(dto.CatalogSubtitle)
+            ? $"<div class=\"cover-info-label\">{catalogSubtitle}</div><div class=\"cover-info-date\">{generatedAt}</div>"
             : "";
+        var coverInfoHeadingHtml = dto.HasCoverLogo
+            ? $"<img class=\"cover-info-logo\" src=\"/api/catalogs/company/{dto.CompanyId}/cover-logo\" alt=\"{companyName}\" />"
+            : $"<div class=\"cover-info-company\">{companyName}</div>";
 
         return ViewerPageTemplate
             .Replace("{{FILE_URL}}", fileUrl)
-            .Replace("{{COMPANY_NAME}}", companyName)
+            .Replace("{{COVER_INFO_HEADING}}", coverInfoHeadingHtml)
             .Replace("{{CATALOG_LABEL_DATE}}", catalogLabelDateHtml)
             .Replace("{{INDEX_BUTTON}}", indexButtonHtml)
             .Replace("{{INDEX_PANEL}}", indexPanelHtml)

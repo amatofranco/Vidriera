@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Vidriera.Api.Common;
 using Vidriera.Application.Catalogs;
 using Vidriera.Application.Common;
+using Vidriera.Application.Companies;
 using Vidriera.Application.Common.Exceptions;
 
 namespace Vidriera.Api.Controllers;
@@ -127,6 +128,21 @@ public class CatalogsController : ControllerBase
         try
         {
             var result = await _mediator.Send(new GetCatalogFileQuery(id), cancellationToken);
+            return File(result.Content, result.ContentType);
+        }
+        catch (NotFoundException)
+        {
+            return NotFound();
+        }
+    }
+
+    [HttpGet("company/{companyId:guid}/cover-logo")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetCoverLogo(Guid companyId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await _mediator.Send(new GetCompanyCoverLogoQuery(companyId), cancellationToken);
             return File(result.Content, result.ContentType);
         }
         catch (NotFoundException)

@@ -281,6 +281,55 @@ export async function fetchCompanyLogoUrl(token: string): Promise<string | null>
   return URL.createObjectURL(blob);
 }
 
+export interface CatalogCoverSettings {
+  hasCoverLogo: boolean;
+  catalogSubtitle: string | null;
+}
+
+export function getCatalogCoverSettings(token: string) {
+  return request<CatalogCoverSettings>("/api/company/catalog-cover-settings", { token });
+}
+
+export function uploadCatalogCoverLogo(token: string, file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  return request<void>("/api/company/cover-logo", {
+    method: "POST",
+    token,
+    body: formData,
+  });
+}
+
+export function deleteCatalogCoverLogo(token: string) {
+  return request<void>("/api/company/cover-logo", {
+    method: "DELETE",
+    token,
+  });
+}
+
+export async function fetchCatalogCoverLogoUrl(token: string): Promise<string | null> {
+  const response = await fetch(`${API_URL}/api/company/cover-logo`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const blob = await response.blob();
+  return URL.createObjectURL(blob);
+}
+
+export function setCatalogSubtitle(token: string, subtitle: string | null) {
+  return request<void>("/api/company/catalog-subtitle", {
+    method: "PUT",
+    token,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ subtitle }),
+  });
+}
+
 export interface GenerateCatalogResult {
   id: string;
   url: string;
