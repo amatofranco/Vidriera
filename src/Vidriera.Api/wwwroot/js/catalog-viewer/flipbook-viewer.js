@@ -122,6 +122,9 @@ export async function renderFlipbookViewer({ catalogId, pageCount, pageAspect, d
         pageFlip.on("flip", updateInfo);
         pageFlip.on("changeState", (e) => {
             document.body.style.overflow = e.data === "read" ? "auto" : "hidden";
+            if (e.data !== "read") {
+                dom.coverInfoEl.style.display = "none";
+            }
         });
         if (wasOpenIndex > 0) pageFlip.turnToPage(wasOpenIndex);
         updateInfo();
