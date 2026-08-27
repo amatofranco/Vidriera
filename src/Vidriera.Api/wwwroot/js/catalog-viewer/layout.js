@@ -85,22 +85,29 @@ export function positionCoverInfo(referenceEl, dom) {
         return;
     }
 
-    const rect = { left: getVisibleBookLeft(referenceEl) };
-    const gap = 50;
+    const spineLeft = getVisibleBookLeft(referenceEl);
+    const containerLeft = referenceEl.getBoundingClientRect().left;
+    const blankAreaCenter = (containerLeft + spineLeft) / 2;
+    const gap = 20;
     const indexPanelOpen = dom.indexPanel && !dom.indexPanel.classList.contains("closed");
     const minLeft = indexPanelOpen ? 90 + INDEX_PANEL_MAX_WIDTH : 90;
 
     const textBuffer = 6;
     const nameEl = dom.coverInfoEl.querySelector(".cover-info-company");
-    let left = minLeft;
+    let boxWidth = 200;
     if (nameEl) {
         nameEl.style.whiteSpace = "nowrap";
         nameEl.style.fontSize = `${COMPANY_NAME_BASE_FONT_SIZE}px`;
-        const naturalWidth = nameEl.scrollWidth + textBuffer;
-        left = Math.max(minLeft, rect.left - naturalWidth - gap);
+        boxWidth = nameEl.scrollWidth + textBuffer;
     }
 
-    const maxWidth = Math.min(Math.max(rect.left - left - gap, 100), 420);
+    const maxAllowedWidth = Math.max(spineLeft - minLeft - gap, 100);
+    boxWidth = Math.min(boxWidth, maxAllowedWidth, 420);
+
+    let left = blankAreaCenter - boxWidth / 2;
+    left = Math.max(minLeft, Math.min(left, spineLeft - boxWidth - gap));
+
+    const maxWidth = boxWidth;
     dom.coverInfoEl.style.left = `${left}px`;
     dom.coverInfoEl.style.maxWidth = `${maxWidth}px`;
 
