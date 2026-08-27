@@ -125,14 +125,11 @@ export async function renderFlipbookViewer({ catalogId, pageCount, pageAspect, d
         });
         if (wasOpenIndex > 0) pageFlip.turnToPage(wasOpenIndex);
         updateInfo();
-        console.log("[DEBUG] buildPageFlip call, flipbookEl connected:", flipbookEl.isConnected, "rect:", JSON.stringify(flipbookEl.getBoundingClientRect()));
         requestAnimationFrame(() => {
-            console.log("[DEBUG] rAF firing, flipbookEl connected:", flipbookEl.isConnected, "coverInfo display:", dom.coverInfoEl.style.display, "nameEl offsetParent null:", dom.coverInfoEl.querySelector(".cover-info-company").offsetParent === null);
             positionSideNav(flipbookEl, dom);
             positionCoverInfo(flipbookEl, dom);
             measureStage();
             updateInfo();
-            console.log("[DEBUG] after positionCoverInfo, cover left:", dom.coverInfoEl.style.left, "maxWidth:", dom.coverInfoEl.style.maxWidth);
         });
     }
 
@@ -148,13 +145,11 @@ export async function renderFlipbookViewer({ catalogId, pageCount, pageAspect, d
     let lastDpr = window.devicePixelRatio || 1;
     let resizeTimer = null;
     window.addEventListener("resize", () => {
-        console.log("[DEBUG] window resize event fired, innerWidth:", window.innerWidth, "innerHeight:", window.innerHeight);
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(() => {
             const dpr = window.devicePixelRatio || 1;
             const isZoomChange = Math.abs(dpr - lastDpr) > 0.01;
             lastDpr = dpr;
-            console.log("[DEBUG] resize debounce fired, isZoomChange:", isZoomChange, "will rebuild:", !isZoomChange);
             if (!isZoomChange) buildPageFlip();
             positionIndexPanel(dom);
         }, 200);
