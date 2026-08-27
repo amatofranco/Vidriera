@@ -57,9 +57,10 @@ const COMPANY_NAME_BASE_FONT_SIZE = 27;
 const COMPANY_NAME_MIN_FONT_SIZE = 16;
 
 function shrinkToFit(nameEl, maxWidth) {
+    const safeWidth = maxWidth - 4;
     let fontSize = COMPANY_NAME_BASE_FONT_SIZE;
     nameEl.style.fontSize = `${fontSize}px`;
-    while (nameEl.scrollWidth > maxWidth && fontSize > COMPANY_NAME_MIN_FONT_SIZE) {
+    while (nameEl.scrollWidth > safeWidth && fontSize > COMPANY_NAME_MIN_FONT_SIZE) {
         fontSize -= 1;
         nameEl.style.fontSize = `${fontSize}px`;
     }
@@ -89,12 +90,13 @@ export function positionCoverInfo(referenceEl, dom) {
     const indexPanelOpen = dom.indexPanel && !dom.indexPanel.classList.contains("closed");
     const minLeft = indexPanelOpen ? 90 + INDEX_PANEL_MAX_WIDTH : 90;
 
+    const textBuffer = 6;
     const nameEl = dom.coverInfoEl.querySelector(".cover-info-company");
     let left = minLeft;
     if (nameEl) {
         nameEl.style.whiteSpace = "nowrap";
         nameEl.style.fontSize = `${COMPANY_NAME_BASE_FONT_SIZE}px`;
-        const naturalWidth = nameEl.scrollWidth;
+        const naturalWidth = nameEl.scrollWidth + textBuffer;
         left = Math.max(minLeft, rect.left - naturalWidth - gap);
     }
 
