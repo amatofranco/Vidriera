@@ -80,6 +80,13 @@ public class CompanyMapping : ClassMapping<Company>
             m.Unique(true);
         });
 
+        Property(x => x.CustomDomain, m =>
+        {
+            m.Column("custom_domain");
+            m.Length(255);
+            m.Unique(true);
+        });
+
         Bag(x => x.Users, m =>
         {
             m.Key(k => k.Column("company_id"));

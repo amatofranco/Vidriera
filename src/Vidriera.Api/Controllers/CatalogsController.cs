@@ -89,6 +89,31 @@ public class CatalogsController : ControllerBase
         }
     }
 
+    [HttpGet("/")]
+    [AllowAnonymous]
+    public async Task<ContentResult> ViewByCustomDomain(CancellationToken cancellationToken)
+    {
+        var host = Request.Host.Host.ToLowerInvariant();
+        if (host == "vidriera.app" || host == "catalogo.vidriera.app")
+        {
+            return HtmlPage(
+                CatalogHtmlBuilder.BuildMessagePage("Catálogo no disponible", "Todavía no se generó un catálogo para esta empresa."),
+                StatusCodes.Status404NotFound);
+        }
+
+        try
+        {
+            var dto = await _mediator.Send(new GetCompanyCatalogByCustomDomainQuery(host), cancellationToken);
+            return HtmlPage(CatalogHtmlBuilder.BuildViewerPage(dto), StatusCodes.Status200OK);
+        }
+        catch (NotFoundException)
+        {
+            return HtmlPage(
+                CatalogHtmlBuilder.BuildMessagePage("Catálogo no disponible", "Todavía no se generó un catálogo para esta empresa."),
+                StatusCodes.Status404NotFound);
+        }
+    }
+
     [HttpGet("/{slug:regex(^[[^.]]+$)}")]
     [AllowAnonymous]
     public async Task<ContentResult> ViewBySlug(string slug, CancellationToken cancellationToken)

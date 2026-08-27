@@ -39,11 +39,28 @@ public class SetCompanySettingsCommandHandler : IRequestHandler<SetCompanySettin
             }
         }
 
+        var customDomain = CompanyCustomDomain.Normalize(request.CustomDomain);
+        if (customDomain is not null)
+        {
+            if (!CompanyCustomDomain.IsValid(customDomain))
+            {
+                throw new ValidationException(ErrorMessages.InvalidCompanyCustomDomain);
+            }
+
+            var domainTaken = await _session.Query<Company>()
+                .AnyAsync(c => c.CustomDomain == customDomain && c.Id != company.Id, cancellationToken);
+            if (domainTaken)
+            {
+                throw new ValidationException(ErrorMessages.CompanyCustomDomainTaken(customDomain));
+            }
+        }
+
         company.ShowCode = request.ShowCode;
         company.ShowPrice = request.ShowPrice;
         company.ShowOrders = request.ShowOrders;
         company.CatalogSubtitle = request.CatalogSubtitle;
         company.Slug = slug;
+        company.CustomDomain = customDomain;
 
         await _session.UpdateInTransactionAsync(company, cancellationToken);
     }

@@ -14,4 +14,5 @@ public record CompanyListItemDto(
     bool ShowPrice,
     bool ShowOrders,
     bool HasCoverLogo,
-    string? CatalogSubtitle);
+    string? CatalogSubtitle,
+    string? CustomDomain);

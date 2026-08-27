@@ -112,6 +112,12 @@
   <data name="CompanySlugTaken" xml:space="preserve">
     <value>Ya existe una empresa con el slug '{0}'.</value>
   </data>
+  <data name="InvalidCompanyCustomDomain" xml:space="preserve">
+    <value>El dominio no tiene un formato válido.</value>
+  </data>
+  <data name="CompanyCustomDomainTaken" xml:space="preserve">
+    <value>Ya existe una empresa con el dominio '{0}'.</value>
+  </data>
   <data name="InvalidCompanyPreset" xml:space="preserve">
     <value>El preset '{0}' no existe.</value>
   </data>
