@@ -10,6 +10,7 @@ public record GeneratedCatalogViewDto(
     Guid CompanyId,
     DateTime GeneratedAt,
     string FileUrl,
+    string CoverImageUrl,
     string CompanyName,
     IReadOnlyList<CatalogIndexEntry> IndexEntries,
     int RasterizedPageCount,

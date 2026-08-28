@@ -28,7 +28,9 @@ public static class CatalogHtmlBuilder
     public static string BuildViewerPage(GeneratedCatalogViewDto dto)
     {
         var fileUrl = WebUtility.HtmlEncode(dto.FileUrl);
+        var coverImageUrl = WebUtility.HtmlEncode(dto.CoverImageUrl);
         var companyName = WebUtility.HtmlEncode(dto.CompanyName);
+        var ogDescription = WebUtility.HtmlEncode($"Mirá el catálogo digital de {dto.CompanyName}.");
         var validityDate = WebUtility.HtmlEncode(dto.ValidityDate.ToString("dd/MM/yyyy"));
 
         var hasIndexData = dto.IndexEntries.Count > 0;
@@ -65,6 +67,9 @@ public static class CatalogHtmlBuilder
 
         return ViewerPageTemplate
             .Replace("{{FILE_URL}}", fileUrl)
+            .Replace("{{COVER_IMAGE_URL}}", coverImageUrl)
+            .Replace("{{COMPANY_NAME}}", companyName)
+            .Replace("{{OG_DESCRIPTION}}", ogDescription)
             .Replace("{{COVER_INFO_HEADING}}", coverInfoHeadingHtml)
             .Replace("{{CATALOG_LABEL_DATE}}", catalogLabelDateHtml)
             .Replace("{{SCENE_BG_STYLE}}", sceneBgStyle)
