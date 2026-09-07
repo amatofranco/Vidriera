@@ -112,6 +112,7 @@ export const Labels = {
   hasStockTitle: "Tiene stock",
   selectAllSectionMembersTitle: "Seleccionar todos los items de esta carátula",
   toggleSectionStockTitle: "Marcar/desmarcar stock de todos los items de esta carátula",
+  partialSectionStockTitle: "Algunos items de esta carátula no tienen stock. Click para marcar stock en todos.",
 
   planLabel: (plan: string) => `Plan ${planNames[plan] ?? plan}`,
 

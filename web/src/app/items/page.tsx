@@ -204,12 +204,21 @@ export default function ItemsPage() {
     return [...direct, ...childSections.flatMap((cs) => deepSectionItems(cs.id))];
   }
 
+  function sectionStockState(sectionId: string): "all" | "some" | "none" {
+    const members = deepSectionItems(sectionId);
+    if (members.length === 0) return "none";
+    const withStockCount = members.filter((p) => p.hasStock).length;
+    if (withStockCount === members.length) return "all";
+    if (withStockCount === 0) return "none";
+    return "some";
+  }
+
   function sectionCheckboxChecked(sectionId: string) {
     const members = deepSectionItems(sectionId);
     if (members.length === 0) return false;
     return isBulkAssigningSection
       ? members.every((p) => bulkAssignSelectedIds.has(p.id))
-      : members.every((p) => p.hasStock);
+      : sectionStockState(sectionId) === "all";
   }
 
   async function handleToggleSectionCheckbox(section: { id: string; name: string }) {
@@ -280,8 +289,13 @@ export default function ItemsPage() {
         positionMax={positionMax}
         isDragged={draggedId === section.id}
         isChecked={sectionCheckboxChecked(section.id)}
+        isPartial={!isBulkAssigningSection && sectionStockState(section.id) === "some"}
         checkboxTitle={
-          isBulkAssigningSection ? Labels.selectAllSectionMembersTitle : Labels.toggleSectionStockTitle
+          isBulkAssigningSection
+            ? Labels.selectAllSectionMembersTitle
+            : sectionStockState(section.id) === "some"
+              ? Labels.partialSectionStockTitle
+              : Labels.toggleSectionStockTitle
         }
         checkboxDisabled={deepSectionItems(section.id).length === 0}
         isBulkAssigningSection={isBulkAssigningSection}

@@ -13,6 +13,7 @@ export function SectionRow({
   positionMax,
   isDragged,
   isChecked,
+  isPartial = false,
   checkboxTitle,
   checkboxDisabled,
   isBulkAssigningSection,
@@ -40,6 +41,7 @@ export function SectionRow({
   positionMax: number;
   isDragged: boolean;
   isChecked: boolean;
+  isPartial?: boolean;
   checkboxTitle: string;
   checkboxDisabled: boolean;
   isBulkAssigningSection: boolean;
@@ -87,7 +89,13 @@ export function SectionRow({
             style={{ accentColor: "#e4c98a" }}
           />
         ) : (
-          <StockToggle checked={isChecked} onToggle={onToggleCheckbox} title={checkboxTitle} disabled={checkboxDisabled} />
+          <StockToggle
+            checked={isChecked}
+            partial={isPartial}
+            onToggle={onToggleCheckbox}
+            title={checkboxTitle}
+            disabled={checkboxDisabled}
+          />
         )}
         <button
           onClick={onToggleCollapse}

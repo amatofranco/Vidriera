@@ -2,11 +2,13 @@
 
 export function StockToggle({
   checked,
+  partial = false,
   onToggle,
   title,
   disabled,
 }: {
   checked: boolean;
+  partial?: boolean;
   onToggle: () => void;
   title: string;
   disabled?: boolean;
@@ -19,9 +21,14 @@ export function StockToggle({
       title={title}
       aria-pressed={checked}
       className="flex h-6 w-6 shrink-0 items-center justify-center rounded transition-colors disabled:opacity-30"
-      style={{ color: checked ? "#c9a86a" : "#9ca3af" }}
+      style={{ color: partial ? "#d9a441" : checked ? "#c9a86a" : "#9ca3af" }}
     >
-      {checked ? (
+      {partial ? (
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z" />
+          <line x1="8" y1="12" x2="16" y2="12" />
+        </svg>
+      ) : checked ? (
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z" />
           <circle cx="12" cy="12" r="3" />
