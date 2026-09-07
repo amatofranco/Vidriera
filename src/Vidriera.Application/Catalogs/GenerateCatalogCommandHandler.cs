@@ -196,6 +196,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
                     return ReportProgressSerializedAsync(progressLock, onProgress, "downloading", completed, physicalEntries.Count);
                 },
                 cancellationToken));
+            pendingDownloads.RemoveAll(t => t.Status == TaskStatus.RanToCompletion);
         }
 
         await Task.WhenAll(pendingDownloads);
@@ -363,6 +364,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
                         return ReportProgressSerializedAsync(progressLock, onProgress, "rasterizing", completed, totalPages);
                     },
                     cancellationToken));
+                pendingUploads.RemoveAll(t => t.Status == TaskStatus.RanToCompletion);
             }
 
             await Task.WhenAll(pendingUploads);
