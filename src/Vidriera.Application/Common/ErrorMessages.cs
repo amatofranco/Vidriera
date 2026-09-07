@@ -79,4 +79,7 @@ public static class ErrorMessages
     public static string CannotChangePlanWithoutPayment => Get(nameof(CannotChangePlanWithoutPayment));
 
     public static string InvalidOrExpiredResetToken => Get(nameof(InvalidOrExpiredResetToken));
+
+    public static string CatalogGenerationBusy => Get(nameof(CatalogGenerationBusy));
+    public static string CatalogTooLarge(int pageCount, int max) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(CatalogTooLarge)), pageCount, max);
 }

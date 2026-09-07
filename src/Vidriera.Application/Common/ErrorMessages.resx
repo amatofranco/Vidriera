@@ -202,4 +202,10 @@
   <data name="InvalidOrExpiredResetToken" xml:space="preserve">
     <value>El link venció o ya se usó. Pedí uno nuevo.</value>
   </data>
+  <data name="CatalogGenerationBusy" xml:space="preserve">
+    <value>Ya se está generando un catálogo en este momento. Esperá un minuto y volvé a intentar.</value>
+  </data>
+  <data name="CatalogTooLarge" xml:space="preserve">
+    <value>El catálogo tendría alrededor de {0} páginas; el máximo permitido es {1}. Sacá algunos items o dividilo en más de un catálogo.</value>
+  </data>
 </root>

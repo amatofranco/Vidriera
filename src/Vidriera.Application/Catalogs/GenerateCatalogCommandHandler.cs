@@ -12,10 +12,14 @@ namespace Vidriera.Application.Catalogs;
 
 public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogCommand, GenerateCatalogResult>
 {
+    private static readonly TimeSpan GateTimeout = TimeSpan.FromSeconds(3);
+    private const int EstimatedPagesPerSectionCover = 2;
+
     private readonly ISession _session;
     private readonly IBlobStorageService _blobStorageService;
     private readonly IPdfMergeService _pdfMergeService;
     private readonly IPdfRasterizerService _pdfRasterizerService;
+    private readonly CatalogGenerationGate _generationGate;
     private readonly CatalogOptions _options;
 
     public GenerateCatalogCommandHandler(
@@ -23,16 +27,35 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         IBlobStorageService blobStorageService,
         IPdfMergeService pdfMergeService,
         IPdfRasterizerService pdfRasterizerService,
+        CatalogGenerationGate generationGate,
         IOptions<CatalogOptions> options)
     {
         _session = session;
         _blobStorageService = blobStorageService;
         _pdfMergeService = pdfMergeService;
         _pdfRasterizerService = pdfRasterizerService;
+        _generationGate = generationGate;
         _options = options.Value;
     }
 
     public async Task<GenerateCatalogResult> Handle(GenerateCatalogCommand request, CancellationToken cancellationToken)
+    {
+        if (!await _generationGate.TryEnterAsync(GateTimeout, cancellationToken))
+        {
+            throw new ValidationException(ErrorMessages.CatalogGenerationBusy);
+        }
+
+        try
+        {
+            return await HandleInternalAsync(request, cancellationToken);
+        }
+        finally
+        {
+            _generationGate.Exit();
+        }
+    }
+
+    private async Task<GenerateCatalogResult> HandleInternalAsync(GenerateCatalogCommand request, CancellationToken cancellationToken)
     {
         var (allItems, allSections) = await LoadCatalogDataAsync(request.CompanyId, cancellationToken);
         var selectedIds = new HashSet<Guid>(
@@ -65,9 +88,14 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             return await RefreshSnapshotOnlyAsync(request, existingCatalog, entries, cancellationToken);
         }
 
-        var mergePlan = await BuildMergePlanAsync(entries, request.OnProgress, cancellationToken);
+        var estimatedPages = EstimateTotalPages(entries);
+        if (estimatedPages > _options.MaxTotalPages)
+        {
+            throw new ValidationException(ErrorMessages.CatalogTooLarge(estimatedPages, _options.MaxTotalPages));
+        }
 
-        var mergeResult = await _pdfMergeService.MergeAsync(mergePlan.PdfBytes, cancellationToken);
+        var mergePlan = await BuildAndMergeAsync(entries, request.OnProgress, cancellationToken);
+        var mergeResult = mergePlan.MergeResult;
         var indexSnapshot = CatalogMergePlanBuilder.BuildIndexSnapshot(entries, mergeResult.PageCounts, request.ShowPrices);
 
         var generatedBlobKey = await UploadMergedPdfAsync(request.CompanyId, mergeResult.Bytes, cancellationToken);
@@ -102,11 +130,26 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         return (items, sections);
     }
 
-    private sealed record MergePlan(List<byte[]> PdfBytes, List<Item> IncludedItems);
+    private int EstimateTotalPages(IReadOnlyList<MergeEntry> entries)
+    {
+        var total = 0;
+        foreach (var entry in entries)
+        {
+            total += entry switch
+            {
+                ItemEntry itemEntry => itemEntry.Item.PageCount,
+                SectionCoverEntry cover when cover.Section.CoverPdfBlobKey is not null => EstimatedPagesPerSectionCover,
+                _ => 0
+            };
+        }
+        return total;
+    }
+
+    private sealed record MergePlan(PdfMergeResult MergeResult, List<Item> IncludedItems);
 
     private const int MaxConcurrentDownloads = 4;
 
-    private async Task<MergePlan> BuildMergePlanAsync(
+    private async Task<MergePlan> BuildAndMergeAsync(
         IReadOnlyList<MergeEntry> entries,
         Func<CatalogGenerationProgress, Task>? onProgress,
         CancellationToken cancellationToken)
@@ -115,9 +158,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             .Where(entry => entry is ItemEntry || (entry is SectionCoverEntry cover && cover.Section.CoverPdfBlobKey is not null))
             .ToList();
 
-        var pdfBytesInOrder = new byte[physicalEntries.Count][];
         var includedItems = new List<Item>();
-
         foreach (var entry in physicalEntries)
         {
             if (entry is ItemEntry itemEntry)
@@ -125,6 +166,9 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
                 includedItems.Add(itemEntry.Item);
             }
         }
+
+        using var session = _pdfMergeService.CreateSession();
+        var coordinator = new OrderedMergeCoordinator(session);
 
         var downloadedCount = 0;
         var pendingDownloads = new List<Task>(physicalEntries.Count);
@@ -141,10 +185,10 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             };
 
             await downloadSemaphore.WaitAsync(cancellationToken);
-            pendingDownloads.Add(DownloadEntryAndReportAsync(
+            pendingDownloads.Add(DownloadAndMergeEntryAsync(
                 blobKey,
                 index,
-                pdfBytesInOrder,
+                coordinator,
                 downloadSemaphore,
                 () =>
                 {
@@ -156,25 +200,57 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
 
         await Task.WhenAll(pendingDownloads);
 
-        return new MergePlan(pdfBytesInOrder.ToList(), includedItems);
+        return new MergePlan(session.Complete(), includedItems);
     }
 
-    private async Task DownloadEntryAndReportAsync(
+    private async Task DownloadAndMergeEntryAsync(
         string blobKey,
         int index,
-        byte[][] results,
+        OrderedMergeCoordinator coordinator,
         SemaphoreSlim downloadSemaphore,
         Func<Task> reportDownloaded,
         CancellationToken cancellationToken)
     {
         try
         {
-            results[index] = await DownloadBytesAsync(blobKey, cancellationToken);
+            var bytes = await DownloadBytesAsync(blobKey, cancellationToken);
+            await coordinator.AddAsync(index, bytes, cancellationToken);
             await reportDownloaded();
         }
         finally
         {
             downloadSemaphore.Release();
+        }
+    }
+
+    private sealed class OrderedMergeCoordinator
+    {
+        private readonly IPdfMergeSession _session;
+        private readonly Dictionary<int, byte[]> _pending = new();
+        private readonly SemaphoreSlim _lock = new(1, 1);
+        private int _nextIndex;
+
+        public OrderedMergeCoordinator(IPdfMergeSession session)
+        {
+            _session = session;
+        }
+
+        public async Task AddAsync(int index, byte[] pdfBytes, CancellationToken cancellationToken)
+        {
+            await _lock.WaitAsync(cancellationToken);
+            try
+            {
+                _pending[index] = pdfBytes;
+                while (_pending.Remove(_nextIndex, out var nextBytes))
+                {
+                    _session.AddDocument(nextBytes);
+                    _nextIndex++;
+                }
+            }
+            finally
+            {
+                _lock.Release();
+            }
         }
     }
 

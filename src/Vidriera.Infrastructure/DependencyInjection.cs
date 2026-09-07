@@ -14,6 +14,7 @@ using Vidriera.Infrastructure.MercadoPago;
 using Vidriera.Infrastructure.ExchangeRate;
 using Vidriera.Infrastructure.Email;
 using Vidriera.Application.Auth;
+using Vidriera.Application.Catalogs;
 
 namespace Vidriera.Infrastructure;
 
@@ -33,6 +34,7 @@ public static class DependencyInjection
 
         services.AddSingleton<IPdfMergeService, PdfSharpMergeService>();
         services.AddSingleton<IPdfRasterizerService, PdfiumRasterizerService>();
+        services.AddSingleton<CatalogGenerationGate>();
         services.AddSingleton<IExcelOrderService, ClosedXmlOrderService>();
         services.AddSingleton<IPriceImportService, ClosedXmlPriceImportService>();
 
