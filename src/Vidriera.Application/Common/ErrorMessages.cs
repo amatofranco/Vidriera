@@ -87,4 +87,6 @@ public static class ErrorMessages
         Get(nameof(CatalogTooHeavy)),
         totalBytes / (1024 * 1024),
         maxBytes / (1024 * 1024));
+
+    public static string CatalogGenerationJobNotFound(Guid jobId) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(CatalogGenerationJobNotFound)), jobId);
 }

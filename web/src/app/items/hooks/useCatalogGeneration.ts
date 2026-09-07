@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import type { AuthState } from "@/lib/auth-context";
 import {
   generateCatalog,
+  getActiveCatalogGenerationJob,
   getCurrentCatalog,
+  pollCatalogGenerationJob,
   type CatalogGenerationProgress,
   type GenerateCatalogResult,
   type Item,
@@ -43,6 +45,22 @@ export function useCatalogGeneration({
       .catch(() => {});
     /* eslint-disable-next-line react-hooks/set-state-in-effect */
     setShowPrices(loadShowPrices(auth.companyId));
+
+    getActiveCatalogGenerationJob(auth.token)
+      .then((job) => {
+        if (!job || (job.status !== "Pending" && job.status !== "Running")) return;
+
+        setIsGenerating(true);
+        setGenerationProgress(null);
+        pollCatalogGenerationJob(auth.token, job.jobId, setGenerationProgress)
+          .then((result) => setCatalogResult(result))
+          .catch((err) => setError(apiErrorMessage(err, Messages.catalogGenerationFailed)))
+          .finally(() => {
+            setIsGenerating(false);
+            setGenerationProgress(null);
+          });
+      })
+      .catch(() => {});
   }, [auth]);
 
   function handleToggleShowPrices() {

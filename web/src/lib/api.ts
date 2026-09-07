@@ -385,49 +385,63 @@ export interface CatalogGenerationProgress {
   total: number;
 }
 
+export interface CatalogGenerationJobStatus {
+  jobId: string;
+  status: "Pending" | "Running" | "Succeeded" | "Failed";
+  stage: "downloading" | "rasterizing" | null;
+  current: number;
+  total: number;
+  result: GenerateCatalogResult | null;
+  errorMessage: string | null;
+}
+
+const CATALOG_GENERATION_POLL_INTERVAL_MS = 1000;
+
+function enqueueCatalogGeneration(token: string, showPrices?: boolean) {
+  return request<{ jobId: string }>(`/api/catalogs${showPrices ? "?showPrices=true" : ""}`, {
+    method: "POST",
+    token,
+  });
+}
+
+export function getCatalogGenerationJobStatus(token: string, jobId: string) {
+  return request<CatalogGenerationJobStatus>(`/api/catalogs/generation-jobs/${jobId}`, { token });
+}
+
+export function getActiveCatalogGenerationJob(token: string) {
+  return request<CatalogGenerationJobStatus | null>("/api/catalogs/generation-jobs/active", { token });
+}
+
+export async function pollCatalogGenerationJob(
+  token: string,
+  jobId: string,
+  onProgress?: (progress: CatalogGenerationProgress) => void
+): Promise<GenerateCatalogResult> {
+  while (true) {
+    const job = await getCatalogGenerationJobStatus(token, jobId);
+
+    if (job.status === "Succeeded" && job.result) {
+      return job.result;
+    }
+    if (job.status === "Failed") {
+      throw new ApiError(job.errorMessage ?? "No se pudo generar el catálogo.", 500);
+    }
+
+    if (job.stage) {
+      onProgress?.({ stage: job.stage, current: job.current, total: job.total });
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, CATALOG_GENERATION_POLL_INTERVAL_MS));
+  }
+}
+
 export async function generateCatalog(
   token: string,
   onProgress?: (progress: CatalogGenerationProgress) => void,
   showPrices?: boolean
 ): Promise<GenerateCatalogResult> {
-  const response = await fetch(`${API_URL}/api/catalogs${showPrices ? "?showPrices=true" : ""}`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!response.body) {
-    throw new ApiError(`Error ${response.status}`, response.status);
-  }
-
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-
-    let newlineIndex;
-    while ((newlineIndex = buffer.indexOf("\n")) >= 0) {
-      const line = buffer.slice(0, newlineIndex);
-      buffer = buffer.slice(newlineIndex + 1);
-      if (!line.trim()) continue;
-
-      const payload = JSON.parse(line);
-      if (payload.type === "progress") {
-        onProgress?.({ stage: payload.stage, current: payload.current, total: payload.total });
-      } else if (payload.type === "result") {
-        return payload.data as GenerateCatalogResult;
-      } else if (payload.type === "error") {
-        throw new ApiError(payload.message, payload.status);
-      }
-    }
-  }
-
-  throw new ApiError("La generación del catálogo no devolvió un resultado.", response.status);
+  const { jobId } = await enqueueCatalogGeneration(token, showPrices);
+  return pollCatalogGenerationJob(token, jobId, onProgress);
 }
 
 export function getCurrentCatalog(token: string) {

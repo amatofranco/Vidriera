@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using NHibernate;
 using Vidriera.Application.Abstractions;
@@ -15,6 +16,7 @@ using Vidriera.Infrastructure.ExchangeRate;
 using Vidriera.Infrastructure.Email;
 using Vidriera.Application.Auth;
 using Vidriera.Application.Catalogs;
+using Vidriera.Infrastructure.Catalogs;
 
 namespace Vidriera.Infrastructure;
 
@@ -35,6 +37,7 @@ public static class DependencyInjection
         services.AddSingleton<IPdfMergeService, PdfSharpMergeService>();
         services.AddSingleton<IPdfRasterizerService, PdfiumRasterizerService>();
         services.AddSingleton<CatalogGenerationGate>();
+        services.AddHostedService<CatalogGenerationWorker>();
         services.AddSingleton<IExcelOrderService, ClosedXmlOrderService>();
         services.AddSingleton<IPriceImportService, ClosedXmlPriceImportService>();
 

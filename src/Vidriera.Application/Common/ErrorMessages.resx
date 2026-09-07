@@ -211,4 +211,7 @@
   <data name="CatalogTooHeavy" xml:space="preserve">
     <value>El catálogo pesaría alrededor de {0} MB; el máximo permitido es {1} MB. Los PDF de fichas/carátulas son demasiado pesados — reducí su tamaño o sacá algunos items.</value>
   </data>
+  <data name="CatalogGenerationJobNotFound" xml:space="preserve">
+    <value>No se encontró el trabajo de generación {0}.</value>
+  </data>
 </root>

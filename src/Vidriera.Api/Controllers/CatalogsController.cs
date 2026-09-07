@@ -1,4 +1,3 @@
-using System.Text.Json;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,8 +13,6 @@ namespace Vidriera.Api.Controllers;
 [Route("api/catalogs")]
 public class CatalogsController : ControllerBase
 {
-    private static readonly JsonSerializerOptions StreamJsonOptions = new(JsonSerializerDefaults.Web);
-
     private readonly IMediator _mediator;
 
     public CatalogsController(IMediator mediator)
@@ -25,41 +22,31 @@ public class CatalogsController : ControllerBase
 
     [HttpPost]
     [Authorize]
-    public async Task Generate([FromQuery] bool showPrices, CancellationToken cancellationToken)
+    public async Task<ActionResult<EnqueueCatalogGenerationResult>> Generate([FromQuery] bool showPrices, CancellationToken cancellationToken)
     {
         var companyId = User.GetCompanyId();
         var userId = User.GetUserId();
 
-        Response.ContentType = "application/x-ndjson";
+        var result = await _mediator.Send(new EnqueueCatalogGenerationCommand(companyId, userId, showPrices), cancellationToken);
+        return Accepted(result);
+    }
 
-        async Task WriteLineAsync(object payload)
-        {
-            await Response.WriteAsync(JsonSerializer.Serialize(payload, StreamJsonOptions) + "\n", cancellationToken);
-            await Response.Body.FlushAsync(cancellationToken);
-        }
+    [HttpGet("generation-jobs/active")]
+    [Authorize]
+    public async Task<ActionResult<CatalogGenerationJobStatusResult?>> GetActiveGenerationJob(CancellationToken cancellationToken)
+    {
+        var companyId = User.GetCompanyId();
+        var result = await _mediator.Send(new GetActiveCatalogGenerationJobQuery(companyId), cancellationToken);
+        return Ok(result);
+    }
 
-        try
-        {
-            var result = await _mediator.Send(
-                new GenerateCatalogCommand(
-                    companyId,
-                    userId,
-                    showPrices,
-                    progress => WriteLineAsync(new { type = "progress", stage = progress.Stage, current = progress.Current, total = progress.Total })),
-                cancellationToken);
-
-            await WriteLineAsync(new { type = "result", data = result });
-        }
-        catch (Exception ex)
-        {
-            var statusCode = ex switch
-            {
-                NotFoundException => StatusCodes.Status404NotFound,
-                ValidationException => StatusCodes.Status400BadRequest,
-                _ => StatusCodes.Status500InternalServerError
-            };
-            await WriteLineAsync(new { type = "error", status = statusCode, message = ex.Message });
-        }
+    [HttpGet("generation-jobs/{jobId:guid}")]
+    [Authorize]
+    public async Task<ActionResult<CatalogGenerationJobStatusResult>> GetGenerationJobStatus(Guid jobId, CancellationToken cancellationToken)
+    {
+        var companyId = User.GetCompanyId();
+        var result = await _mediator.Send(new GetCatalogGenerationJobStatusQuery(jobId, companyId), cancellationToken);
+        return Ok(result);
     }
 
     [HttpGet("current")]
