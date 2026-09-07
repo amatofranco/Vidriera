@@ -7,7 +7,7 @@ internal static class PdfUploadValidation
 {
     private const int MaxPages = 2;
 
-    public static async Task<MemoryStream> BufferAndValidatePageCountAsync(
+    public static async Task<(MemoryStream Content, int PageCount)> BufferAndValidatePageCountAsync(
         Stream fileContent,
         IPdfMergeService pdfMergeService,
         CancellationToken cancellationToken)
@@ -23,7 +23,7 @@ internal static class PdfUploadValidation
         }
 
         buffered.Position = 0;
-        return buffered;
+        return (buffered, pageCount);
     }
 
     public static async Task<(MemoryStream Content, int PageCount)> BufferAndGetPageCountAsync(

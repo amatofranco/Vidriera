@@ -41,6 +41,8 @@ public class SectionMapping : ClassMapping<Section>
             m.Length(300);
         });
 
+        Property(x => x.CoverPageCount, m => m.Column("cover_page_count"));
+
         Property(x => x.SortOrder, m => m.Column("sort_order"));
 
         ManyToOne(x => x.ParentSection, m =>

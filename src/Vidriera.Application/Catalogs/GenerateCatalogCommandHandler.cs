@@ -13,7 +13,6 @@ namespace Vidriera.Application.Catalogs;
 public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogCommand, GenerateCatalogResult>
 {
     private static readonly TimeSpan GateTimeout = TimeSpan.FromSeconds(3);
-    private const int EstimatedPagesPerSectionCover = 2;
 
     private readonly ISession _session;
     private readonly IBlobStorageService _blobStorageService;
@@ -148,7 +147,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             total += entry switch
             {
                 ItemEntry itemEntry => itemEntry.Item.PageCount,
-                SectionCoverEntry cover when cover.Section.CoverPdfBlobKey is not null => EstimatedPagesPerSectionCover,
+                SectionCoverEntry cover when cover.Section.CoverPdfBlobKey is not null => cover.Section.CoverPageCount,
                 _ => 0
             };
         }

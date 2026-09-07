@@ -33,9 +33,10 @@ public class CreateSectionCommandHandler : IRequestHandler<CreateSectionCommand,
             cancellationToken);
 
         MemoryStream? validatedFileContent = null;
+        var coverPageCount = 0;
         if (request.FileContent is not null)
         {
-            validatedFileContent = await PdfUploadValidation.BufferAndValidatePageCountAsync(
+            (validatedFileContent, coverPageCount) = await PdfUploadValidation.BufferAndValidatePageCountAsync(
                 request.FileContent, _pdfMergeService, cancellationToken);
         }
 
@@ -68,6 +69,7 @@ public class CreateSectionCommandHandler : IRequestHandler<CreateSectionCommand,
 
             section.CoverPdfBlobKey = blobKey;
             section.CoverPdfOriginalName = request.OriginalFileName;
+            section.CoverPageCount = coverPageCount;
 
             await validatedFileContent.DisposeAsync();
         }
