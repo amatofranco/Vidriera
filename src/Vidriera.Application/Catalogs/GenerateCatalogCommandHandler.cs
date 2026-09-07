@@ -101,15 +101,18 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             throw new ValidationException(ErrorMessages.CatalogTooHeavy(estimatedBytes, _options.MaxTotalBytes));
         }
 
-        var mergePlan = await BuildAndMergeAsync(physicalEntries, request.OnProgress, cancellationToken);
+        var catalogId = Guid.NewGuid();
+        var mergePlan = await BuildMergeAndRasterizeAsync(
+            physicalEntries, request.CompanyId, catalogId, estimatedPages, request.OnProgress, cancellationToken);
         var mergeResult = mergePlan.MergeResult;
         var indexSnapshot = CatalogMergePlanBuilder.BuildIndexSnapshot(entries, mergeResult.PageCounts, request.ShowPrices);
 
         var generatedBlobKey = await UploadMergedPdfAsync(request.CompanyId, mergeResult.Bytes, cancellationToken);
         var previousCatalogId = company.CurrentCatalogId;
 
-        var catalog = await CreateCatalogAsync(request, company, mergePlan.IncludedItems, indexSnapshot, generatedBlobKey, fingerprint, cancellationToken);
-        await RasterizePagesAsync(catalog, mergeResult.Bytes, mergeResult.PageCounts.Sum(), request.OnProgress, cancellationToken);
+        var catalog = await CreateCatalogAsync(
+            catalogId, request, company, mergePlan.IncludedItems, indexSnapshot, generatedBlobKey, fingerprint,
+            mergeResult.PageCounts.Sum(), cancellationToken);
 
         company.CurrentCatalogId = catalog.Id;
         await _session.UpdateInTransactionAsync(company, cancellationToken);
@@ -190,8 +193,11 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
 
     private const int MaxConcurrentDownloads = 4;
 
-    private async Task<MergePlan> BuildAndMergeAsync(
+    private async Task<MergePlan> BuildMergeAndRasterizeAsync(
         IReadOnlyList<MergeEntry> physicalEntries,
+        Guid companyId,
+        Guid catalogId,
+        int estimatedTotalPages,
         Func<CatalogGenerationProgress, Task>? onProgress,
         CancellationToken cancellationToken)
     {
@@ -205,50 +211,50 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         }
 
         using var session = _pdfMergeService.CreateSession();
-        var coordinator = new OrderedMergeCoordinator(session);
+        var coordinator = new OrderedMergeRasterizeCoordinator(
+            session, _pdfRasterizerService, _blobStorageService, companyId, catalogId,
+            physicalEntries.Count, estimatedTotalPages, onProgress);
 
-        var downloadedCount = 0;
         var pendingDownloads = new List<Task>(physicalEntries.Count);
         using var downloadSemaphore = new SemaphoreSlim(MaxConcurrentDownloads);
-        using var progressLock = new SemaphoreSlim(1, 1);
 
-        for (var index = 0; index < physicalEntries.Count; index++)
+        try
         {
-            var blobKey = GetBlobKey(physicalEntries[index]);
+            for (var index = 0; index < physicalEntries.Count; index++)
+            {
+                var blobKey = GetBlobKey(physicalEntries[index]);
 
-            await downloadSemaphore.WaitAsync(cancellationToken);
-            pendingDownloads.Add(DownloadAndMergeEntryAsync(
-                blobKey,
-                index,
-                coordinator,
-                downloadSemaphore,
-                () =>
-                {
-                    var completed = Interlocked.Increment(ref downloadedCount);
-                    return ReportProgressSerializedAsync(progressLock, onProgress, "downloading", completed, physicalEntries.Count);
-                },
-                cancellationToken));
-            pendingDownloads.RemoveAll(t => t.Status == TaskStatus.RanToCompletion);
+                await downloadSemaphore.WaitAsync(cancellationToken);
+                pendingDownloads.Add(DownloadMergeAndRasterizeEntryAsync(
+                    blobKey, index, coordinator, downloadSemaphore, cancellationToken));
+                pendingDownloads.RemoveAll(t => t.Status == TaskStatus.RanToCompletion);
+            }
+
+            await Task.WhenAll(pendingDownloads);
         }
-
-        await Task.WhenAll(pendingDownloads);
+        catch
+        {
+            foreach (var pageKey in coordinator.UploadedPageKeys)
+            {
+                await _blobStorageService.DeleteAsync(pageKey, CancellationToken.None);
+            }
+            throw;
+        }
 
         return new MergePlan(session.Complete(), includedItems);
     }
 
-    private async Task DownloadAndMergeEntryAsync(
+    private async Task DownloadMergeAndRasterizeEntryAsync(
         string blobKey,
         int index,
-        OrderedMergeCoordinator coordinator,
+        OrderedMergeRasterizeCoordinator coordinator,
         SemaphoreSlim downloadSemaphore,
-        Func<Task> reportDownloaded,
         CancellationToken cancellationToken)
     {
         try
         {
             var bytes = await DownloadBytesAsync(blobKey, cancellationToken);
-            await coordinator.AddAsync(index, bytes, cancellationToken);
-            await reportDownloaded();
+            await coordinator.AddDownloadedAsync(index, bytes, cancellationToken);
         }
         finally
         {
@@ -256,27 +262,72 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         }
     }
 
-    private sealed class OrderedMergeCoordinator
+    private sealed class OrderedMergeRasterizeCoordinator
     {
-        private readonly IPdfMergeSession _session;
+        private readonly IPdfMergeSession _mergeSession;
+        private readonly IPdfRasterizerService _rasterizerService;
+        private readonly IBlobStorageService _blobStorageService;
+        private readonly Guid _companyId;
+        private readonly Guid _catalogId;
+        private readonly int _totalEntries;
+        private readonly int _estimatedTotalPages;
+        private readonly Func<CatalogGenerationProgress, Task>? _onProgress;
+        private readonly List<string> _uploadedPageKeys = new();
         private readonly Dictionary<int, byte[]> _pending = new();
         private readonly SemaphoreSlim _lock = new(1, 1);
         private int _nextIndex;
+        private int _pageCursor;
+        private int _downloadedCount;
+        private int _rasterizedPageCount;
 
-        public OrderedMergeCoordinator(IPdfMergeSession session)
+        public OrderedMergeRasterizeCoordinator(
+            IPdfMergeSession mergeSession,
+            IPdfRasterizerService rasterizerService,
+            IBlobStorageService blobStorageService,
+            Guid companyId,
+            Guid catalogId,
+            int totalEntries,
+            int estimatedTotalPages,
+            Func<CatalogGenerationProgress, Task>? onProgress)
         {
-            _session = session;
+            _mergeSession = mergeSession;
+            _rasterizerService = rasterizerService;
+            _blobStorageService = blobStorageService;
+            _companyId = companyId;
+            _catalogId = catalogId;
+            _totalEntries = totalEntries;
+            _estimatedTotalPages = estimatedTotalPages;
+            _onProgress = onProgress;
         }
 
-        public async Task AddAsync(int index, byte[] pdfBytes, CancellationToken cancellationToken)
+        public IReadOnlyList<string> UploadedPageKeys => _uploadedPageKeys;
+
+        public async Task AddDownloadedAsync(int index, byte[] pdfBytes, CancellationToken cancellationToken)
         {
             await _lock.WaitAsync(cancellationToken);
             try
             {
                 _pending[index] = pdfBytes;
+                _downloadedCount++;
+                await ReportAsync("downloading", _downloadedCount, _totalEntries);
+
                 while (_pending.Remove(_nextIndex, out var nextBytes))
                 {
-                    _session.AddDocument(nextBytes);
+                    var pageCount = _mergeSession.AddDocument(nextBytes);
+
+                    await foreach (var (pageIndex, jpegBytes) in _rasterizerService.RasterizePagesToJpegAsync(
+                        nextBytes, Enumerable.Range(0, pageCount).ToList(), cancellationToken))
+                    {
+                        var pageNumber = _pageCursor + pageIndex + 1;
+                        var blobKey = BlobKeys.GeneratedCatalogPage(_companyId, _catalogId, pageNumber);
+                        using var stream = new MemoryStream(jpegBytes);
+                        await _blobStorageService.UploadAsync(blobKey, stream, "image/jpeg", cancellationToken);
+                        _uploadedPageKeys.Add(blobKey);
+                        _rasterizedPageCount++;
+                        await ReportAsync("rasterizing", _rasterizedPageCount, _estimatedTotalPages);
+                    }
+
+                    _pageCursor += pageCount;
                     _nextIndex++;
                 }
             }
@@ -284,6 +335,16 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             {
                 _lock.Release();
             }
+        }
+
+        private async Task ReportAsync(string stage, int current, int total)
+        {
+            if (_onProgress is null)
+            {
+                return;
+            }
+
+            await _onProgress(new CatalogGenerationProgress(stage, current, total));
         }
     }
 
@@ -298,12 +359,14 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
     }
 
     private async Task<GeneratedCatalog> CreateCatalogAsync(
+        Guid catalogId,
         GenerateCatalogCommand request,
         Company company,
         IReadOnlyList<Item> includedItems,
         List<CatalogIndexEntry> indexSnapshot,
         string generatedBlobKey,
         string fingerprint,
+        int rasterizedPageCount,
         CancellationToken cancellationToken)
     {
         var user = await _session.GetAsync<User>(request.UserId, cancellationToken);
@@ -320,10 +383,14 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             GeneratedAt = DateTime.UtcNow,
             GeneratedPdfBlobKey = generatedBlobKey,
             ItemsSnapshotJson = JsonSerializer.Serialize(snapshot),
-            ContentFingerprint = fingerprint
+            ContentFingerprint = fingerprint,
+            RasterizedPageCount = rasterizedPageCount
         };
 
-        await _session.SaveInTransactionAsync(catalog, cancellationToken);
+        using var transaction = _session.BeginTransaction();
+        await _session.SaveAsync(catalog, catalogId, cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
         return catalog;
     }
 
@@ -364,102 +431,6 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             }
         }
         return pageCounts;
-    }
-
-    private const int MaxConcurrentPageUploads = 4;
-
-    private async Task RasterizePagesAsync(
-        GeneratedCatalog catalog,
-        byte[] mergedPdfBytes,
-        int totalPages,
-        Func<CatalogGenerationProgress, Task>? onProgress,
-        CancellationToken cancellationToken)
-    {
-        var uploadedPageCount = 0;
-        var pendingUploads = new List<Task>();
-        using var uploadSemaphore = new SemaphoreSlim(MaxConcurrentPageUploads);
-        using var progressLock = new SemaphoreSlim(1, 1);
-        try
-        {
-            var allPageIndices = Enumerable.Range(0, totalPages).ToList();
-            await foreach (var (pageIndex, jpegBytes) in _pdfRasterizerService.RasterizePagesToJpegAsync(mergedPdfBytes, allPageIndices, cancellationToken))
-            {
-                await uploadSemaphore.WaitAsync(cancellationToken);
-                pendingUploads.Add(UploadPageAndReportAsync(
-                    catalog,
-                    pageIndex,
-                    jpegBytes,
-                    uploadSemaphore,
-                    () =>
-                    {
-                        var completed = Interlocked.Increment(ref uploadedPageCount);
-                        return ReportProgressSerializedAsync(progressLock, onProgress, "rasterizing", completed, totalPages);
-                    },
-                    cancellationToken));
-                pendingUploads.RemoveAll(t => t.Status == TaskStatus.RanToCompletion);
-            }
-
-            await Task.WhenAll(pendingUploads);
-
-            catalog.RasterizedPageCount = uploadedPageCount;
-            await _session.UpdateInTransactionAsync(catalog, cancellationToken);
-        }
-        catch
-        {
-            await _session.DeleteInTransactionAsync(catalog, CancellationToken.None);
-            await _blobStorageService.DeleteAsync(catalog.GeneratedPdfBlobKey, CancellationToken.None);
-            for (var pageNumber = 1; pageNumber <= totalPages; pageNumber++)
-            {
-                await _blobStorageService.DeleteAsync(
-                    BlobKeys.GeneratedCatalogPage(catalog.Company.Id, catalog.Id, pageNumber),
-                    CancellationToken.None);
-            }
-            throw;
-        }
-    }
-
-    private async Task UploadPageAndReportAsync(
-        GeneratedCatalog catalog,
-        int pageIndex,
-        byte[] jpegBytes,
-        SemaphoreSlim uploadSemaphore,
-        Func<Task> reportUploaded,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            var blobKey = BlobKeys.GeneratedCatalogPage(catalog.Company.Id, catalog.Id, pageIndex + 1);
-            using var stream = new MemoryStream(jpegBytes);
-            await _blobStorageService.UploadAsync(blobKey, stream, "image/jpeg", cancellationToken);
-            await reportUploaded();
-        }
-        finally
-        {
-            uploadSemaphore.Release();
-        }
-    }
-
-    private static async Task ReportProgressSerializedAsync(
-        SemaphoreSlim progressLock,
-        Func<CatalogGenerationProgress, Task>? onProgress,
-        string stage,
-        int current,
-        int total)
-    {
-        if (onProgress is null)
-        {
-            return;
-        }
-
-        await progressLock.WaitAsync();
-        try
-        {
-            await onProgress(new CatalogGenerationProgress(stage, current, total));
-        }
-        finally
-        {
-            progressLock.Release();
-        }
     }
 
     private async Task DeleteCatalogAsync(Guid companyId, Guid catalogId, CancellationToken cancellationToken)

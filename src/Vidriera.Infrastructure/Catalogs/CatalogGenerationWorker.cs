@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using NHibernate;
 using NHibernate.Linq;
 using Vidriera.Application.Catalogs;
+using Vidriera.Application.Common.Exceptions;
 using Vidriera.Domain.Entities;
 
 namespace Vidriera.Infrastructure.Catalogs;
@@ -102,8 +103,16 @@ public class CatalogGenerationWorker : BackgroundService
         }
         catch (Exception ex)
         {
+            var isExpected = ex is ValidationException or NotFoundException;
+            if (!isExpected)
+            {
+                _logger.LogError(ex, "Error inesperado generando el catálogo para el job {JobId}.", job.Id);
+            }
+
             job.Status = CatalogGenerationJobStatus.Failed;
-            job.ErrorMessage = ex.Message;
+            job.ErrorMessage = isExpected
+                ? ex.Message
+                : "No se pudo generar el catálogo por un error inesperado del servidor. Volvé a intentar en unos minutos.";
             job.UpdatedAt = DateTime.UtcNow;
             await SaveAsync(session, job);
         }
