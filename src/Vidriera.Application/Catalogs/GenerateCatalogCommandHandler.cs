@@ -264,6 +264,9 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
 
     private sealed class OrderedMergeRasterizeCoordinator
     {
+        private const int PagesPerCpuYield = 10;
+        private static readonly TimeSpan CpuYieldDelay = TimeSpan.FromMilliseconds(300);
+
         private readonly IPdfMergeSession _mergeSession;
         private readonly IPdfRasterizerService _rasterizerService;
         private readonly IBlobStorageService _blobStorageService;
@@ -325,6 +328,11 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
                         _uploadedPageKeys.Add(blobKey);
                         _rasterizedPageCount++;
                         await ReportAsync("rasterizing", _rasterizedPageCount, _estimatedTotalPages);
+
+                        if (_rasterizedPageCount % PagesPerCpuYield == 0)
+                        {
+                            await Task.Delay(CpuYieldDelay, cancellationToken);
+                        }
                     }
 
                     _pageCursor += pageCount;
