@@ -7,7 +7,7 @@ namespace Vidriera.Infrastructure.Pdf;
 
 public class PdfiumRasterizerService : IPdfRasterizerService
 {
-    private const int Dpi = 150;
+    private const int Dpi = 120;
     private const int JpegQuality = 85;
 
     public async IAsyncEnumerable<(int PageIndex, byte[] JpegBytes)> RasterizePagesToJpegAsync(
