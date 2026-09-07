@@ -3,6 +3,7 @@
 import type { Item, Section } from "@/lib/api";
 import { Labels } from "@/lib/labels";
 import { StockToggle } from "./StockToggle";
+import { SectionPicker } from "./SectionPicker";
 import { CodeInput, DeleteConfirmActions, DragHandle, NameInput, PositionInput, PriceInput } from "./RowControls";
 
 export function ItemRow({
@@ -92,19 +93,13 @@ export function ItemRow({
         <NameInput itemKey={item.id} name={item.name} onUpdateName={onUpdateName} />
         {showPrice && <PriceInput itemKey={item.id} price={item.price} onUpdatePrice={onUpdatePrice} />}
       </div>
-      <select
-        value={item.sectionId ?? ""}
-        onChange={(e) => onAssignSection(e.target.value || null)}
+      <SectionPicker
+        sections={sections}
+        value={item.sectionId}
+        onChange={onAssignSection}
+        noneLabel={Labels.noSectionOption}
         title={Labels.sectionSelectTitle}
-        className="rounded border border-zinc-300 bg-white px-1 py-1 text-xs text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
-      >
-        <option value="">{Labels.noSectionOption}</option>
-        {sections.map((s) => (
-          <option key={s.id} value={s.id}>
-            {s.name}
-          </option>
-        ))}
-      </select>
+      />
 
       {confirmingDelete ? (
         <DeleteConfirmActions

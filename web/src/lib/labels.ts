@@ -97,6 +97,8 @@ export const Labels = {
   sectionSelectTitle: "Carátula",
   sectionParentSelectTitle: "Carátula padre",
   noParentSectionOption: "Sin carátula padre",
+  sectionSearchPlaceholder: "Buscar carátula...",
+  noSectionSearchMatches: "Ninguna carátula coincide con la búsqueda.",
   confirmDeleteItemQuestion: "¿Borrar?",
   confirmDeleteSectionQuestion: "¿Borrar carátula?",
   yes: "Sí",

@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import type { Section } from "@/lib/api";
 import { Labels } from "@/lib/labels";
 import { StockToggle } from "./StockToggle";
+import { SectionPicker } from "./SectionPicker";
 import { DeleteConfirmActions, DragHandle, PositionInput } from "./RowControls";
 
 export function SectionRow({
@@ -103,19 +104,13 @@ export function SectionRow({
           <span className="font-normal text-zinc-500 dark:text-zinc-400">({memberCount})</span>
         </span>
         {canHaveParent && (
-          <select
-            value={section.parentSectionId ?? ""}
-            onChange={(e) => onChangeParent(e.target.value || null)}
+          <SectionPicker
+            sections={parentOptions}
+            value={section.parentSectionId}
+            onChange={onChangeParent}
+            noneLabel={Labels.noParentSectionOption}
             title={Labels.sectionParentSelectTitle}
-            className="rounded border border-zinc-300 bg-white px-1 py-1 text-xs text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
-          >
-            <option value="">{Labels.noParentSectionOption}</option>
-            {parentOptions.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
+          />
         )}
         {confirmingDelete ? (
           <DeleteConfirmActions
