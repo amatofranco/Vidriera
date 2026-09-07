@@ -94,7 +94,14 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             throw new ValidationException(ErrorMessages.CatalogTooLarge(estimatedPages, _options.MaxTotalPages));
         }
 
-        var mergePlan = await BuildAndMergeAsync(entries, request.OnProgress, cancellationToken);
+        var physicalEntries = GetPhysicalEntries(entries);
+        var estimatedBytes = await EstimateTotalBytesAsync(physicalEntries, cancellationToken);
+        if (estimatedBytes > _options.MaxTotalBytes)
+        {
+            throw new ValidationException(ErrorMessages.CatalogTooHeavy(estimatedBytes, _options.MaxTotalBytes));
+        }
+
+        var mergePlan = await BuildAndMergeAsync(physicalEntries, request.OnProgress, cancellationToken);
         var mergeResult = mergePlan.MergeResult;
         var indexSnapshot = CatalogMergePlanBuilder.BuildIndexSnapshot(entries, mergeResult.PageCounts, request.ShowPrices);
 
@@ -145,19 +152,49 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         return total;
     }
 
+    private static List<MergeEntry> GetPhysicalEntries(IReadOnlyList<MergeEntry> entries) =>
+        entries
+            .Where(entry => entry is ItemEntry || (entry is SectionCoverEntry cover && cover.Section.CoverPdfBlobKey is not null))
+            .ToList();
+
+    private static string GetBlobKey(MergeEntry entry) => entry switch
+    {
+        SectionCoverEntry cover => cover.Section.CoverPdfBlobKey!,
+        ItemEntry itemEntry => itemEntry.Item.SheetPdfBlobKey!,
+        _ => throw new InvalidOperationException("Unknown merge entry type.")
+    };
+
+    private const int MaxConcurrentSizeChecks = 8;
+
+    private async Task<long> EstimateTotalBytesAsync(IReadOnlyList<MergeEntry> physicalEntries, CancellationToken cancellationToken)
+    {
+        using var sizeCheckSemaphore = new SemaphoreSlim(MaxConcurrentSizeChecks);
+        var sizeTasks = physicalEntries.Select(async entry =>
+        {
+            await sizeCheckSemaphore.WaitAsync(cancellationToken);
+            try
+            {
+                return await _blobStorageService.GetSizeAsync(GetBlobKey(entry), cancellationToken);
+            }
+            finally
+            {
+                sizeCheckSemaphore.Release();
+            }
+        });
+
+        var sizes = await Task.WhenAll(sizeTasks);
+        return sizes.Sum();
+    }
+
     private sealed record MergePlan(PdfMergeResult MergeResult, List<Item> IncludedItems);
 
     private const int MaxConcurrentDownloads = 4;
 
     private async Task<MergePlan> BuildAndMergeAsync(
-        IReadOnlyList<MergeEntry> entries,
+        IReadOnlyList<MergeEntry> physicalEntries,
         Func<CatalogGenerationProgress, Task>? onProgress,
         CancellationToken cancellationToken)
     {
-        var physicalEntries = entries
-            .Where(entry => entry is ItemEntry || (entry is SectionCoverEntry cover && cover.Section.CoverPdfBlobKey is not null))
-            .ToList();
-
         var includedItems = new List<Item>();
         foreach (var entry in physicalEntries)
         {
@@ -177,12 +214,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
 
         for (var index = 0; index < physicalEntries.Count; index++)
         {
-            var blobKey = physicalEntries[index] switch
-            {
-                SectionCoverEntry cover => cover.Section.CoverPdfBlobKey!,
-                ItemEntry itemEntry => itemEntry.Item.SheetPdfBlobKey!,
-                _ => throw new InvalidOperationException("Unknown merge entry type.")
-            };
+            var blobKey = GetBlobKey(physicalEntries[index]);
 
             await downloadSemaphore.WaitAsync(cancellationToken);
             pendingDownloads.Add(DownloadAndMergeEntryAsync(

@@ -208,4 +208,7 @@
   <data name="CatalogTooLarge" xml:space="preserve">
     <value>El catálogo tendría alrededor de {0} páginas; el máximo permitido es {1}. Sacá algunos items o dividilo en más de un catálogo.</value>
   </data>
+  <data name="CatalogTooHeavy" xml:space="preserve">
+    <value>El catálogo pesaría alrededor de {0} MB; el máximo permitido es {1} MB. Los PDF de fichas/carátulas son demasiado pesados — reducí su tamaño o sacá algunos items.</value>
+  </data>
 </root>

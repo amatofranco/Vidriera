@@ -82,4 +82,9 @@ public static class ErrorMessages
 
     public static string CatalogGenerationBusy => Get(nameof(CatalogGenerationBusy));
     public static string CatalogTooLarge(int pageCount, int max) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(CatalogTooLarge)), pageCount, max);
+    public static string CatalogTooHeavy(long totalBytes, long maxBytes) => string.Format(
+        CultureInfo.CurrentUICulture,
+        Get(nameof(CatalogTooHeavy)),
+        totalBytes / (1024 * 1024),
+        maxBytes / (1024 * 1024));
 }

@@ -49,6 +49,14 @@ public class R2BlobStorageService : IBlobStorageService
         return response.ResponseStream;
     }
 
+    public async Task<long> GetSizeAsync(string key, CancellationToken cancellationToken)
+    {
+        var response = await _client.GetObjectMetadataAsync(
+            new GetObjectMetadataRequest { BucketName = _bucketName, Key = key },
+            cancellationToken);
+        return response.ContentLength;
+    }
+
     public async Task DeleteAsync(string key, CancellationToken cancellationToken)
     {
         await _client.DeleteObjectAsync(_bucketName, key, cancellationToken);
