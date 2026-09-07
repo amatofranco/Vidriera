@@ -143,6 +143,14 @@ export const Labels = {
   importingPrices: "Importando...",
   importPricesUpdatedCount: (count: number) => `${count} precio${plural(count)} actualizado${plural(count)}.`,
   importPricesNotFoundCodes: (codes: string[]) => `Códigos no encontrados: ${codes.join(", ")}`,
+  importAvailabilityNavLabel: "Disponibilidad",
+  importAvailabilityTitle: "Importar disponibilidad",
+  importAvailabilityHint:
+    "Excel con Código en la primera columna y Disponibilidad en la segunda. Solo se actúa sobre las filas que digan \"Agotado\" (marca el item sin stock); cualquier otro valor, o vacío, se ignora. La primera fila se ignora (encabezado).",
+  importingAvailability: "Importando...",
+  importAvailabilityMarkedCount: (count: number) =>
+    `${count} item${plural(count)} marcado${plural(count)} sin stock.`,
+  importAvailabilityNotFoundCodes: (codes: string[]) => `Códigos no encontrados: ${codes.join(", ")}`,
 
   loadingOrders: "Cargando pedidos...",
   noOrdersYet: "Todavía no se recibieron pedidos.",

@@ -257,6 +257,34 @@ export async function downloadPriceImportTemplate(token: string): Promise<Blob> 
   return response.blob();
 }
 
+export interface ImportAvailabilityResult {
+  markedOutOfStockCount: number;
+  notFoundCodes: string[];
+}
+
+export function importAvailability(token: string, file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  return request<ImportAvailabilityResult>("/api/items/import-availability", {
+    method: "POST",
+    token,
+    body: formData,
+  });
+}
+
+export async function downloadAvailabilityImportTemplate(token: string): Promise<Blob> {
+  const response = await fetch(`${API_URL}/api/items/import-availability/template`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!response.ok) {
+    throw new ApiError(`Error ${response.status}`, response.status);
+  }
+
+  return response.blob();
+}
+
 export function uploadCompanyLogo(token: string, file: File) {
   const formData = new FormData();
   formData.append("file", file);

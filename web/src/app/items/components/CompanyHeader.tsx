@@ -15,6 +15,7 @@ const BASE_NAV_LINKS = [
 const ORDERS_NAV_LINK = { href: "/orders", label: Labels.ordersNavLabel };
 const ORDER_FORM_NAV_LINK = { href: "/order-form", label: Labels.orderFormNavLabel };
 const PRICES_NAV_LINK = { href: "/import-prices", label: Labels.importPricesNavLabel };
+const AVAILABILITY_NAV_LINK = { href: "/import-availability", label: Labels.importAvailabilityNavLabel };
 
 export function CompanyHeader({
   auth,
@@ -35,6 +36,7 @@ export function CompanyHeader({
     ...BASE_NAV_LINKS,
     ...(auth.showOrders ? [ORDERS_NAV_LINK, ORDER_FORM_NAV_LINK] : []),
     ...(auth.showPrice ? [PRICES_NAV_LINK] : []),
+    AVAILABILITY_NAV_LINK,
   ];
 
   async function handleLogoChange(file: File) {

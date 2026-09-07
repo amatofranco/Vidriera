@@ -104,6 +104,25 @@ public class ItemsController : ControllerBase
         return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "plantilla-precios.xlsx");
     }
 
+    [HttpPost("import-availability")]
+    [RequestSizeLimit(20_000_000)]
+    public async Task<ActionResult<ImportAvailabilityResult>> ImportAvailability(IFormFile file, CancellationToken cancellationToken)
+    {
+        var companyId = User.GetCompanyId();
+
+        await using var stream = file.OpenReadStream();
+        var result = await _mediator.Send(new ImportAvailabilityCommand(companyId, stream), cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpGet("import-availability/template")]
+    public async Task<IActionResult> DownloadAvailabilityImportTemplate(CancellationToken cancellationToken)
+    {
+        var content = await _mediator.Send(new GetAvailabilityImportTemplateQuery(), cancellationToken);
+        return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "plantilla-disponibilidad.xlsx");
+    }
+
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> DeleteItem(Guid id, CancellationToken cancellationToken)
     {

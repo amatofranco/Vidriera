@@ -22,6 +22,8 @@ public static class ErrorMessages
     public static string SectionNameRequired => Get(nameof(SectionNameRequired));
     public static string PriceImportInvalidFile => Get(nameof(PriceImportInvalidFile));
     public static string PriceImportEmpty => Get(nameof(PriceImportEmpty));
+    public static string AvailabilityImportInvalidFile => Get(nameof(AvailabilityImportInvalidFile));
+    public static string AvailabilityImportEmpty => Get(nameof(AvailabilityImportEmpty));
     public static string CompanyCatalogNotFound => Get(nameof(CompanyCatalogNotFound));
 
     public static string InvalidSectionReorderItems => Get(nameof(InvalidSectionReorderItems));

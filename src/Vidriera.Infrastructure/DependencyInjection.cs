@@ -40,6 +40,7 @@ public static class DependencyInjection
         services.AddHostedService<CatalogGenerationWorker>();
         services.AddSingleton<IExcelOrderService, ClosedXmlOrderService>();
         services.AddSingleton<IPriceImportService, ClosedXmlPriceImportService>();
+        services.AddSingleton<IAvailabilityImportService, ClosedXmlAvailabilityImportService>();
 
         services.Configure<JwtOptions>(configuration.GetSection("Jwt"));
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();

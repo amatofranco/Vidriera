@@ -136,6 +136,12 @@
   <data name="PriceImportEmpty" xml:space="preserve">
     <value>El archivo no tiene filas válidas — Código en la primera columna, Precio en la segunda, sin contar el encabezado.</value>
   </data>
+  <data name="AvailabilityImportInvalidFile" xml:space="preserve">
+    <value>No se pudo leer el archivo. Verificá que sea un Excel (.xlsx) válido.</value>
+  </data>
+  <data name="AvailabilityImportEmpty" xml:space="preserve">
+    <value>El archivo no tiene filas válidas — Código en la primera columna, Disponibilidad en la segunda, sin contar el encabezado.</value>
+  </data>
   <data name="SectionNotFound" xml:space="preserve">
     <value>No se encontró la carátula {0} para esta empresa.</value>
   </data>
