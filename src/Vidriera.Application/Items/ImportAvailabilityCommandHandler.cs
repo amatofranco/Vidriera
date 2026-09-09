@@ -10,7 +10,7 @@ namespace Vidriera.Application.Items;
 
 public class ImportAvailabilityCommandHandler : IRequestHandler<ImportAvailabilityCommand, ImportAvailabilityResult>
 {
-    private const string OutOfStockValue = "Agotado";
+    private const string OutOfStockWord = "agotado";
 
     private readonly ISession _session;
     private readonly IAvailabilityImportService _availabilityImportService;
@@ -48,33 +48,38 @@ public class ImportAvailabilityCommandHandler : IRequestHandler<ImportAvailabili
 
         var notFoundCodes = new List<string>();
         var markedOutOfStockCount = 0;
+        var markedInStockCount = 0;
 
         using var transaction = _session.BeginTransaction();
 
         foreach (var row in rows)
         {
-            if (!string.Equals(row.Availability, OutOfStockValue, StringComparison.OrdinalIgnoreCase))
+            if (!itemsByCode.TryGetValue(row.Code, out var matches))
             {
+                notFoundCodes.Add(row.Code);
                 continue;
             }
 
-            if (itemsByCode.TryGetValue(row.Code, out var matches))
+            var isOutOfStock = row.Availability?.Contains(OutOfStockWord, StringComparison.OrdinalIgnoreCase) ?? false;
+
+            foreach (var item in matches)
             {
-                foreach (var item in matches)
-                {
-                    item.HasStock = false;
-                    await _session.UpdateAsync(item, cancellationToken);
-                    markedOutOfStockCount++;
-                }
+                item.HasStock = !isOutOfStock;
+                await _session.UpdateAsync(item, cancellationToken);
+            }
+
+            if (isOutOfStock)
+            {
+                markedOutOfStockCount += matches.Count;
             }
             else
             {
-                notFoundCodes.Add(row.Code);
+                markedInStockCount += matches.Count;
             }
         }
 
         await transaction.CommitAsync(cancellationToken);
 
-        return new ImportAvailabilityResult(markedOutOfStockCount, notFoundCodes);
+        return new ImportAvailabilityResult(markedOutOfStockCount, markedInStockCount, notFoundCodes);
     }
 }

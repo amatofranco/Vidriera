@@ -49,7 +49,8 @@ export function ImportAvailabilityPanel({
 
       {result && (
         <div className="mt-4 text-sm text-zinc-700 dark:text-zinc-300">
-          <p>{Labels.importAvailabilityMarkedCount(result.markedOutOfStockCount)}</p>
+          <p>{Labels.importAvailabilityMarkedInStockCount(result.markedInStockCount)}</p>
+          <p>{Labels.importAvailabilityMarkedOutOfStockCount(result.markedOutOfStockCount)}</p>
           {result.notFoundCodes.length > 0 && (
             <p className="mt-1 text-amber-600 dark:text-amber-400">
               {Labels.importAvailabilityNotFoundCodes(result.notFoundCodes)}

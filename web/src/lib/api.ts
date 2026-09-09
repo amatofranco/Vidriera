@@ -259,6 +259,7 @@ export async function downloadPriceImportTemplate(token: string): Promise<Blob> 
 
 export interface ImportAvailabilityResult {
   markedOutOfStockCount: number;
+  markedInStockCount: number;
   notFoundCodes: string[];
 }
 
