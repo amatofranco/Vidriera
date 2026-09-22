@@ -37,6 +37,7 @@ public static class DependencyInjection
         services.AddSingleton<IPdfMergeService, PdfSharpMergeService>();
         services.AddSingleton<IPdfRasterizerService, PdfiumRasterizerService>();
         services.AddSingleton<CatalogGenerationGate>();
+        services.AddSingleton<CatalogGenerationSignal>();
         services.AddHostedService<CatalogGenerationWorker>();
         services.AddSingleton<IExcelOrderService, ClosedXmlOrderService>();
         services.AddSingleton<IPriceImportService, ClosedXmlPriceImportService>();

@@ -12,14 +12,19 @@ namespace Vidriera.Infrastructure.Catalogs;
 
 public class CatalogGenerationWorker : BackgroundService
 {
-    private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(1);
+    private static readonly TimeSpan FallbackPollInterval = TimeSpan.FromMinutes(5);
 
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly CatalogGenerationSignal _signal;
     private readonly ILogger<CatalogGenerationWorker> _logger;
 
-    public CatalogGenerationWorker(IServiceScopeFactory scopeFactory, ILogger<CatalogGenerationWorker> logger)
+    public CatalogGenerationWorker(
+        IServiceScopeFactory scopeFactory,
+        CatalogGenerationSignal signal,
+        ILogger<CatalogGenerationWorker> logger)
     {
         _scopeFactory = scopeFactory;
+        _signal = signal;
         _logger = logger;
     }
 
@@ -43,7 +48,7 @@ public class CatalogGenerationWorker : BackgroundService
             {
                 try
                 {
-                    await Task.Delay(PollInterval, stoppingToken);
+                    await _signal.WaitAsync(FallbackPollInterval, stoppingToken);
                 }
                 catch (OperationCanceledException)
                 {

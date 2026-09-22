@@ -10,10 +10,12 @@ namespace Vidriera.Application.Catalogs;
 public class EnqueueCatalogGenerationCommandHandler : IRequestHandler<EnqueueCatalogGenerationCommand, EnqueueCatalogGenerationResult>
 {
     private readonly ISession _session;
+    private readonly CatalogGenerationSignal _signal;
 
-    public EnqueueCatalogGenerationCommandHandler(ISession session)
+    public EnqueueCatalogGenerationCommandHandler(ISession session, CatalogGenerationSignal signal)
     {
         _session = session;
+        _signal = signal;
     }
 
     public async Task<EnqueueCatalogGenerationResult> Handle(EnqueueCatalogGenerationCommand request, CancellationToken cancellationToken)
@@ -65,6 +67,7 @@ public class EnqueueCatalogGenerationCommandHandler : IRequestHandler<EnqueueCat
         };
 
         await _session.SaveInTransactionAsync(job, cancellationToken);
+        _signal.Notify();
 
         return new EnqueueCatalogGenerationResult(job.Id);
     }
