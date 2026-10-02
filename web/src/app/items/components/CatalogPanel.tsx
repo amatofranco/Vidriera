@@ -67,7 +67,13 @@ export function CatalogPanel({
               <div className="h-1.5 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/10">
                 <div
                   className="h-full rounded-full bg-[#c9a86a] transition-all"
-                  style={{ width: `${Math.round((generationProgress.current / generationProgress.total) * 100)}%` }}
+                  style={{
+                    width: `${
+                      generationProgress.total > 0
+                        ? Math.min(100, Math.round((generationProgress.current / generationProgress.total) * 100))
+                        : 0
+                    }%`,
+                  }}
                 />
               </div>
               <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">

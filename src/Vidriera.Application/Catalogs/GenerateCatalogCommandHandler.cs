@@ -209,10 +209,12 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             }
         }
 
+        var reportPages = physicalEntries.All(entry => GetKnownPageCount(entry) > 0);
+
         using var session = _pdfMergeService.CreateSession();
         var coordinator = new OrderedMergeRasterizeCoordinator(
             session, _pdfRasterizerService, _blobStorageService, companyId, catalogId,
-            physicalEntries.Count, estimatedTotalPages, onProgress);
+            physicalEntries.Count, estimatedTotalPages, reportPages, onProgress);
 
         var pendingDownloads = new List<Task>(physicalEntries.Count);
         using var downloadSemaphore = new SemaphoreSlim(MaxConcurrentDownloads);
@@ -240,7 +242,37 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             throw;
         }
 
+        await SyncStoredPageCountsAsync(physicalEntries, coordinator.ResolvedPageCounts, cancellationToken);
+
         return new MergePlan(session.Complete(), includedItems);
+    }
+
+    private static int GetKnownPageCount(MergeEntry entry) => entry switch
+    {
+        ItemEntry itemEntry => itemEntry.Item.PageCount,
+        SectionCoverEntry cover => cover.Section.CoverPageCount,
+        _ => 0
+    };
+
+    private async Task SyncStoredPageCountsAsync(
+        IReadOnlyList<MergeEntry> physicalEntries,
+        IReadOnlyDictionary<int, int> resolvedPageCounts,
+        CancellationToken cancellationToken)
+    {
+        foreach (var (index, pageCount) in resolvedPageCounts)
+        {
+            switch (physicalEntries[index])
+            {
+                case ItemEntry itemEntry when itemEntry.Item.PageCount != pageCount:
+                    itemEntry.Item.PageCount = pageCount;
+                    await _session.UpdateInTransactionAsync(itemEntry.Item, cancellationToken);
+                    break;
+                case SectionCoverEntry cover when cover.Section.CoverPageCount != pageCount:
+                    cover.Section.CoverPageCount = pageCount;
+                    await _session.UpdateInTransactionAsync(cover.Section, cancellationToken);
+                    break;
+            }
+        }
     }
 
     private async Task DownloadMergeAndRasterizeEntryAsync(
@@ -273,14 +305,17 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         private readonly Guid _catalogId;
         private readonly int _totalEntries;
         private readonly int _estimatedTotalPages;
+        private readonly bool _reportPages;
         private readonly Func<CatalogGenerationProgress, Task>? _onProgress;
         private readonly List<string> _uploadedPageKeys = new();
         private readonly Dictionary<int, byte[]> _pending = new();
+        private readonly Dictionary<int, int> _resolvedPageCounts = new();
         private readonly SemaphoreSlim _lock = new(1, 1);
         private int _nextIndex;
         private int _pageCursor;
         private int _downloadedCount;
         private int _rasterizedPageCount;
+        private bool _rasterizationStarted;
 
         public OrderedMergeRasterizeCoordinator(
             IPdfMergeSession mergeSession,
@@ -290,6 +325,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             Guid catalogId,
             int totalEntries,
             int estimatedTotalPages,
+            bool reportPages,
             Func<CatalogGenerationProgress, Task>? onProgress)
         {
             _mergeSession = mergeSession;
@@ -299,10 +335,13 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             _catalogId = catalogId;
             _totalEntries = totalEntries;
             _estimatedTotalPages = estimatedTotalPages;
+            _reportPages = reportPages;
             _onProgress = onProgress;
         }
 
         public IReadOnlyList<string> UploadedPageKeys => _uploadedPageKeys;
+
+        public IReadOnlyDictionary<int, int> ResolvedPageCounts => _resolvedPageCounts;
 
         public async Task AddDownloadedAsync(int index, byte[] pdfBytes, CancellationToken cancellationToken)
         {
@@ -311,11 +350,21 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             {
                 _pending[index] = pdfBytes;
                 _downloadedCount++;
-                await ReportAsync("downloading", _downloadedCount, _totalEntries);
+                if (!_rasterizationStarted)
+                {
+                    await ReportAsync("downloading", _downloadedCount, _totalEntries);
+                }
 
                 while (_pending.Remove(_nextIndex, out var nextBytes))
                 {
                     var pageCount = _mergeSession.AddDocument(nextBytes);
+                    _resolvedPageCounts[_nextIndex] = pageCount;
+
+                    if (!_rasterizationStarted)
+                    {
+                        _rasterizationStarted = true;
+                        await ReportAsync("rasterizing", 0, _reportPages ? _estimatedTotalPages : _totalEntries);
+                    }
 
                     await foreach (var (pageIndex, jpegBytes) in _rasterizerService.RasterizePagesToJpegAsync(
                         nextBytes, Enumerable.Range(0, pageCount).ToList(), cancellationToken))
@@ -326,7 +375,10 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
                         await _blobStorageService.UploadAsync(blobKey, stream, "image/jpeg", cancellationToken);
                         _uploadedPageKeys.Add(blobKey);
                         _rasterizedPageCount++;
-                        await ReportAsync("rasterizing", _rasterizedPageCount, _estimatedTotalPages);
+                        if (_reportPages)
+                        {
+                            await ReportAsync("rasterizing", _rasterizedPageCount, _estimatedTotalPages);
+                        }
 
                         if (_rasterizedPageCount % PagesPerCpuYield == 0)
                         {
@@ -336,6 +388,11 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
 
                     _pageCursor += pageCount;
                     _nextIndex++;
+
+                    if (!_reportPages)
+                    {
+                        await ReportAsync("rasterizing", _nextIndex, _totalEntries);
+                    }
                 }
             }
             finally
