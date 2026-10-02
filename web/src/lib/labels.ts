@@ -85,6 +85,8 @@ export const Labels = {
   generateCatalogButton: (count: number) => `Actualizar catálogo (${count} con stock y ficha)`,
   catalogGenerationHint: "Puede tardar un momento si el catálogo tiene muchos items.",
   preparingFilesProgress: (current: number, total: number) => `Preparando archivos (${current}/${total})`,
+  queuedStatus: "En cola, iniciando el proceso...",
+  finalizingProgress: (current: number, total: number) => `Finalizando catálogo (${current}/${total})`,
   generatingImagesProgress: (current: number, total: number) => `Generando imágenes (${current}/${total})`,
   linkPrefix: "Link fijo:",
 

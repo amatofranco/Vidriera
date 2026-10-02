@@ -4,6 +4,19 @@ import type { CatalogGenerationProgress, GenerateCatalogResult } from "@/lib/api
 import { Labels } from "@/lib/labels";
 import { missingPricesHint } from "@/lib/messages";
 
+function progressLabel({ stage, current, total }: CatalogGenerationProgress) {
+  switch (stage) {
+    case "queued":
+      return Labels.queuedStatus;
+    case "downloading":
+      return Labels.preparingFilesProgress(current, total);
+    case "rasterizing":
+      return Labels.generatingImagesProgress(current, total);
+    case "finalizing":
+      return Labels.finalizingProgress(current, total);
+  }
+}
+
 export function CatalogPanel({
   selectableCount,
   isGenerating,
@@ -66,20 +79,23 @@ export function CatalogPanel({
             <>
               <div className="h-1.5 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/10">
                 <div
-                  className="h-full rounded-full bg-[#c9a86a] transition-all"
-                  style={{
-                    width: `${
-                      generationProgress.total > 0
-                        ? Math.min(100, Math.round((generationProgress.current / generationProgress.total) * 100))
-                        : 0
-                    }%`,
-                  }}
+                  className={`h-full rounded-full bg-[#c9a86a] transition-all ${
+                    generationProgress.total > 0 ? "" : "w-full animate-pulse"
+                  }`}
+                  style={
+                    generationProgress.total > 0
+                      ? {
+                          width: `${Math.min(
+                            100,
+                            Math.round((generationProgress.current / generationProgress.total) * 100)
+                          )}%`,
+                        }
+                      : undefined
+                  }
                 />
               </div>
               <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">
-                {generationProgress.stage === "rasterizing"
-                  ? Labels.generatingImagesProgress(generationProgress.current, generationProgress.total)
-                  : Labels.preparingFilesProgress(generationProgress.current, generationProgress.total)}
+                {progressLabel(generationProgress)}
               </p>
             </>
           ) : (

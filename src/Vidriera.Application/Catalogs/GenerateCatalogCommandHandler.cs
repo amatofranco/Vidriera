@@ -106,9 +106,11 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         var mergeResult = mergePlan.MergeResult;
         var indexSnapshot = CatalogMergePlanBuilder.BuildIndexSnapshot(entries, mergeResult.PageCounts, request.ShowPrices);
 
+        await ReportFinalizingAsync(request.OnProgress, 1);
         var generatedBlobKey = await UploadMergedPdfAsync(request.CompanyId, mergeResult.Bytes, cancellationToken);
         var previousCatalogId = company.CurrentCatalogId;
 
+        await ReportFinalizingAsync(request.OnProgress, 2);
         var catalog = await CreateCatalogAsync(
             catalogId, request, company, mergePlan.IncludedItems, indexSnapshot, generatedBlobKey, fingerprint,
             mergeResult.PageCounts.Sum(), cancellationToken);
@@ -118,12 +120,20 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
 
         if (previousCatalogId.HasValue)
         {
+            await ReportFinalizingAsync(request.OnProgress, 3);
             await DeleteCatalogAsync(request.CompanyId, previousCatalogId.Value, CancellationToken.None);
         }
 
         var url = CatalogShareUrl.Build(_options.PublicBaseUrl, request.CompanyId, company.Slug);
         return new GenerateCatalogResult(catalog.Id, url);
     }
+
+    private const int FinalizingSteps = 3;
+
+    private static Task ReportFinalizingAsync(Func<CatalogGenerationProgress, Task>? onProgress, int step) =>
+        onProgress is null
+            ? Task.CompletedTask
+            : onProgress(new CatalogGenerationProgress("finalizing", step, FinalizingSteps));
 
     private async Task<(List<Item> Items, List<Section> Sections)> LoadCatalogDataAsync(
         Guid companyId,
@@ -210,6 +220,11 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         }
 
         var reportPages = physicalEntries.All(entry => GetKnownPageCount(entry) > 0);
+
+        if (onProgress is not null)
+        {
+            await onProgress(new CatalogGenerationProgress("downloading", 0, physicalEntries.Count));
+        }
 
         using var session = _pdfMergeService.CreateSession();
         var coordinator = new OrderedMergeRasterizeCoordinator(

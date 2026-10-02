@@ -409,7 +409,7 @@ export interface GenerateCatalogResult {
 }
 
 export interface CatalogGenerationProgress {
-  stage: "downloading" | "rasterizing";
+  stage: "queued" | "downloading" | "rasterizing" | "finalizing";
   current: number;
   total: number;
 }
@@ -417,7 +417,7 @@ export interface CatalogGenerationProgress {
 export interface CatalogGenerationJobStatus {
   jobId: string;
   status: "Pending" | "Running" | "Succeeded" | "Failed";
-  stage: "downloading" | "rasterizing" | null;
+  stage: "downloading" | "rasterizing" | "finalizing" | null;
   current: number;
   total: number;
   result: GenerateCatalogResult | null;
@@ -456,7 +456,9 @@ export async function pollCatalogGenerationJob(
       throw new ApiError(job.errorMessage ?? "No se pudo generar el catálogo.", 500);
     }
 
-    if (job.stage) {
+    if (job.status === "Pending") {
+      onProgress?.({ stage: "queued", current: 0, total: 0 });
+    } else if (job.stage) {
       onProgress?.({ stage: job.stage, current: job.current, total: job.total });
     }
 
