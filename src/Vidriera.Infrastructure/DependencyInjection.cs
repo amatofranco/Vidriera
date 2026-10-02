@@ -38,7 +38,10 @@ public static class DependencyInjection
         services.AddSingleton<IPdfRasterizerService, PdfiumRasterizerService>();
         services.AddSingleton<CatalogGenerationGate>();
         services.AddSingleton<CatalogGenerationSignal>();
-        services.AddHostedService<CatalogGenerationWorker>();
+        if (!configuration.GetValue<bool>("CatalogWorker:IsWorkerNode"))
+        {
+            services.AddHostedService<CatalogGenerationWorker>();
+        }
 
         services.Configure<CatalogWorkerOptions>(configuration.GetSection("CatalogWorker"));
         services.AddHttpClient(CloudRunCatalogWorkerTrigger.HttpClientName, (sp, client) =>
