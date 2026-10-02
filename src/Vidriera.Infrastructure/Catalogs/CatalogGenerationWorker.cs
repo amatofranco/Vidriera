@@ -2,10 +2,10 @@ using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using NHibernate;
 using NHibernate.Linq;
 using Vidriera.Application.Catalogs;
-using Vidriera.Application.Common.Exceptions;
 using Vidriera.Domain.Entities;
 
 namespace Vidriera.Infrastructure.Catalogs;
@@ -14,17 +14,29 @@ public class CatalogGenerationWorker : BackgroundService
 {
     private static readonly TimeSpan FallbackPollInterval = TimeSpan.FromMinutes(5);
 
+    // Cuando hay un worker externo configurado, se le da esta ventana para tomar el job
+    // antes de que el worker local (más lento en CPU) lo procese como respaldo.
+    private static readonly TimeSpan ExternalWorkerGraceWindow = TimeSpan.FromMinutes(2);
+
+    // Un job "Running" puede estar siendo procesado por el worker externo (Cloud Run), cuyo
+    // ciclo de vida es independiente de este proceso. Sólo se considera huérfano si no tuvo
+    // actividad (progreso reportado) por más tiempo del que puede durar una generación real.
+    private static readonly TimeSpan OrphanedJobStaleThreshold = TimeSpan.FromMinutes(30);
+
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly CatalogGenerationSignal _signal;
+    private readonly CatalogWorkerOptions _workerOptions;
     private readonly ILogger<CatalogGenerationWorker> _logger;
 
     public CatalogGenerationWorker(
         IServiceScopeFactory scopeFactory,
         CatalogGenerationSignal signal,
+        IOptions<CatalogWorkerOptions> workerOptions,
         ILogger<CatalogGenerationWorker> logger)
     {
         _scopeFactory = scopeFactory;
         _signal = signal;
+        _workerOptions = workerOptions.Value;
         _logger = logger;
     }
 
@@ -63,8 +75,9 @@ public class CatalogGenerationWorker : BackgroundService
         using var scope = _scopeFactory.CreateScope();
         var session = scope.ServiceProvider.GetRequiredService<ISession>();
 
+        var cutoff = DateTime.UtcNow - OrphanedJobStaleThreshold;
         var orphaned = await session.Query<CatalogGenerationJob>()
-            .Where(j => j.Status == CatalogGenerationJobStatus.Running)
+            .Where(j => j.Status == CatalogGenerationJobStatus.Running && j.UpdatedAt <= cutoff)
             .ToListAsync();
 
         foreach (var job in orphaned)
@@ -82,87 +95,28 @@ public class CatalogGenerationWorker : BackgroundService
         var session = scope.ServiceProvider.GetRequiredService<ISession>();
         var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-        var job = await ClaimNextPendingJobAsync(session);
-        if (job is null)
+        var jobId = await FindNextClaimableJobIdAsync(session);
+        if (jobId is null)
         {
             return false;
         }
 
-        using var progressLock = new SemaphoreSlim(1, 1);
-
-        try
-        {
-            var result = await mediator.Send(
-                new GenerateCatalogCommand(
-                    job.Company.Id,
-                    job.User.Id,
-                    job.ShowPrices,
-                    progress => ReportProgressAsync(session, progressLock, job, progress)),
-                stoppingToken);
-
-            job.Status = CatalogGenerationJobStatus.Succeeded;
-            job.ResultCatalogId = result.Id;
-            job.ResultUrl = result.Url;
-            job.UpdatedAt = DateTime.UtcNow;
-            await SaveAsync(session, job);
-        }
-        catch (Exception ex)
-        {
-            var isExpected = ex is ValidationException or NotFoundException;
-            if (!isExpected)
-            {
-                _logger.LogError(ex, "Error inesperado generando el catálogo para el job {JobId}.", job.Id);
-            }
-
-            job.Status = CatalogGenerationJobStatus.Failed;
-            job.ErrorMessage = isExpected
-                ? ex.Message
-                : "No se pudo generar el catálogo por un error inesperado del servidor. Volvé a intentar en unos minutos.";
-            job.UpdatedAt = DateTime.UtcNow;
-            await SaveAsync(session, job);
-        }
-
-        return true;
+        return await mediator.Send(new ProcessCatalogGenerationJobCommand(jobId.Value), stoppingToken);
     }
 
-    private static async Task<CatalogGenerationJob?> ClaimNextPendingJobAsync(ISession session)
+    private async Task<Guid?> FindNextClaimableJobIdAsync(ISession session)
     {
-        var job = await session.Query<CatalogGenerationJob>()
-            .Where(j => j.Status == CatalogGenerationJobStatus.Pending)
-            .OrderBy(j => j.CreatedAt)
-            .FirstOrDefaultAsync();
+        var query = session.Query<CatalogGenerationJob>()
+            .Where(j => j.Status == CatalogGenerationJobStatus.Pending);
 
-        if (job is null)
+        if (!string.IsNullOrEmpty(_workerOptions.WorkerUrl))
         {
-            return null;
+            var cutoff = DateTime.UtcNow - ExternalWorkerGraceWindow;
+            query = query.Where(j => j.CreatedAt <= cutoff);
         }
 
-        job.Status = CatalogGenerationJobStatus.Running;
-        job.UpdatedAt = DateTime.UtcNow;
-        await SaveAsync(session, job);
-
-        return job;
-    }
-
-    private static async Task ReportProgressAsync(
-        ISession session,
-        SemaphoreSlim progressLock,
-        CatalogGenerationJob job,
-        CatalogGenerationProgress progress)
-    {
-        await progressLock.WaitAsync();
-        try
-        {
-            job.Stage = progress.Stage;
-            job.ProgressCurrent = progress.Current;
-            job.ProgressTotal = progress.Total;
-            job.UpdatedAt = DateTime.UtcNow;
-            await SaveAsync(session, job);
-        }
-        finally
-        {
-            progressLock.Release();
-        }
+        var job = await query.OrderBy(j => j.CreatedAt).FirstOrDefaultAsync();
+        return job?.Id;
     }
 
     private static async Task SaveAsync(ISession session, CatalogGenerationJob job)

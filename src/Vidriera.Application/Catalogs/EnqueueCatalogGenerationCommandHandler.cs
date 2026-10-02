@@ -1,6 +1,7 @@
 using MediatR;
 using NHibernate;
 using NHibernate.Linq;
+using Vidriera.Application.Abstractions;
 using Vidriera.Application.Common;
 using Vidriera.Application.Common.Exceptions;
 using Vidriera.Domain.Entities;
@@ -11,11 +12,13 @@ public class EnqueueCatalogGenerationCommandHandler : IRequestHandler<EnqueueCat
 {
     private readonly ISession _session;
     private readonly CatalogGenerationSignal _signal;
+    private readonly ICatalogWorkerTrigger _workerTrigger;
 
-    public EnqueueCatalogGenerationCommandHandler(ISession session, CatalogGenerationSignal signal)
+    public EnqueueCatalogGenerationCommandHandler(ISession session, CatalogGenerationSignal signal, ICatalogWorkerTrigger workerTrigger)
     {
         _session = session;
         _signal = signal;
+        _workerTrigger = workerTrigger;
     }
 
     public async Task<EnqueueCatalogGenerationResult> Handle(EnqueueCatalogGenerationCommand request, CancellationToken cancellationToken)
@@ -68,6 +71,7 @@ public class EnqueueCatalogGenerationCommandHandler : IRequestHandler<EnqueueCat
 
         await _session.SaveInTransactionAsync(job, cancellationToken);
         _signal.Notify();
+        await _workerTrigger.TriggerAsync(job.Id, cancellationToken);
 
         return new EnqueueCatalogGenerationResult(job.Id);
     }

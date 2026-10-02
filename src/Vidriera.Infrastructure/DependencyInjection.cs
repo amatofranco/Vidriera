@@ -39,6 +39,25 @@ public static class DependencyInjection
         services.AddSingleton<CatalogGenerationGate>();
         services.AddSingleton<CatalogGenerationSignal>();
         services.AddHostedService<CatalogGenerationWorker>();
+
+        services.Configure<CatalogWorkerOptions>(configuration.GetSection("CatalogWorker"));
+        services.AddHttpClient(CloudRunCatalogWorkerTrigger.HttpClientName, (sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<CatalogWorkerOptions>>().Value;
+            if (!string.IsNullOrEmpty(options.WorkerUrl))
+            {
+                // Uri combina rutas relativas pisando el último segmento si el BaseAddress no
+                // termina en "/" (ej. ".../catalog-jobs" + "abc/process" => ".../abc/process").
+                var workerUrl = options.WorkerUrl.EndsWith('/') ? options.WorkerUrl : options.WorkerUrl + "/";
+                client.BaseAddress = new Uri(workerUrl);
+            }
+            if (!string.IsNullOrEmpty(options.ApiKey))
+            {
+                client.DefaultRequestHeaders.Add("X-Worker-Api-Key", options.ApiKey);
+            }
+            client.Timeout = TimeSpan.FromMinutes(25);
+        });
+        services.AddSingleton<ICatalogWorkerTrigger, CloudRunCatalogWorkerTrigger>();
         services.AddSingleton<IExcelOrderService, ClosedXmlOrderService>();
         services.AddSingleton<IPriceImportService, ClosedXmlPriceImportService>();
         services.AddSingleton<IAvailabilityImportService, ClosedXmlAvailabilityImportService>();
