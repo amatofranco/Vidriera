@@ -12,16 +12,9 @@ namespace Vidriera.Infrastructure.Catalogs;
 
 public class CatalogGenerationWorker : BackgroundService
 {
-    private static readonly TimeSpan FallbackPollInterval = TimeSpan.FromMinutes(5);
-
-    // Cuando hay un worker externo configurado, se le da esta ventana para tomar el job
-    // antes de que el worker local (más lento en CPU) lo procese como respaldo.
     private static readonly TimeSpan ExternalWorkerGraceWindow = TimeSpan.FromMinutes(2);
-
-    // Un job "Running" puede estar siendo procesado por el worker externo (Cloud Run), cuyo
-    // ciclo de vida es independiente de este proceso. Sólo se considera huérfano si no tuvo
-    // actividad (progreso reportado) por más tiempo del que puede durar una generación real.
     private static readonly TimeSpan OrphanedJobStaleThreshold = TimeSpan.FromMinutes(30);
+    private static readonly TimeSpan ErrorBackoff = TimeSpan.FromMinutes(1);
 
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly CatalogGenerationSignal _signal;
@@ -46,21 +39,22 @@ public class CatalogGenerationWorker : BackgroundService
 
         while (!stoppingToken.IsCancellationRequested)
         {
-            var processed = false;
+            TimeSpan? wait;
             try
             {
-                processed = await TryProcessNextJobAsync(stoppingToken);
+                wait = await TryProcessNextJobAsync(stoppingToken);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error inesperado procesando la cola de generación de catálogos.");
+                wait = ErrorBackoff;
             }
 
-            if (!processed)
+            if (wait != TimeSpan.Zero)
             {
                 try
                 {
-                    await _signal.WaitAsync(FallbackPollInterval, stoppingToken);
+                    await _signal.WaitAsync(wait ?? Timeout.InfiniteTimeSpan, stoppingToken);
                 }
                 catch (OperationCanceledException)
                 {
@@ -89,34 +83,33 @@ public class CatalogGenerationWorker : BackgroundService
         }
     }
 
-    private async Task<bool> TryProcessNextJobAsync(CancellationToken stoppingToken)
+    private async Task<TimeSpan?> TryProcessNextJobAsync(CancellationToken stoppingToken)
     {
         using var scope = _scopeFactory.CreateScope();
         var session = scope.ServiceProvider.GetRequiredService<ISession>();
         var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-        var jobId = await FindNextClaimableJobIdAsync(session);
-        if (jobId is null)
+        var oldestPending = await session.Query<CatalogGenerationJob>()
+            .Where(j => j.Status == CatalogGenerationJobStatus.Pending)
+            .OrderBy(j => j.CreatedAt)
+            .FirstOrDefaultAsync();
+
+        if (oldestPending is null)
         {
-            return false;
+            return null;
         }
-
-        return await mediator.Send(new ProcessCatalogGenerationJobCommand(jobId.Value), stoppingToken);
-    }
-
-    private async Task<Guid?> FindNextClaimableJobIdAsync(ISession session)
-    {
-        var query = session.Query<CatalogGenerationJob>()
-            .Where(j => j.Status == CatalogGenerationJobStatus.Pending);
 
         if (!string.IsNullOrEmpty(_workerOptions.WorkerUrl))
         {
-            var cutoff = DateTime.UtcNow - ExternalWorkerGraceWindow;
-            query = query.Where(j => j.CreatedAt <= cutoff);
+            var remaining = oldestPending.CreatedAt + ExternalWorkerGraceWindow - DateTime.UtcNow;
+            if (remaining > TimeSpan.Zero)
+            {
+                return remaining;
+            }
         }
 
-        var job = await query.OrderBy(j => j.CreatedAt).FirstOrDefaultAsync();
-        return job?.Id;
+        await mediator.Send(new ProcessCatalogGenerationJobCommand(oldestPending.Id), stoppingToken);
+        return TimeSpan.Zero;
     }
 
     private static async Task SaveAsync(ISession session, CatalogGenerationJob job)
