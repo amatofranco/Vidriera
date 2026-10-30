@@ -82,7 +82,8 @@ body { overflow: auto; }
     font-size: 27px; font-weight: 600; color: #f5f5f7;
 }
 #cover-info .cover-info-logo {
-    display: block; height: auto;
+    display: block; width: auto; height: auto;
+    max-width: 260px; max-height: 140px;
 }
 #cover-info-meta {
     position: fixed; text-align: center; z-index: 10; display: none;
