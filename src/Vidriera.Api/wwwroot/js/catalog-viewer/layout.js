@@ -56,6 +56,7 @@ export function positionSideNav(referenceEl, dom) {
 const COMPANY_NAME_BASE_FONT_SIZE = 27;
 const COMPANY_NAME_MIN_FONT_SIZE = 16;
 const COVER_LOGO_TARGET_HEIGHT = 140;
+const COVER_LOGO_MAX_WIDTH = 320;
 
 function shrinkToFit(nameEl, maxWidth) {
     const safeWidth = maxWidth - 4;
@@ -117,7 +118,7 @@ export function positionCoverInfo(referenceEl, dom) {
     }
 
     const maxAllowedWidth = Math.max(spineLeft - minLeft - gap, 100);
-    boxWidth = Math.min(boxWidth, maxAllowedWidth, 420);
+    boxWidth = Math.min(boxWidth, maxAllowedWidth, isLogo ? COVER_LOGO_MAX_WIDTH : 420);
 
     let left = preferredCenter - boxWidth / 2;
     left = Math.max(minLeft, Math.min(left, spineLeft - boxWidth - gap));
