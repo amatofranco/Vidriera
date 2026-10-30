@@ -16,12 +16,20 @@ function buildPageDivs(catalogId, pageCount) {
         const div = document.createElement("div");
         div.className = "page-content";
         const img = document.createElement("img");
-        img.src = `/api/catalogs/${catalogId}/pages/${pageNumber}`;
+        img.dataset.src = `/api/catalogs/${catalogId}/pages/${pageNumber}`;
         div.appendChild(img);
         divs.push(div);
         imgs.push(img);
     }
     return { divs, imgs };
+}
+
+function loadImage(img) {
+    if (!img.src) img.src = img.dataset.src;
+}
+
+function loadRemainingImages(imgs) {
+    imgs.forEach(loadImage);
 }
 
 function waitForImagesLoaded(imgs, pageNumbers) {
@@ -30,6 +38,7 @@ function waitForImagesLoaded(imgs, pageNumbers) {
             .filter((pageNumber) => pageNumber >= 1 && pageNumber <= imgs.length)
             .map((pageNumber) => {
                 const img = imgs[pageNumber - 1];
+                loadImage(img);
                 if (img.complete) return Promise.resolve();
                 return new Promise((resolve) => {
                     img.addEventListener("load", () => resolve(), { once: true });
@@ -55,6 +64,7 @@ function buildPriorityPageList(pageCount, sectionsData) {
 export async function renderFlipbookViewer({ catalogId, pageCount, pageAspect, dom, flipbookEl, sectionsData, rebuildRef }) {
     const { divs: pageDivs, imgs: pageImgs } = buildPageDivs(catalogId, pageCount);
     await waitForImagesLoaded(pageImgs, buildPriorityPageList(pageCount, sectionsData));
+    loadRemainingImages(pageImgs);
 
     let pageFlip = null;
 
