@@ -237,7 +237,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         var pageStorageService = PageStorageService;
         var coordinator = new OrderedMergeRasterizeCoordinator(
             session, _pdfRasterizerService, pageStorageService, companyId, catalogId,
-            physicalEntries.Count, estimatedTotalPages, reportPages, onProgress);
+            physicalEntries.Count, estimatedTotalPages, reportPages, onProgress, _options.IsWorkerNode);
 
         var pendingDownloads = new List<Task>(physicalEntries.Count);
         using var downloadSemaphore = new SemaphoreSlim(MaxConcurrentDownloads);
@@ -330,6 +330,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         private readonly int _estimatedTotalPages;
         private readonly bool _reportPages;
         private readonly Func<CatalogGenerationProgress, Task>? _onProgress;
+        private readonly bool _skipCpuYield;
         private readonly List<string> _uploadedPageKeys = new();
         private readonly Dictionary<int, byte[]> _pending = new();
         private readonly Dictionary<int, int> _resolvedPageCounts = new();
@@ -349,7 +350,8 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             int totalEntries,
             int estimatedTotalPages,
             bool reportPages,
-            Func<CatalogGenerationProgress, Task>? onProgress)
+            Func<CatalogGenerationProgress, Task>? onProgress,
+            bool skipCpuYield)
         {
             _mergeSession = mergeSession;
             _rasterizerService = rasterizerService;
@@ -360,6 +362,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             _estimatedTotalPages = estimatedTotalPages;
             _reportPages = reportPages;
             _onProgress = onProgress;
+            _skipCpuYield = skipCpuYield;
         }
 
         public IReadOnlyList<string> UploadedPageKeys => _uploadedPageKeys;
@@ -403,7 +406,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
                             await ReportAsync("rasterizing", _rasterizedPageCount, _estimatedTotalPages);
                         }
 
-                        if (_rasterizedPageCount % PagesPerCpuYield == 0)
+                        if (!_skipCpuYield && _rasterizedPageCount % PagesPerCpuYield == 0)
                         {
                             await Task.Delay(CpuYieldDelay, cancellationToken);
                         }

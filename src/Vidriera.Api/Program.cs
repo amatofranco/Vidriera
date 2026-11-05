@@ -46,6 +46,8 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Login
 
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.Configure<CatalogOptions>(builder.Configuration.GetSection("Catalog"));
+builder.Services.PostConfigure<CatalogOptions>(o =>
+    o.IsWorkerNode = builder.Configuration.GetValue<bool>("CatalogWorker:IsWorkerNode"));
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
