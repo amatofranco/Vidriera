@@ -1,5 +1,6 @@
 import { computeFitSize, positionSideNav, positionCoverInfo, positionCoverMeta, positionIndexPanel } from "./layout.js";
 import { renderIndexPanel } from "./index-panel.js";
+import { buildPageUrl } from "./page-url.js";
 
 const INITIAL_LOAD_COUNT = 5;
 
@@ -9,14 +10,14 @@ function getSpreadPages(current, pageCount) {
     return right <= pageCount ? [current, right] : [current];
 }
 
-function buildPageDivs(catalogId, pageCount) {
+function buildPageDivs(dom, pageCount) {
     const divs = [];
     const imgs = [];
     for (let pageNumber = 1; pageNumber <= pageCount; pageNumber++) {
         const div = document.createElement("div");
         div.className = "page-content";
         const img = document.createElement("img");
-        img.dataset.src = `/api/catalogs/${catalogId}/pages/${pageNumber}`;
+        img.dataset.src = buildPageUrl(dom, pageNumber);
         div.appendChild(img);
         divs.push(div);
         imgs.push(img);
@@ -61,8 +62,8 @@ function buildPriorityPageList(pageCount, sectionsData) {
     return Array.from(pages);
 }
 
-export async function renderFlipbookViewer({ catalogId, pageCount, pageAspect, dom, flipbookEl, sectionsData, rebuildRef }) {
-    const { divs: pageDivs, imgs: pageImgs } = buildPageDivs(catalogId, pageCount);
+export async function renderFlipbookViewer({ pageCount, pageAspect, dom, flipbookEl, sectionsData, rebuildRef }) {
+    const { divs: pageDivs, imgs: pageImgs } = buildPageDivs(dom, pageCount);
     await waitForImagesLoaded(pageImgs, buildPriorityPageList(pageCount, sectionsData));
     loadRemainingImages(pageImgs);
 

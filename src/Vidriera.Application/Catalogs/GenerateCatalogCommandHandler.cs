@@ -16,6 +16,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
 
     private readonly ISession _session;
     private readonly IBlobStorageService _blobStorageService;
+    private readonly IPublicCatalogPageStorageService _publicCatalogPageStorageService;
     private readonly IPdfMergeService _pdfMergeService;
     private readonly IPdfRasterizerService _pdfRasterizerService;
     private readonly CatalogGenerationGate _generationGate;
@@ -24,6 +25,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
     public GenerateCatalogCommandHandler(
         ISession session,
         IBlobStorageService blobStorageService,
+        IPublicCatalogPageStorageService publicCatalogPageStorageService,
         IPdfMergeService pdfMergeService,
         IPdfRasterizerService pdfRasterizerService,
         CatalogGenerationGate generationGate,
@@ -31,11 +33,16 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
     {
         _session = session;
         _blobStorageService = blobStorageService;
+        _publicCatalogPageStorageService = publicCatalogPageStorageService;
         _pdfMergeService = pdfMergeService;
         _pdfRasterizerService = pdfRasterizerService;
         _generationGate = generationGate;
         _options = options.Value;
     }
+
+    private bool PagesArePublic => !string.IsNullOrEmpty(_options.PagesPublicBaseUrl);
+
+    private IBlobStorageService PageStorageService => PagesArePublic ? _publicCatalogPageStorageService : _blobStorageService;
 
     public async Task<GenerateCatalogResult> Handle(GenerateCatalogCommand request, CancellationToken cancellationToken)
     {
@@ -227,8 +234,9 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         }
 
         using var session = _pdfMergeService.CreateSession();
+        var pageStorageService = PageStorageService;
         var coordinator = new OrderedMergeRasterizeCoordinator(
-            session, _pdfRasterizerService, _blobStorageService, companyId, catalogId,
+            session, _pdfRasterizerService, pageStorageService, companyId, catalogId,
             physicalEntries.Count, estimatedTotalPages, reportPages, onProgress);
 
         var pendingDownloads = new List<Task>(physicalEntries.Count);
@@ -252,7 +260,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         {
             foreach (var pageKey in coordinator.UploadedPageKeys)
             {
-                await _blobStorageService.DeleteAsync(pageKey, CancellationToken.None);
+                await pageStorageService.DeleteAsync(pageKey, CancellationToken.None);
             }
             throw;
         }
@@ -463,7 +471,8 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             GeneratedPdfBlobKey = generatedBlobKey,
             ItemsSnapshotJson = JsonSerializer.Serialize(snapshot),
             ContentFingerprint = fingerprint,
-            RasterizedPageCount = rasterizedPageCount
+            RasterizedPageCount = rasterizedPageCount,
+            PagesPublic = PagesArePublic
         };
 
         using var transaction = _session.BeginTransaction();
@@ -525,9 +534,10 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         await transaction.CommitAsync(cancellationToken);
 
         await _blobStorageService.DeleteAsync(old.GeneratedPdfBlobKey, cancellationToken);
+        var oldPageStorageService = old.PagesPublic ? (IBlobStorageService)_publicCatalogPageStorageService : _blobStorageService;
         for (var pageNumber = 1; pageNumber <= old.RasterizedPageCount; pageNumber++)
         {
-            await _blobStorageService.DeleteAsync(
+            await oldPageStorageService.DeleteAsync(
                 BlobKeys.GeneratedCatalogPage(companyId, catalogId, pageNumber),
                 cancellationToken);
         }

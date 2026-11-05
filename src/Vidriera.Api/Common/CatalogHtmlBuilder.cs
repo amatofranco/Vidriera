@@ -29,6 +29,7 @@ public static class CatalogHtmlBuilder
     {
         var fileUrl = WebUtility.HtmlEncode(dto.FileUrl);
         var coverImageUrl = WebUtility.HtmlEncode(dto.CoverImageUrl);
+        var pagesBaseUrl = WebUtility.HtmlEncode(dto.PagesBaseUrl);
         var companyName = WebUtility.HtmlEncode(dto.CompanyName);
         var ogDescription = WebUtility.HtmlEncode($"Mirá el catálogo digital de {dto.CompanyName}.");
         var validityDate = WebUtility.HtmlEncode(dto.ValidityDate.ToString("dd/MM/yyyy"));
@@ -80,6 +81,8 @@ public static class CatalogHtmlBuilder
             .Replace("{{CATALOG_ID}}", dto.Id.ToString())
             .Replace("{{COMPANY_ID}}", dto.CompanyId.ToString())
             .Replace("{{PAGE_COUNT}}", dto.RasterizedPageCount.ToString())
+            .Replace("{{PAGES_BASE_URL}}", pagesBaseUrl)
+            .Replace("{{PAGES_PUBLIC}}", dto.PagesArePublic ? "true" : "false")
             .Replace("{{HAS_CUSTOM_BACKGROUND}}", dto.HasCustomBackground ? "true" : "false")
             .Replace("{{ORDER_FIELDS_JSON}}", orderFieldsJsonEncoded);
     }

@@ -185,6 +185,7 @@ public class CatalogsController : ControllerBase
         try
         {
             var result = await _mediator.Send(new GetCatalogPageQuery(id, pageNumber), cancellationToken);
+            Response.Headers.CacheControl = "public, max-age=31536000, immutable";
             return File(result.Content, result.ContentType);
         }
         catch (NotFoundException)

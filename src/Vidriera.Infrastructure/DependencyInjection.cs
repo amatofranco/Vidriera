@@ -33,6 +33,7 @@ public static class DependencyInjection
 
         services.Configure<R2Options>(configuration.GetSection("R2"));
         services.AddSingleton<IBlobStorageService, R2BlobStorageService>();
+        services.AddSingleton<IPublicCatalogPageStorageService, R2PublicCatalogPageStorageService>();
 
         services.AddSingleton<IPdfMergeService, PdfSharpMergeService>();
         services.AddSingleton<IPdfRasterizerService, PdfiumRasterizerService>();

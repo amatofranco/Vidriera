@@ -1,5 +1,6 @@
 import { computeFitSize, positionSideNav, positionIndexPanel, MOBILE_BREAKPOINT } from "./layout.js";
 import { renderIndexPanel } from "./index-panel.js";
+import { buildPageUrl } from "./page-url.js";
 
 const SWIPE_THRESHOLD_PX = 40;
 const SLIDE_DURATION_MS = 260;
@@ -37,7 +38,7 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
     flipbookEl.replaceWith(viewport);
 
     function pageUrl(n) {
-        return `/api/catalogs/${catalogId}/pages/${n}`;
+        return buildPageUrl(dom, n);
     }
 
     const PRELOAD_RADIUS = 3;

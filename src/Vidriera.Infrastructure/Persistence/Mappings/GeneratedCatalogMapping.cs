@@ -50,5 +50,7 @@ public class GeneratedCatalogMapping : ClassMapping<GeneratedCatalog>
             m.Column("content_fingerprint");
             m.NotNullable(true);
         });
+
+        Property(x => x.PagesPublic, m => m.Column("pages_public"));
     }
 }

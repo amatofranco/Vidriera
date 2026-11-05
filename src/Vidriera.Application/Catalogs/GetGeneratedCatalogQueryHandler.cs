@@ -30,7 +30,9 @@ public class GetGeneratedCatalogQueryHandler : IRequestHandler<GetGeneratedCatal
         }
 
         var fileUrl = $"{_options.PublicBaseUrl.TrimEnd('/')}/api/catalogs/{catalog.Id}/file";
-        var coverImageUrl = $"{_options.PublicBaseUrl.TrimEnd('/')}/api/catalogs/{catalog.Id}/pages/1";
+        var pagesBaseUrl = CatalogPageUrlBuilder.BuildPagesBaseUrl(
+            _options.PublicBaseUrl, _options.PagesPublicBaseUrl, catalog.PagesPublic, catalog.Company.Id, catalog.Id);
+        var coverImageUrl = CatalogPageUrlBuilder.BuildPageUrl(pagesBaseUrl, catalog.PagesPublic, 1);
 
         CatalogSnapshot snapshot;
         try
@@ -51,6 +53,8 @@ public class GetGeneratedCatalogQueryHandler : IRequestHandler<GetGeneratedCatal
             catalog.GeneratedAt,
             fileUrl,
             coverImageUrl,
+            pagesBaseUrl,
+            catalog.PagesPublic,
             catalog.Company.Name,
             snapshot.IndexEntries,
             catalog.RasterizedPageCount,

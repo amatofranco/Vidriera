@@ -1,4 +1,5 @@
 import { dom } from "./catalog-viewer/dom.js";
+import { buildPageUrl } from "./catalog-viewer/page-url.js";
 import { setupZoom } from "./catalog-viewer/zoom.js";
 import { setupToolbar } from "./catalog-viewer/toolbar.js";
 import { renderSinglePageViewer } from "./catalog-viewer/single-page-viewer.js";
@@ -46,7 +47,7 @@ function loadImageDimensions(url) {
 
 async function start() {
     const flipbookEl = document.getElementById("flipbook");
-    const firstPageUrl = `/api/catalogs/${dom.catalogId}/pages/1`;
+    const firstPageUrl = buildPageUrl(dom, 1);
     const { width, height } = await loadImageDimensions(firstPageUrl);
     const pageAspect = width / height;
 
@@ -67,7 +68,6 @@ async function start() {
     }
 
     await renderFlipbookViewer({
-        catalogId: dom.catalogId,
         pageCount: dom.pageCount,
         pageAspect,
         dom,

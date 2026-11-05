@@ -26,6 +26,8 @@ export const dom = {
     catalogId: catalogMetaEl ? catalogMetaEl.dataset.catalogId : null,
     companyId: catalogMetaEl ? catalogMetaEl.dataset.companyId : null,
     pageCount: catalogMetaEl ? parseInt(catalogMetaEl.dataset.pageCount, 10) || 0 : 0,
+    pagesBaseUrl: catalogMetaEl ? catalogMetaEl.dataset.pagesBaseUrl : "",
+    pagesPublic: catalogMetaEl ? catalogMetaEl.dataset.pagesPublic === "true" : false,
     hasCustomBackground: catalogMetaEl ? catalogMetaEl.dataset.hasCustomBackground === "true" : false,
     orderFormFields: catalogMetaEl
         ? JSON.parse(catalogMetaEl.dataset.orderFields || "[]")

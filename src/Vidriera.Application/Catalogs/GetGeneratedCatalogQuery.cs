@@ -11,6 +11,8 @@ public record GeneratedCatalogViewDto(
     DateTime GeneratedAt,
     string FileUrl,
     string CoverImageUrl,
+    string PagesBaseUrl,
+    bool PagesArePublic,
     string CompanyName,
     IReadOnlyList<CatalogIndexEntry> IndexEntries,
     int RasterizedPageCount,
