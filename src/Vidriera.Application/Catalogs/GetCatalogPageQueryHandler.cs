@@ -33,7 +33,7 @@ public class GetCatalogPageQueryHandler : IRequestHandler<GetCatalogPageQuery, C
         }
 
         var blobKey = BlobKeys.GeneratedCatalogPage(catalog.Company.Id, catalog.Id, request.PageNumber);
-        var content = await _blobStorageService.DownloadAsync(blobKey, cancellationToken);
-        return new CatalogPageResult(content, "image/jpeg");
+        var (content, contentType) = await _blobStorageService.DownloadWithContentTypeAsync(blobKey, cancellationToken);
+        return new CatalogPageResult(content, contentType);
     }
 }

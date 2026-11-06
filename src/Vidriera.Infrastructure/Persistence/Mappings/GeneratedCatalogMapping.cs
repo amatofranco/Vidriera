@@ -52,5 +52,7 @@ public class GeneratedCatalogMapping : ClassMapping<GeneratedCatalog>
         });
 
         Property(x => x.PagesPublic, m => m.Column("pages_public"));
+
+        Property(x => x.FirstPageAspectRatio, m => m.Column("first_page_aspect_ratio"));
     }
 }

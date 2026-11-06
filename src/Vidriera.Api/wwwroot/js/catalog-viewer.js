@@ -47,9 +47,12 @@ function loadImageDimensions(url) {
 
 async function start() {
     const flipbookEl = document.getElementById("flipbook");
-    const firstPageUrl = buildPageUrl(dom, 1);
-    const { width, height } = await loadImageDimensions(firstPageUrl);
-    const pageAspect = width / height;
+    let pageAspect = dom.firstPageAspectRatio;
+    if (!pageAspect) {
+        const firstPageUrl = buildPageUrl(dom, 1);
+        const { width, height } = await loadImageDimensions(firstPageUrl);
+        pageAspect = width / height;
+    }
 
     const isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
     if (isMobile && dom.indexPanel) dom.indexPanel.classList.add("closed");

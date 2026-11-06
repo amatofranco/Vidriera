@@ -51,6 +51,12 @@ public class R2BucketClient
         return response.ResponseStream;
     }
 
+    public async Task<(Stream Content, string ContentType)> DownloadWithContentTypeAsync(string key, CancellationToken cancellationToken)
+    {
+        var response = await _client.GetObjectAsync(_bucketName, key, cancellationToken);
+        return (response.ResponseStream, response.Headers.ContentType);
+    }
+
     public async Task<long> GetSizeAsync(string key, CancellationToken cancellationToken)
     {
         var response = await _client.GetObjectMetadataAsync(

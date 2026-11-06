@@ -30,6 +30,10 @@ public static class CatalogHtmlBuilder
         var fileUrl = WebUtility.HtmlEncode(dto.FileUrl);
         var coverImageUrl = WebUtility.HtmlEncode(dto.CoverImageUrl);
         var pagesBaseUrl = WebUtility.HtmlEncode(dto.PagesBaseUrl);
+        var firstPageAspectRatio = dto.FirstPageAspectRatio?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "";
+        var pagesPreconnectHtml = dto.PagesArePublic && Uri.TryCreate(dto.PagesBaseUrl, UriKind.Absolute, out var pagesOrigin)
+            ? $"<link rel=\"preconnect\" href=\"{WebUtility.HtmlEncode(pagesOrigin.GetLeftPart(UriPartial.Authority))}\" crossorigin />"
+            : "";
         var companyName = WebUtility.HtmlEncode(dto.CompanyName);
         var ogDescription = WebUtility.HtmlEncode($"Mirá el catálogo digital de {dto.CompanyName}.");
         var validityDate = WebUtility.HtmlEncode(dto.ValidityDate.ToString("dd/MM/yyyy"));
@@ -82,7 +86,9 @@ public static class CatalogHtmlBuilder
             .Replace("{{COMPANY_ID}}", dto.CompanyId.ToString())
             .Replace("{{PAGE_COUNT}}", dto.RasterizedPageCount.ToString())
             .Replace("{{PAGES_BASE_URL}}", pagesBaseUrl)
+            .Replace("{{PAGES_PRECONNECT}}", pagesPreconnectHtml)
             .Replace("{{PAGES_PUBLIC}}", dto.PagesArePublic ? "true" : "false")
+            .Replace("{{FIRST_PAGE_ASPECT_RATIO}}", firstPageAspectRatio)
             .Replace("{{HAS_CUSTOM_BACKGROUND}}", dto.HasCustomBackground ? "true" : "false")
             .Replace("{{ORDER_FIELDS_JSON}}", orderFieldsJsonEncoded);
     }

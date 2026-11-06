@@ -12,4 +12,5 @@ public class GeneratedCatalog
     public virtual int RasterizedPageCount { get; set; }
     public virtual string ContentFingerprint { get; set; } = "";
     public virtual bool PagesPublic { get; set; }
+    public virtual double? FirstPageAspectRatio { get; set; }
 }

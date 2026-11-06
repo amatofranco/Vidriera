@@ -13,6 +13,7 @@ public record GeneratedCatalogViewDto(
     string CoverImageUrl,
     string PagesBaseUrl,
     bool PagesArePublic,
+    double? FirstPageAspectRatio,
     string CompanyName,
     IReadOnlyList<CatalogIndexEntry> IndexEntries,
     int RasterizedPageCount,

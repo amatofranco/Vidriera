@@ -384,7 +384,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
                     var pageCount = _mergeSession.AddDocument(nextBytes);
                     _resolvedPageCounts[_nextIndex] = pageCount;
 
-                    await foreach (var (pageIndex, jpegBytes, width, height) in _rasterizerService.RasterizePagesToJpegAsync(
+                    await foreach (var (pageIndex, imageBytes, width, height) in _rasterizerService.RasterizePagesToImagesAsync(
                         nextBytes, Enumerable.Range(0, pageCount).ToList(), cancellationToken))
                     {
                         var pageNumber = _pageCursor + pageIndex + 1;
@@ -394,8 +394,8 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
                         }
 
                         var blobKey = BlobKeys.GeneratedCatalogPage(_companyId, _catalogId, pageNumber);
-                        using var stream = new MemoryStream(jpegBytes);
-                        await _blobStorageService.UploadAsync(blobKey, stream, "image/jpeg", cancellationToken);
+                        using var stream = new MemoryStream(imageBytes);
+                        await _blobStorageService.UploadAsync(blobKey, stream, "image/webp", cancellationToken);
                         _uploadedPageKeys.Add(blobKey);
                         _rasterizedPageCount++;
                         if (_reportPages)

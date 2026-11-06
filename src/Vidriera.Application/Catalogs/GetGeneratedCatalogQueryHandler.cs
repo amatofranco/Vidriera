@@ -55,6 +55,7 @@ public class GetGeneratedCatalogQueryHandler : IRequestHandler<GetGeneratedCatal
             coverImageUrl,
             pagesBaseUrl,
             catalog.PagesPublic,
+            catalog.FirstPageAspectRatio,
             catalog.Company.Name,
             snapshot.IndexEntries,
             catalog.RasterizedPageCount,

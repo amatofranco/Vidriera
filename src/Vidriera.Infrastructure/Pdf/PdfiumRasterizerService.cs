@@ -8,9 +8,9 @@ namespace Vidriera.Infrastructure.Pdf;
 public class PdfiumRasterizerService : IPdfRasterizerService
 {
     private const int Dpi = 150;
-    private const int JpegQuality = 85;
+    private const int ImageQuality = 85;
 
-    public async IAsyncEnumerable<(int PageIndex, byte[] JpegBytes)> RasterizePagesToJpegAsync(
+    public async IAsyncEnumerable<(int PageIndex, byte[] ImageBytes, int Width, int Height)> RasterizePagesToImagesAsync(
         byte[] pdfBytes,
         IReadOnlyList<int> pageIndices,
         [EnumeratorCancellation] CancellationToken cancellationToken)
@@ -21,8 +21,8 @@ public class PdfiumRasterizerService : IPdfRasterizerService
         {
             using (bitmap)
             {
-                using var data = bitmap.Encode(SKEncodedImageFormat.Jpeg, JpegQuality);
-                yield return (pageIndices[i], data.ToArray());
+                using var data = bitmap.Encode(SKEncodedImageFormat.Webp, ImageQuality);
+                yield return (pageIndices[i], data.ToArray(), bitmap.Width, bitmap.Height);
             }
             i++;
         }

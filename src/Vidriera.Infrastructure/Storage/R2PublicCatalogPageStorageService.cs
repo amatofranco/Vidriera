@@ -20,6 +20,9 @@ public class R2PublicCatalogPageStorageService : IPublicCatalogPageStorageServic
     public Task<Stream> DownloadAsync(string key, CancellationToken cancellationToken) =>
         _client.DownloadAsync(key, cancellationToken);
 
+    public Task<(Stream Content, string ContentType)> DownloadWithContentTypeAsync(string key, CancellationToken cancellationToken) =>
+        _client.DownloadWithContentTypeAsync(key, cancellationToken);
+
     public Task<long> GetSizeAsync(string key, CancellationToken cancellationToken) =>
         _client.GetSizeAsync(key, cancellationToken);
 
