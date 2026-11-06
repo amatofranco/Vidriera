@@ -153,6 +153,8 @@ export async function renderFlipbookViewer({ pageCount, pageAspect, dom, flipboo
             if (e.data !== "read") {
                 dom.coverInfoEl.style.display = "none";
                 if (dom.coverInfoMetaEl) dom.coverInfoMetaEl.style.display = "none";
+            } else {
+                updateInfo();
             }
         });
         flipbookEl.addEventListener("mousedown", () => setPageOverflowHidden(true));
