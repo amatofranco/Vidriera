@@ -6,6 +6,12 @@ const INITIAL_LOAD_COUNT = 5;
 const MAX_TOP_LEVEL_SECTION_PAGES = 15;
 const MAX_SUB_SECTION_PAGES = 15;
 
+function setPageOverflowHidden(hidden) {
+    const overflow = hidden ? "hidden" : "auto";
+    document.documentElement.style.overflow = overflow;
+    document.body.style.overflow = overflow;
+}
+
 function getSpreadPages(current, pageCount) {
     if (current <= 1) return [1];
     const right = current + 1;
@@ -148,12 +154,14 @@ export async function renderFlipbookViewer({ pageCount, pageAspect, dom, flipboo
         pageFlip.loadFromHTML(pageDivs);
         pageFlip.on("flip", updateInfo);
         pageFlip.on("changeState", (e) => {
-            document.body.style.overflow = e.data === "read" ? "auto" : "hidden";
+            setPageOverflowHidden(e.data !== "read");
             if (e.data !== "read") {
                 dom.coverInfoEl.style.display = "none";
                 if (dom.coverInfoMetaEl) dom.coverInfoMetaEl.style.display = "none";
             }
         });
+        flipbookEl.addEventListener("mousedown", () => setPageOverflowHidden(true));
+        flipbookEl.addEventListener("touchstart", () => setPageOverflowHidden(true), { passive: true });
         if (wasOpenIndex > 0) pageFlip.turnToPage(wasOpenIndex);
         updateInfo();
         requestAnimationFrame(() => {
