@@ -1,16 +1,11 @@
 import { computeFitSize, positionSideNav, positionCoverInfo, positionCoverMeta, positionIndexPanel } from "./layout.js";
 import { renderIndexPanel } from "./index-panel.js";
 import { buildPageUrl } from "./page-url.js";
+import { setPageOverflowHidden } from "./scroll-lock.js";
 
 const INITIAL_LOAD_COUNT = 5;
 const MAX_TOP_LEVEL_SECTION_PAGES = 15;
 const MAX_SUB_SECTION_PAGES = 15;
-
-function setPageOverflowHidden(hidden) {
-    const overflow = hidden ? "hidden" : "auto";
-    document.documentElement.style.overflow = overflow;
-    document.body.style.overflow = overflow;
-}
 
 function getSpreadPages(current, pageCount) {
     if (current <= 1) return [1];

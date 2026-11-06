@@ -25,6 +25,13 @@ public static class CatalogHtmlBuilder
         return reader.ReadToEnd();
     }
 
+    private static string SanitizeFileName(string name)
+    {
+        var invalidChars = Path.GetInvalidFileNameChars();
+        var sanitized = new string(name.Select(c => invalidChars.Contains(c) ? '-' : c).ToArray());
+        return sanitized.Trim();
+    }
+
     public static string BuildViewerPage(GeneratedCatalogViewDto dto)
     {
         var fileUrl = WebUtility.HtmlEncode(dto.FileUrl);
@@ -35,6 +42,7 @@ public static class CatalogHtmlBuilder
             ? $"<link rel=\"preconnect\" href=\"{WebUtility.HtmlEncode(pagesOrigin.GetLeftPart(UriPartial.Authority))}\" crossorigin />"
             : "";
         var companyName = WebUtility.HtmlEncode(dto.CompanyName);
+        var fileDownloadName = WebUtility.HtmlEncode($"Catalogo {SanitizeFileName(dto.CompanyName)}.pdf");
         var ogDescription = WebUtility.HtmlEncode($"Mirá el catálogo digital de {dto.CompanyName}.");
         var validityDate = WebUtility.HtmlEncode(dto.ValidityDate.ToString("dd/MM/yyyy"));
 
@@ -72,6 +80,7 @@ public static class CatalogHtmlBuilder
 
         return ViewerPageTemplate
             .Replace("{{FILE_URL}}", fileUrl)
+            .Replace("{{FILE_DOWNLOAD_NAME}}", fileDownloadName)
             .Replace("{{COVER_IMAGE_URL}}", coverImageUrl)
             .Replace("{{COMPANY_NAME}}", companyName)
             .Replace("{{OG_DESCRIPTION}}", ogDescription)
