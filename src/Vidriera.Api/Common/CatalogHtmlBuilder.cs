@@ -42,7 +42,9 @@ public static class CatalogHtmlBuilder
             ? $"<link rel=\"preconnect\" href=\"{WebUtility.HtmlEncode(pagesOrigin.GetLeftPart(UriPartial.Authority))}\" crossorigin />"
             : "";
         var companyName = WebUtility.HtmlEncode(dto.CompanyName);
-        var fileDownloadName = WebUtility.HtmlEncode($"Catalogo {SanitizeFileName(dto.CompanyName)}.pdf");
+        var fileDownloadName = WebUtility.HtmlEncode(dto.ShowValidityDate
+            ? $"Catalogo {SanitizeFileName(dto.CompanyName)} {dto.ValidityDate:dd-MM-yyyy}.pdf"
+            : $"Catalogo {SanitizeFileName(dto.CompanyName)}.pdf");
         var ogDescription = WebUtility.HtmlEncode($"Mirá el catálogo digital de {dto.CompanyName}.");
         var validityDate = WebUtility.HtmlEncode(dto.ValidityDate.ToString("dd/MM/yyyy"));
 
