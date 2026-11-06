@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import type { AuthState } from "@/lib/auth-context";
 import { updateStock, type Item } from "@/lib/api";
 import { Messages, sectionStockUpdateFailed } from "@/lib/messages";
@@ -16,16 +17,30 @@ export function useBulkStockToggle({
   setError: (message: string) => void;
   loadItems: (token: string, options?: { silent?: boolean }) => Promise<void>;
 }) {
+  const pendingWrites = useRef(new Set<Promise<unknown>>());
+
+  function track<T>(promise: Promise<T>): Promise<T> {
+    pendingWrites.current.add(promise);
+    promise.finally(() => pendingWrites.current.delete(promise));
+    return promise;
+  }
+
+  async function waitForPendingStockWrites() {
+    await Promise.all(Array.from(pendingWrites.current));
+  }
+
   async function handleToggleStock(item: Item) {
     if (!auth) return;
     const nextValue = !item.hasStock;
-    await updateItemFieldOptimistically(
-      setItems,
-      item.id,
-      (p) => ({ ...p, hasStock: nextValue }),
-      (p) => ({ ...p, hasStock: !nextValue }),
-      () => updateStock(auth.token, item.id, nextValue),
-      () => setError(Messages.stockUpdateFailed)
+    await track(
+      updateItemFieldOptimistically(
+        setItems,
+        item.id,
+        (p) => ({ ...p, hasStock: nextValue }),
+        (p) => ({ ...p, hasStock: !nextValue }),
+        () => updateStock(auth.token, item.id, nextValue),
+        () => setError(Messages.stockUpdateFailed)
+      )
     );
   }
 
@@ -42,7 +57,7 @@ export function useBulkStockToggle({
       prev.map((p) => (targetIds.has(p.id) ? { ...p, hasStock: nextValue } : p))
     );
     try {
-      await Promise.all(targets.map((p) => updateStock(auth.token, p.id, nextValue)));
+      await track(Promise.all(targets.map((p) => updateStock(auth.token, p.id, nextValue))));
     } catch {
       setError(Messages.bulkStockUpdateFailed);
       loadItems(auth.token);
@@ -56,12 +71,12 @@ export function useBulkStockToggle({
     const targetIds = new Set(targets.map((p) => p.id));
     setItems((prev) => prev.map((p) => (targetIds.has(p.id) ? { ...p, hasStock: nextValue } : p)));
     try {
-      await Promise.all(targets.map((p) => updateStock(auth.token, p.id, nextValue)));
+      await track(Promise.all(targets.map((p) => updateStock(auth.token, p.id, nextValue))));
     } catch {
       setError(sectionStockUpdateFailed(sectionName));
       loadItems(auth.token, { silent: true });
     }
   }
 
-  return { handleToggleStock, handleBulkStockToggle, handleToggleSectionStock };
+  return { handleToggleStock, handleBulkStockToggle, handleToggleSectionStock, waitForPendingStockWrites };
 }

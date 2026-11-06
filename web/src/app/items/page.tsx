@@ -82,13 +82,14 @@ export default function ItemsPage() {
     setError,
   });
 
-  const { handleToggleStock, handleBulkStockToggle, handleToggleSectionStock } = useBulkStockToggle({
-    auth,
-    items,
-    setItems,
-    setError,
-    loadItems,
-  });
+  const { handleToggleStock, handleBulkStockToggle, handleToggleSectionStock, waitForPendingStockWrites } =
+    useBulkStockToggle({
+      auth,
+      items,
+      setItems,
+      setError,
+      loadItems,
+    });
 
   const { handleUpdatePrice } = useItemPrice({ auth, setItems, setError });
   const { handleUpdateCode } = useItemCode({ auth, setItems, setError });
@@ -147,6 +148,7 @@ export default function ItemsPage() {
     auth,
     items,
     setError,
+    waitForPendingStockWrites,
   });
 
   const { filteredItems, filteredTopLevelRows, visibleSectionChildren } = useFilteredRows({

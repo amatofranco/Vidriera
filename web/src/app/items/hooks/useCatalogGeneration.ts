@@ -25,10 +25,12 @@ export function useCatalogGeneration({
   auth,
   items,
   setError,
+  waitForPendingStockWrites,
 }: {
   auth: AuthState | null;
   items: Item[];
   setError: (message: string | null) => void;
+  waitForPendingStockWrites: () => Promise<void>;
 }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [catalogResult, setCatalogResult] = useState<GenerateCatalogResult | null>(null);
@@ -89,6 +91,7 @@ export function useCatalogGeneration({
     setCatalogResult(null);
     setGenerationProgress(null);
     try {
+      await waitForPendingStockWrites();
       const result = await generateCatalog(auth.token, setGenerationProgress, showPrices);
       setCatalogResult(result);
     } catch (err) {
