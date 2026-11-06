@@ -124,7 +124,7 @@ public class AdminController : ControllerBase
         [FromBody] SetCompanySettingsRequest request,
         CancellationToken cancellationToken)
     {
-        await _mediator.Send(new SetCompanySettingsCommand(companyId, request.ShowCode, request.ShowPrice, request.ShowOrders, request.CatalogSubtitle, request.Slug, request.CustomDomain), cancellationToken);
+        await _mediator.Send(new SetCompanySettingsCommand(companyId, request.ShowCode, request.ShowPrice, request.ShowOrders, request.ShowPrint, request.CatalogSubtitle, request.Slug, request.CustomDomain), cancellationToken);
         return NoContent();
     }
 
@@ -191,4 +191,4 @@ public record SetSubscriptionExemptRequest(bool IsExempt);
 
 public record ChangePlanRequest(string PayerEmail, string NewPlan);
 
-public record SetCompanySettingsRequest(bool ShowCode, bool ShowPrice, bool ShowOrders, string? CatalogSubtitle, string? Slug, string? CustomDomain);
+public record SetCompanySettingsRequest(bool ShowCode, bool ShowPrice, bool ShowOrders, bool ShowPrint, string? CatalogSubtitle, string? Slug, string? CustomDomain);

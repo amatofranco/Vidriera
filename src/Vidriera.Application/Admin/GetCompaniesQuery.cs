@@ -13,6 +13,7 @@ public record CompanyListItemDto(
     bool ShowCode,
     bool ShowPrice,
     bool ShowOrders,
+    bool ShowPrint,
     bool HasCoverLogo,
     string? CatalogSubtitle,
     string? CustomDomain);

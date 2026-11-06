@@ -18,6 +18,7 @@ public record GeneratedCatalogViewDto(
     IReadOnlyList<CatalogIndexEntry> IndexEntries,
     int RasterizedPageCount,
     bool ShowOrders,
+    bool ShowPrint,
     bool HasCoverLogo,
     string? CatalogSubtitle,
     bool HasCustomBackground,

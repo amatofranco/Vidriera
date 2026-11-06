@@ -10,6 +10,7 @@ public record CreateCompanyCommand(
     bool ShowCode = true,
     bool ShowPrice = true,
     bool ShowOrders = false,
+    bool ShowPrint = false,
     string? CatalogSubtitle = "Catálogo",
     string? Slug = null,
     string? Preset = null) : IRequest<CreateCompanyResult>;

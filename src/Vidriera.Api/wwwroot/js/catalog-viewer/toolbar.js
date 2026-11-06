@@ -9,25 +9,27 @@ export function setupToolbar(dom) {
         }
     });
 
-    dom.printBtn.addEventListener("click", () => {
-        let printFrame = document.getElementById("print-frame");
-        if (!printFrame) {
-            printFrame = document.createElement("iframe");
-            printFrame.id = "print-frame";
-            printFrame.style.position = "fixed";
-            printFrame.style.right = "0";
-            printFrame.style.bottom = "0";
-            printFrame.style.width = "0";
-            printFrame.style.height = "0";
-            printFrame.style.border = "0";
-            document.body.appendChild(printFrame);
-        }
-        printFrame.onload = () => {
-            printFrame.contentWindow.focus();
-            printFrame.contentWindow.print();
-        };
-        printFrame.src = dom.fileUrl;
-    });
+    if (dom.printBtn) {
+        dom.printBtn.addEventListener("click", () => {
+            let printFrame = document.getElementById("print-frame");
+            if (!printFrame) {
+                printFrame = document.createElement("iframe");
+                printFrame.id = "print-frame";
+                printFrame.style.position = "fixed";
+                printFrame.style.right = "0";
+                printFrame.style.bottom = "0";
+                printFrame.style.width = "0";
+                printFrame.style.height = "0";
+                printFrame.style.border = "0";
+                document.body.appendChild(printFrame);
+            }
+            printFrame.onload = () => {
+                printFrame.contentWindow.focus();
+                printFrame.contentWindow.print();
+            };
+            printFrame.src = dom.fileUrl;
+        });
+    }
 
     if (dom.shareBtn) {
         if (!navigator.share || window.innerWidth > MOBILE_BREAKPOINT) {

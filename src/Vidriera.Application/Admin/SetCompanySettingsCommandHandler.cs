@@ -58,6 +58,7 @@ public class SetCompanySettingsCommandHandler : IRequestHandler<SetCompanySettin
         company.ShowCode = request.ShowCode;
         company.ShowPrice = request.ShowPrice;
         company.ShowOrders = request.ShowOrders;
+        company.ShowPrint = request.ShowPrint;
         company.CatalogSubtitle = request.CatalogSubtitle;
         company.Slug = slug;
         company.CustomDomain = customDomain;

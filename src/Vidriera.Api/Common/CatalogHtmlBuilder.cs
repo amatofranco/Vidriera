@@ -54,6 +54,9 @@ public static class CatalogHtmlBuilder
         var indexButtonHtml = showIndexUi
             ? "<button id=\"index-btn\" title=\"Índice\">&#128209;</button>"
             : "";
+        var printButtonHtml = dto.ShowPrint
+            ? "<button id=\"print-btn\" title=\"Imprimir\">&#128424;</button>"
+            : "";
         var indexPanelHtml = showIndexUi ? IndexPanelTemplate : "";
         var sectionsDataHtml = hasIndexData
             ? SectionsDataTemplate.Replace("{{SECTIONS_JSON}}", sectionsJsonEncoded)
@@ -88,6 +91,7 @@ public static class CatalogHtmlBuilder
             .Replace("{{CATALOG_LABEL_DATE}}", catalogLabelDateHtml)
             .Replace("{{SCENE_BG_STYLE}}", sceneBgStyle)
             .Replace("{{INDEX_BUTTON}}", indexButtonHtml)
+            .Replace("{{PRINT_BUTTON}}", printButtonHtml)
             .Replace("{{INDEX_PANEL}}", indexPanelHtml)
             .Replace("{{SECTIONS_DATA}}", sectionsDataHtml)
             .Replace("{{ORDER_PANEL}}", orderPanelHtml)

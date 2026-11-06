@@ -60,6 +60,7 @@ public class GetGeneratedCatalogQueryHandler : IRequestHandler<GetGeneratedCatal
             snapshot.IndexEntries,
             catalog.RasterizedPageCount,
             catalog.Company.ShowOrders,
+            catalog.Company.ShowPrint,
             catalog.Company.CoverLogoBlobKey is not null,
             catalog.Company.CatalogSubtitle,
             catalog.Company.BackgroundBlobKey is not null,
