@@ -1,8 +1,10 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Vidriera.Api.Common;
 using Vidriera.Application.Abstractions;
 using Vidriera.Application.Admin;
+using Vidriera.Application.Catalogs;
 using Vidriera.Application.Orders;
 using Vidriera.Application.Subscriptions;
 
@@ -14,11 +16,21 @@ namespace Vidriera.Api.Controllers;
 public class AdminController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly CatalogOptions _catalogOptions;
 
-    public AdminController(IMediator mediator)
+    public AdminController(IMediator mediator, IOptions<CatalogOptions> catalogOptions)
     {
         _mediator = mediator;
+        _catalogOptions = catalogOptions.Value;
     }
+
+    [HttpGet("config/catalog")]
+    public ActionResult GetCatalogConfig() => Ok(new
+    {
+        _catalogOptions.PublicBaseUrl,
+        _catalogOptions.PagesPublicBaseUrl,
+        _catalogOptions.IsWorkerNode
+    });
 
     [HttpGet("companies")]
     public async Task<ActionResult<IReadOnlyList<CompanyListItemDto>>> GetCompanies(CancellationToken cancellationToken)
