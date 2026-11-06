@@ -63,8 +63,13 @@ function buildPriorityPageList(pageCount, sectionsData) {
 }
 
 export async function renderFlipbookViewer({ pageCount, pageAspect, dom, flipbookEl, sectionsData, rebuildRef }) {
+    console.time("[perf] buildPageDivs");
     const { divs: pageDivs, imgs: pageImgs } = buildPageDivs(dom, pageCount);
+    console.timeEnd("[perf] buildPageDivs");
+
+    console.time("[perf] waitForImagesLoaded (priority)");
     await waitForImagesLoaded(pageImgs, buildPriorityPageList(pageCount, sectionsData));
+    console.timeEnd("[perf] waitForImagesLoaded (priority)");
     loadRemainingImages(pageImgs);
 
     let pageFlip = null;
@@ -130,8 +135,13 @@ export async function renderFlipbookViewer({ pageCount, pageAspect, dom, flipboo
             flippingTime: 600,
         });
 
+        console.time("[perf] append pageDivs to DOM");
         pageDivs.forEach((div) => flipbookEl.appendChild(div));
+        console.timeEnd("[perf] append pageDivs to DOM");
+
+        console.time("[perf] pageFlip.loadFromHTML");
         pageFlip.loadFromHTML(pageDivs);
+        console.timeEnd("[perf] pageFlip.loadFromHTML");
         pageFlip.on("flip", updateInfo);
         pageFlip.on("changeState", (e) => {
             document.body.style.overflow = e.data === "read" ? "auto" : "hidden";
