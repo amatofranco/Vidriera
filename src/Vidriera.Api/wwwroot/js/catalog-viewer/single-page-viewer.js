@@ -7,7 +7,7 @@ const SLIDE_DURATION_MS = 260;
 const SNAP_DURATION_MS = 200;
 const SCRUB_RANGE_PX = 220;
 
-export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, flipbookEl, sectionsData, rebuildRef, initialPage }) {
+export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, flipbookEl, sectionsData, rebuildRef }) {
     const lastPageStorageKey = `vidriera:lastPage:${catalogId}`;
 
     function readInitialPage() {
@@ -21,7 +21,7 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
         return 1;
     }
 
-    let currentPage = initialPage >= 1 && initialPage <= pageCount ? initialPage : readInitialPage();
+    let currentPage = readInitialPage();
     let isAnimating = false;
 
     const viewport = document.createElement("div");
@@ -127,15 +127,14 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
     let dragDx = 0;
     let dragDirection = 0;
 
-    const onViewportTouchStart = (e) => {
+    viewport.addEventListener("touchstart", (e) => {
         if (isAnimating) return;
         dragStartX = e.touches[0].clientX;
         dragDx = 0;
         dragDirection = 0;
-    };
-    viewport.addEventListener("touchstart", onViewportTouchStart, { passive: true });
+    }, { passive: true });
 
-    const onViewportTouchMove = (e) => {
+    viewport.addEventListener("touchmove", (e) => {
         if (dragStartX === null) return;
         dragDx = e.touches[0].clientX - dragStartX;
 
@@ -155,10 +154,9 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
 
         activeImg.style.transform = `translateX(${dragDx}px)`;
         inactiveImg.style.transform = `translateX(calc(${dragDirection * 100}% + ${dragDx}px))`;
-    };
-    viewport.addEventListener("touchmove", onViewportTouchMove, { passive: true });
+    }, { passive: true });
 
-    const onViewportTouchEnd = () => {
+    viewport.addEventListener("touchend", () => {
         if (dragStartX === null) return;
         const direction = dragDirection;
         const dx = dragDx;
@@ -194,29 +192,26 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
                 isAnimating = false;
             }, SNAP_DURATION_MS + 30);
         }
-    };
-    viewport.addEventListener("touchend", onViewportTouchEnd);
+    });
 
     let scrubStartX = null;
     let scrubStartPage = currentPage;
 
-    const onPageInfoTouchStart = (e) => {
+    dom.pageInfoEl.addEventListener("touchstart", (e) => {
         if (isAnimating) return;
         scrubStartX = e.touches[0].clientX;
         scrubStartPage = currentPage;
-    };
-    dom.pageInfoEl.addEventListener("touchstart", onPageInfoTouchStart, { passive: true });
+    }, { passive: true });
 
-    const onPageInfoTouchMove = (e) => {
+    dom.pageInfoEl.addEventListener("touchmove", (e) => {
         if (scrubStartX === null) return;
         const dx = e.touches[0].clientX - scrubStartX;
         const delta = Math.round((dx / SCRUB_RANGE_PX) * pageCount);
         const preview = Math.min(Math.max(scrubStartPage + delta, 1), pageCount);
         dom.pageInfoEl.textContent = `${preview} / ${pageCount}`;
-    };
-    dom.pageInfoEl.addEventListener("touchmove", onPageInfoTouchMove, { passive: true });
+    }, { passive: true });
 
-    const onPageInfoTouchEnd = (e) => {
+    dom.pageInfoEl.addEventListener("touchend", (e) => {
         if (scrubStartX === null) return;
         const lastX = e.changedTouches[0] ? e.changedTouches[0].clientX : scrubStartX;
         const dx = lastX - scrubStartX;
@@ -229,12 +224,11 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
         } else {
             goToPage(target);
         }
-    };
-    dom.pageInfoEl.addEventListener("touchend", onPageInfoTouchEnd);
+    });
 
     let lastDpr = window.devicePixelRatio || 1;
     let resizeTimer = null;
-    const onResize = () => {
+    window.addEventListener("resize", () => {
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(() => {
             const dpr = window.devicePixelRatio || 1;
@@ -246,13 +240,10 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
             }
             positionIndexPanel(dom);
         }, 200);
-    };
-    window.addEventListener("resize", onResize);
+    });
 
-    const onPrevClick = () => goToPage(currentPage - 1);
-    const onNextClick = () => goToPage(currentPage + 1);
-    dom.prevBtn.addEventListener("click", onPrevClick);
-    dom.nextBtn.addEventListener("click", onNextClick);
+    dom.prevBtn.addEventListener("click", () => goToPage(currentPage - 1));
+    dom.nextBtn.addEventListener("click", () => goToPage(currentPage + 1));
 
     viewport.style.visibility = "visible";
     dom.loadingEl.style.display = "none";
@@ -267,23 +258,4 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
     renderIndexPanel({ dom, indexEntries: sectionsData, onJumpToPage: goToPage, rebuildRef });
     if (dom.indexPanel) dom.indexPanel.classList.add("visible");
     positionIndexPanel(dom);
-
-    function destroy() {
-        viewport.removeEventListener("touchstart", onViewportTouchStart);
-        viewport.removeEventListener("touchmove", onViewportTouchMove);
-        viewport.removeEventListener("touchend", onViewportTouchEnd);
-        dom.pageInfoEl.removeEventListener("touchstart", onPageInfoTouchStart);
-        dom.pageInfoEl.removeEventListener("touchmove", onPageInfoTouchMove);
-        dom.pageInfoEl.removeEventListener("touchend", onPageInfoTouchEnd);
-        window.removeEventListener("resize", onResize);
-        dom.prevBtn.removeEventListener("click", onPrevClick);
-        dom.nextBtn.removeEventListener("click", onNextClick);
-
-        const placeholder = document.createElement("div");
-        placeholder.id = "flipbook";
-        viewport.replaceWith(placeholder);
-        return placeholder;
-    }
-
-    return { getCurrentPage: () => currentPage, destroy };
 }

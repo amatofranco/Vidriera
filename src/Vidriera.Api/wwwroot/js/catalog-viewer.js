@@ -71,7 +71,7 @@ async function start() {
         return;
     }
 
-    const activeViewer = await renderFlipbookViewer({
+    const flipbookViewer = await renderFlipbookViewer({
         pageCount: dom.pageCount,
         pageAspect,
         dom,
@@ -80,15 +80,7 @@ async function start() {
         rebuildRef,
     });
 
-    setupViewerModeSwitch({
-        dom,
-        pageCount: dom.pageCount,
-        pageAspect,
-        sectionsData: dom.sectionsData,
-        rebuildRef,
-        initialViewer: activeViewer,
-        zoomControl,
-    });
+    setupViewerModeSwitch({ flipbookViewer, zoomControl });
 }
 
 start().catch((e) => {
