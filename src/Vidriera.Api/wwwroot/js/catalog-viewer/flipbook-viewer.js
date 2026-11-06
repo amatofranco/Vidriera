@@ -72,7 +72,7 @@ function buildPriorityPageList(pageCount, sectionsData) {
     return Array.from(pages);
 }
 
-export async function renderFlipbookViewer({ pageCount, pageAspect, dom, flipbookEl, sectionsData, rebuildRef }) {
+export async function renderFlipbookViewer({ pageCount, pageAspect, dom, flipbookEl, sectionsData, rebuildRef, initialPage }) {
     const { divs: pageDivs, imgs: pageImgs } = buildPageDivs(dom, pageCount);
     await waitForImagesLoaded(pageImgs, buildPriorityPageList(pageCount, sectionsData));
     loadRemainingImages(pageImgs);
@@ -116,7 +116,9 @@ export async function renderFlipbookViewer({ pageCount, pageAspect, dom, flipboo
 
     function buildPageFlip() {
         const { width, height } = computeFitSize(pageAspect, dom);
-        const wasOpenIndex = pageFlip ? pageFlip.getCurrentPageIndex() : 0;
+        const wasOpenIndex = pageFlip
+            ? pageFlip.getCurrentPageIndex()
+            : (initialPage >= 1 ? initialPage - 1 : 0);
         if (pageFlip) {
             try {
                 pageFlip.destroy();
@@ -172,7 +174,7 @@ export async function renderFlipbookViewer({ pageCount, pageAspect, dom, flipboo
 
     let lastDpr = window.devicePixelRatio || 1;
     let resizeTimer = null;
-    window.addEventListener("resize", () => {
+    const onResize = () => {
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(() => {
             const dpr = window.devicePixelRatio || 1;
@@ -181,10 +183,13 @@ export async function renderFlipbookViewer({ pageCount, pageAspect, dom, flipboo
             if (!isZoomChange) buildPageFlip();
             positionIndexPanel(dom);
         }, 200);
-    });
+    };
+    window.addEventListener("resize", onResize);
 
-    dom.prevBtn.addEventListener("click", () => pageFlip.flipPrev());
-    dom.nextBtn.addEventListener("click", () => pageFlip.flipNext());
+    const onPrevClick = () => pageFlip.flipPrev();
+    const onNextClick = () => pageFlip.flipNext();
+    dom.prevBtn.addEventListener("click", onPrevClick);
+    dom.nextBtn.addEventListener("click", onNextClick);
 
     dom.loadingEl.style.display = "none";
     dom.toolbarEl.style.display = "flex";
@@ -194,4 +199,21 @@ export async function renderFlipbookViewer({ pageCount, pageAspect, dom, flipboo
     flipbookEl.style.visibility = "visible";
     if (dom.indexPanel) dom.indexPanel.classList.add("visible");
     positionIndexPanel(dom);
+
+    function destroy() {
+        window.removeEventListener("resize", onResize);
+        dom.prevBtn.removeEventListener("click", onPrevClick);
+        dom.nextBtn.removeEventListener("click", onNextClick);
+        try {
+            pageFlip.destroy();
+        } catch (e) {
+            console.error("pageFlip.destroy() failed while tearing down flipbook", e);
+        }
+        const placeholder = document.createElement("div");
+        placeholder.id = "flipbook";
+        flipbookEl.replaceWith(placeholder);
+        return placeholder;
+    }
+
+    return { getCurrentPage: () => pageFlip.getCurrentPageIndex() + 1, destroy };
 }

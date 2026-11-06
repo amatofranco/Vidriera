@@ -3,6 +3,7 @@ const ZOOM_LEVEL = 2;
 export function setupZoom(dom) {
     let zoomArmed = false;
     let isZoomed = false;
+    const armedChangeListeners = [];
 
     function currentZoomTarget() {
         return document.getElementById("flipbook") || document.getElementById("static-page-viewport");
@@ -32,6 +33,7 @@ export function setupZoom(dom) {
         dom.lensBtn.classList.toggle("active", zoomArmed);
         dom.stageEl.classList.toggle("zoom-armed", zoomArmed);
         if (!zoomArmed && isZoomed) setZoomed(false);
+        armedChangeListeners.forEach((listener) => listener(zoomArmed));
     });
 
     dom.stageEl.addEventListener("mousedown", (e) => {
@@ -52,4 +54,8 @@ export function setupZoom(dom) {
         const relY = Math.min(Math.max(((e.clientY - rect.top) / rect.height) * 100, 0), 100);
         target.style.transformOrigin = `${relX}% ${relY}%`;
     });
+
+    return {
+        onArmedChange: (listener) => armedChangeListeners.push(listener),
+    };
 }

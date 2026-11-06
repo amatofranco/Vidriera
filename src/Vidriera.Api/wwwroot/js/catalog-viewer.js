@@ -4,6 +4,7 @@ import { setupZoom } from "./catalog-viewer/zoom.js";
 import { setupToolbar } from "./catalog-viewer/toolbar.js";
 import { renderSinglePageViewer } from "./catalog-viewer/single-page-viewer.js";
 import { renderFlipbookViewer } from "./catalog-viewer/flipbook-viewer.js";
+import { setupViewerModeSwitch } from "./catalog-viewer/viewer-mode-switch.js";
 import { setupUpdateChecker } from "./catalog-viewer/update-checker.js";
 import { initOrderCart } from "./catalog-viewer/order-cart.js";
 import { MOBILE_BREAKPOINT } from "./catalog-viewer/layout.js";
@@ -31,7 +32,7 @@ document.addEventListener("fullscreenchange", () => {
     }
 });
 
-setupZoom(dom);
+const zoomControl = setupZoom(dom);
 setupToolbar(dom);
 setupUpdateChecker(dom);
 dom.orderCart = initOrderCart(dom);
@@ -70,13 +71,23 @@ async function start() {
         return;
     }
 
-    await renderFlipbookViewer({
+    const activeViewer = await renderFlipbookViewer({
         pageCount: dom.pageCount,
         pageAspect,
         dom,
         flipbookEl,
         sectionsData: dom.sectionsData,
         rebuildRef,
+    });
+
+    setupViewerModeSwitch({
+        dom,
+        pageCount: dom.pageCount,
+        pageAspect,
+        sectionsData: dom.sectionsData,
+        rebuildRef,
+        initialViewer: activeViewer,
+        zoomControl,
     });
 }
 
