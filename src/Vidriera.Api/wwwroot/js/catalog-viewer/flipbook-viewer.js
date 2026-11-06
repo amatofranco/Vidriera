@@ -52,7 +52,7 @@ function waitForImagesLoaded(imgs, pageNumbers) {
     );
 }
 
-function buildPriorityPageList(pageCount, sectionsData) {
+export function buildPriorityPageList(pageCount, sectionsData) {
     const pages = new Set();
     for (let p = 1; p <= Math.min(INITIAL_LOAD_COUNT, pageCount); p++) {
         pages.add(p);

@@ -89,8 +89,8 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             ? await _session.GetAsync<GeneratedCatalog>(company.CurrentCatalogId.Value, cancellationToken)
             : null;
 
-        if (existingCatalog is not null && existingCatalog.ContentFingerprint == fingerprint
-            && existingCatalog.PagesPublic == PagesArePublic)
+        if (existingCatalog is not null && CatalogRegenerationDecision.ShouldReuseCachedCatalog(
+                existingCatalog.ContentFingerprint, fingerprint, existingCatalog.PagesPublic, PagesArePublic))
         {
             return await RefreshSnapshotOnlyAsync(request, existingCatalog, entries, cancellationToken);
         }
