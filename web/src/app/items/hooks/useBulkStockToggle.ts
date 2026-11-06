@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import type { AuthState } from "@/lib/auth-context";
+import { runWithConcurrency } from "@/lib/concurrency";
 import { updateStock, type Item } from "@/lib/api";
 import { Messages, sectionStockUpdateFailed } from "@/lib/messages";
 import { updateItemFieldOptimistically } from "./optimisticItemUpdate";
@@ -57,7 +58,7 @@ export function useBulkStockToggle({
       prev.map((p) => (targetIds.has(p.id) ? { ...p, hasStock: nextValue } : p))
     );
     try {
-      await track(Promise.all(targets.map((p) => updateStock(auth.token, p.id, nextValue))));
+      await track(runWithConcurrency(targets, 4, (p) => updateStock(auth.token, p.id, nextValue)));
     } catch {
       setError(Messages.bulkStockUpdateFailed);
       loadItems(auth.token);
@@ -71,7 +72,7 @@ export function useBulkStockToggle({
     const targetIds = new Set(targets.map((p) => p.id));
     setItems((prev) => prev.map((p) => (targetIds.has(p.id) ? { ...p, hasStock: nextValue } : p)));
     try {
-      await track(Promise.all(targets.map((p) => updateStock(auth.token, p.id, nextValue))));
+      await track(runWithConcurrency(targets, 4, (p) => updateStock(auth.token, p.id, nextValue)));
     } catch {
       setError(sectionStockUpdateFailed(sectionName));
       loadItems(auth.token, { silent: true });
