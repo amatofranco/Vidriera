@@ -3,6 +3,7 @@ import { renderIndexPanel } from "./index-panel.js";
 import { buildPageUrl } from "./page-url.js";
 
 const INITIAL_LOAD_COUNT = 5;
+const MAX_PRIORITY_PAGES = 30;
 
 function getSpreadPages(current, pageCount) {
     if (current <= 1) return [1];
@@ -54,11 +55,12 @@ function buildPriorityPageList(pageCount, sectionsData) {
     for (let p = 1; p <= Math.min(INITIAL_LOAD_COUNT, pageCount); p++) {
         pages.add(p);
     }
-    sectionsData.forEach((entry) => {
+    for (const entry of sectionsData) {
+        if (pages.size >= MAX_PRIORITY_PAGES) break;
         if (!entry.isItem && entry.startPage >= 1 && entry.startPage <= pageCount) {
             pages.add(entry.startPage);
         }
-    });
+    }
     return Array.from(pages);
 }
 
