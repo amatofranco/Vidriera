@@ -121,7 +121,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         await ReportFinalizingAsync(request.OnProgress, 2);
         var catalog = await CreateCatalogAsync(
             catalogId, request, company, mergePlan.IncludedItems, indexSnapshot, generatedBlobKey, fingerprint,
-            mergeResult.PageCounts.Sum(), cancellationToken);
+            mergeResult.PageCounts.Sum(), mergePlan.FirstPageAspectRatio, cancellationToken);
 
         company.CurrentCatalogId = catalog.Id;
         await _session.UpdateInTransactionAsync(company, cancellationToken);
@@ -206,7 +206,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         return sizes.Sum();
     }
 
-    private sealed record MergePlan(PdfMergeResult MergeResult, List<Item> IncludedItems);
+    private sealed record MergePlan(PdfMergeResult MergeResult, List<Item> IncludedItems, double? FirstPageAspectRatio);
 
     private const int MaxConcurrentDownloads = 4;
 
@@ -231,7 +231,8 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
 
         if (onProgress is not null)
         {
-            await onProgress(new CatalogGenerationProgress("downloading", 0, physicalEntries.Count));
+            await onProgress(new CatalogGenerationProgress(
+                "rasterizing", 0, reportPages ? estimatedTotalPages : physicalEntries.Count));
         }
 
         using var session = _pdfMergeService.CreateSession();
@@ -268,7 +269,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
 
         await SyncStoredPageCountsAsync(physicalEntries, coordinator.ResolvedPageCounts, cancellationToken);
 
-        return new MergePlan(session.Complete(), includedItems);
+        return new MergePlan(session.Complete(), includedItems, coordinator.FirstPageAspectRatio);
     }
 
     private static int GetKnownPageCount(MergeEntry entry) => entry switch
@@ -338,9 +339,8 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         private readonly SemaphoreSlim _lock = new(1, 1);
         private int _nextIndex;
         private int _pageCursor;
-        private int _downloadedCount;
         private int _rasterizedPageCount;
-        private bool _rasterizationStarted;
+        private double? _firstPageAspectRatio;
 
         public OrderedMergeRasterizeCoordinator(
             IPdfMergeSession mergeSession,
@@ -370,33 +370,29 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
 
         public IReadOnlyDictionary<int, int> ResolvedPageCounts => _resolvedPageCounts;
 
+        public double? FirstPageAspectRatio => _firstPageAspectRatio;
+
         public async Task AddDownloadedAsync(int index, byte[] pdfBytes, CancellationToken cancellationToken)
         {
             await _lock.WaitAsync(cancellationToken);
             try
             {
                 _pending[index] = pdfBytes;
-                _downloadedCount++;
-                if (!_rasterizationStarted)
-                {
-                    await ReportAsync("downloading", _downloadedCount, _totalEntries);
-                }
 
                 while (_pending.Remove(_nextIndex, out var nextBytes))
                 {
                     var pageCount = _mergeSession.AddDocument(nextBytes);
                     _resolvedPageCounts[_nextIndex] = pageCount;
 
-                    if (!_rasterizationStarted)
-                    {
-                        _rasterizationStarted = true;
-                        await ReportAsync("rasterizing", 0, _reportPages ? _estimatedTotalPages : _totalEntries);
-                    }
-
-                    await foreach (var (pageIndex, jpegBytes) in _rasterizerService.RasterizePagesToJpegAsync(
+                    await foreach (var (pageIndex, jpegBytes, width, height) in _rasterizerService.RasterizePagesToJpegAsync(
                         nextBytes, Enumerable.Range(0, pageCount).ToList(), cancellationToken))
                     {
                         var pageNumber = _pageCursor + pageIndex + 1;
+                        if (pageNumber == 1)
+                        {
+                            _firstPageAspectRatio = (double)width / height;
+                        }
+
                         var blobKey = BlobKeys.GeneratedCatalogPage(_companyId, _catalogId, pageNumber);
                         using var stream = new MemoryStream(jpegBytes);
                         await _blobStorageService.UploadAsync(blobKey, stream, "image/jpeg", cancellationToken);
@@ -458,6 +454,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         string generatedBlobKey,
         string fingerprint,
         int rasterizedPageCount,
+        double? firstPageAspectRatio,
         CancellationToken cancellationToken)
     {
         var user = await _session.GetAsync<User>(request.UserId, cancellationToken);
@@ -476,7 +473,8 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             ItemsSnapshotJson = JsonSerializer.Serialize(snapshot),
             ContentFingerprint = fingerprint,
             RasterizedPageCount = rasterizedPageCount,
-            PagesPublic = PagesArePublic
+            PagesPublic = PagesArePublic,
+            FirstPageAspectRatio = firstPageAspectRatio
         };
 
         using var transaction = _session.BeginTransaction();

@@ -8,8 +8,6 @@ function progressLabel({ stage, current, total }: CatalogGenerationProgress) {
   switch (stage) {
     case "queued":
       return Labels.queuedStatus;
-    case "downloading":
-      return Labels.preparingFilesProgress(current, total);
     case "rasterizing":
       return Labels.generatingImagesProgress(current, total);
     case "finalizing":

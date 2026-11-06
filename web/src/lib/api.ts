@@ -409,7 +409,7 @@ export interface GenerateCatalogResult {
 }
 
 export interface CatalogGenerationProgress {
-  stage: "queued" | "downloading" | "rasterizing" | "finalizing";
+  stage: "queued" | "rasterizing" | "finalizing";
   current: number;
   total: number;
 }
@@ -417,7 +417,7 @@ export interface CatalogGenerationProgress {
 export interface CatalogGenerationJobStatus {
   jobId: string;
   status: "Pending" | "Running" | "Succeeded" | "Failed";
-  stage: "downloading" | "rasterizing" | "finalizing" | null;
+  stage: "rasterizing" | "finalizing" | null;
   current: number;
   total: number;
   result: GenerateCatalogResult | null;
