@@ -82,6 +82,7 @@ public static class ErrorMessages
     public static string InvalidSubscriptionDuration(int maxMonths) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(InvalidSubscriptionDuration)), maxMonths);
     public static string SubscriptionEndsBeforePlanChange => Get(nameof(SubscriptionEndsBeforePlanChange));
     public static string SubscriptionAlreadyActive => Get(nameof(SubscriptionAlreadyActive));
+    public static string PlanChangeAlreadyAuthorized => Get(nameof(PlanChangeAlreadyAuthorized));
 
     public static string InvalidOrExpiredResetToken => Get(nameof(InvalidOrExpiredResetToken));
 

@@ -214,6 +214,9 @@
   <data name="SubscriptionAlreadyActive" xml:space="preserve">
     <value>La empresa ya tiene una suscripción autorizada en MercadoPago — para cambiarla usá el cambio de plan, o cancelala antes de generar una nueva.</value>
   </data>
+  <data name="PlanChangeAlreadyAuthorized" xml:space="preserve">
+    <value>El cliente ya autorizó el cambio de plan anterior — sincronizá la suscripción antes de pedir otro cambio.</value>
+  </data>
   <data name="InvalidOrExpiredResetToken" xml:space="preserve">
     <value>El link venció o ya se usó. Pedí uno nuevo.</value>
   </data>

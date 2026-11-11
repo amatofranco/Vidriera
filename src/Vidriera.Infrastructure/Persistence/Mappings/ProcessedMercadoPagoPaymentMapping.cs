@@ -25,5 +25,6 @@ public class ProcessedMercadoPagoPaymentMapping : ClassMapping<ProcessedMercadoP
         });
 
         Property(x => x.ProcessedAt, m => m.Column("processed_at"));
+        Property(x => x.RevertedAt, m => m.Column("reverted_at"));
     }
 }

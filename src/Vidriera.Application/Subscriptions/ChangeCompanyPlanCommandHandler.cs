@@ -53,6 +53,18 @@ public class ChangeCompanyPlanCommandHandler : IRequestHandler<ChangeCompanyPlan
         // misma fecha: cambiar de plan no extiende el contrato. Se consulta antes de marcar el
         // cambio pendiente para poder rechazarlo sin dejar nada a medio hacer.
         var currentPreapproval = await _mercadoPagoClient.GetPreapprovalAsync(subscription.PreapprovalId, cancellationToken);
+
+        // Si ya había un cambio de plan pedido antes, su link también hay que darlo de baja —
+        // si no, el cliente podría autorizar los dos y pagar doble. Si ese link ya fue
+        // autorizado, el cambio está hecho (falta que llegue el webhook o correr /sync).
+        var previousPending = subscription.PendingPreapprovalId is null
+            ? null
+            : await _mercadoPagoClient.GetPreapprovalAsync(subscription.PendingPreapprovalId, cancellationToken);
+        if (previousPending is not null && PreapprovalCanceller.IsAuthorized(previousPending))
+        {
+            throw new ValidationException(ErrorMessages.PlanChangeAlreadyAuthorized);
+        }
+
         var endDate = currentPreapproval.EndDate?.UtcDateTime;
         if (endDate.HasValue && endDate.Value <= effectiveDate)
         {
@@ -80,7 +92,14 @@ public class ChangeCompanyPlanCommandHandler : IRequestHandler<ChangeCompanyPlan
 
         // end_date en una preapproval ya autorizada no lo respeta MercadoPago (confirmado en
         // pruebas: no tira error pero tampoco lo aplica). Cancelarla sí es confiable.
-        var oldPreapprovalCancelled = await _mercadoPagoClient.CancelPreapprovalAsync(subscription.PreapprovalId, cancellationToken);
+        // CancelIfNotFinal hace que el cambio se pueda reintentar: si una corrida anterior canceló
+        // la preapproval vieja y después falló al crear la nueva, la segunda corrida no vuelve a
+        // cancelar (MP puede dar error con una ya cancelada) y sigue directo a crear la nueva.
+        var oldPreapprovalCancelled = await PreapprovalCanceller.CancelIfNotFinalAsync(_mercadoPagoClient, currentPreapproval, cancellationToken);
+        if (previousPending is not null)
+        {
+            await PreapprovalCanceller.CancelIfNotFinalAsync(_mercadoPagoClient, previousPending, cancellationToken);
+        }
 
         var preapproval = await _mercadoPagoClient.CreatePreapprovalAsync(
             request.PayerEmail,

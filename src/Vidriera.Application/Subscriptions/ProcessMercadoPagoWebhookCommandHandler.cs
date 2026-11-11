@@ -94,7 +94,7 @@ public class ProcessMercadoPagoWebhookCommandHandler : IRequestHandler<ProcessMe
         }
 
         using var transaction = _session.BeginTransaction();
-        await SubscriptionPaymentApplier.ApplyIfApprovedAndNewAsync(_session, subscription, payment, cancellationToken);
+        await SubscriptionPaymentApplier.ApplyAsync(_session, subscription, payment, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
     }
 }

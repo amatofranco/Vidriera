@@ -51,7 +51,7 @@ public class SyncCompanySubscriptionCommandHandler : IRequestHandler<SyncCompany
 
         foreach (var payment in payments)
         {
-            await SubscriptionPaymentApplier.ApplyIfApprovedAndNewAsync(_session, subscription, payment, cancellationToken);
+            await SubscriptionPaymentApplier.ApplyAsync(_session, subscription, payment, cancellationToken);
         }
 
         MercadoPagoPreapproval? pendingPreapproval = null;
