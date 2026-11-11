@@ -33,7 +33,7 @@ public class ProcessCatalogGenerationJobCommandHandler : IRequestHandler<Process
         }
 
         using var progressLock = new SemaphoreSlim(1, 1);
-        var progressThrottle = new ProgressSaveThrottle(TimeSpan.FromSeconds(1));
+        var progressThrottle = new ProgressSaveThrottle(TimeSpan.FromMilliseconds(500));
 
         try
         {
