@@ -42,7 +42,6 @@ public class CreateCompanySubscriptionCommandHandler : IRequestHandler<CreateCom
             _ => throw new ValidationException(ErrorMessages.InvalidSubscriptionPlan)
         };
 
-        // Se valida antes de llamar a MercadoPago para no crear una preapproval huérfana.
         var endDate = SubscriptionDuration.EndDateFrom(DateTime.UtcNow, request.DurationMonths);
 
         var subscription = await _session.Query<CompanySubscription>()
@@ -92,13 +91,6 @@ public class CreateCompanySubscriptionCommandHandler : IRequestHandler<CreateCom
         return new CreateCompanySubscriptionResult(preapproval.InitPoint, endDate);
     }
 
-    /// <summary>
-    /// Antes de generar un link nuevo, se da de baja en MercadoPago todo lo que haya quedado de
-    /// antes (links sin autorizar, cambio de plan a medio hacer) para que el cliente no pueda
-    /// autorizar dos suscripciones y pagar doble. Si alguna está autorizada (cobrando), se
-    /// rechaza: para eso están el cambio de plan y la cancelación explícita.
-    /// Los estados se leen en vivo de MP, no de la base, porque la base depende del webhook.
-    /// </summary>
     private async Task CancelPreviousPreapprovalsAsync(CompanySubscription subscription, CancellationToken cancellationToken)
     {
         var current = await _mercadoPagoClient.GetPreapprovalAsync(subscription.PreapprovalId, cancellationToken);

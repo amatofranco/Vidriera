@@ -57,9 +57,6 @@ public class ProcessMercadoPagoWebhookCommandHandler : IRequestHandler<ProcessMe
             subscription.Status = preapproval.Status;
             subscription.UpdatedAt = DateTime.UtcNow;
             await _session.UpdateAsync(subscription, cancellationToken);
-
-            // Una cancelación o pausa no corta el acceso acá: el cliente conserva lo que ya pagó
-            // hasta AccessExpiresAt (ver SubscriptionAccess, que se evalúa en el login).
         }
 
         await transaction.CommitAsync(cancellationToken);

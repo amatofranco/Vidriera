@@ -1,6 +1,5 @@
 namespace Vidriera.Application.Catalogs;
 
-/// <summary>Cuánto tarda cada etapa de una generación, para registrarlo en el log al terminar.</summary>
 internal sealed class CatalogGenerationTimings
 {
     public long TotalMs { get; set; }

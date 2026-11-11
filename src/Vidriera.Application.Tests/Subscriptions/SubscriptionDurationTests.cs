@@ -19,7 +19,6 @@ public class SubscriptionDurationTests
         var endDate = SubscriptionDuration.EndDateFrom(Now, 12);
 
         Assert.Equal(new DateTime(2027, 11, 10, 15, 0, 0, DateTimeKind.Utc), endDate);
-        // El cobro 12 (now + 11 meses) entra; el 13 (now + 12 meses) queda afuera.
         Assert.True(Now.AddMonths(11) < endDate);
         Assert.True(Now.AddMonths(12) > endDate);
     }

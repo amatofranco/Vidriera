@@ -1,10 +1,5 @@
 namespace Vidriera.Application.Catalogs;
 
-/// <summary>
-/// Decide cuándo vale la pena guardar el progreso de una generación en la base. Antes se guardaba
-/// en cada página (una transacción por página, en el camino crítico); la barra de progreso se ve
-/// igual guardando como mucho una vez por intervalo, más los cambios de etapa y el final de cada una.
-/// </summary>
 internal sealed class ProgressSaveThrottle
 {
     private readonly TimeSpan _minInterval;

@@ -155,8 +155,6 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         return new GenerateCatalogResult(catalog.Id, url);
     }
 
-    // Lo que no figura en el desglose de "unir+rasterizar" es tiempo esperando que lleguen las
-    // descargas de los PDFs.
     private void LogTimings(Guid catalogId, PdfMergeResult mergeResult, int entryCount, CatalogGenerationTimings t) =>
         _logger.LogInformation(
             "Catálogo {CatalogId} generado: {Pages} páginas, {Entries} PDFs, {MergedMb:F1} MB. Tiempos (ms): total {TotalMs} | " +
@@ -293,9 +291,6 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         }
         catch
         {
-            // Antes de limpiar se espera a que termine todo lo que está en vuelo: las descargas
-            // (si el error cortó el bucle, alguna puede seguir agregando páginas) y después las
-            // subidas (si se borrara antes, una subida que termina después quedaría huérfana en R2).
             await WhenAllQuietlyAsync(pendingDownloads);
             await coordinator.WaitForUploadsQuietlyAsync();
             foreach (var pageKey in coordinator.UploadedPageKeys)
@@ -318,7 +313,6 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         }
         catch
         {
-            // El error que importa ya se está propagando; acá solo se espera a que terminen.
         }
     }
 
@@ -373,9 +367,6 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         private const int PagesPerCpuYield = 10;
         private static readonly TimeSpan CpuYieldDelay = TimeSpan.FromMilliseconds(300);
 
-        // Las imágenes se suben a R2 en paralelo mientras se rasteriza la página siguiente, en vez
-        // de esperar cada subida. El límite acota cuántas imágenes hay en memoria a la vez: si se
-        // llena, el rasterizado espera (ese tiempo queda medido en UploadSlotWaitMs).
         private const int MaxConcurrentUploads = 6;
 
         private readonly IPdfMergeSession _mergeSession;
@@ -446,8 +437,6 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
                     _timings.MergeMs += ElapsedMs(mergeStart);
                     _resolvedPageCounts[_nextIndex] = pageCount;
 
-                    // El rasterizado ocurre al pedir el siguiente elemento del enumerable, así que
-                    // se mide desde el final de una vuelta hasta el principio de la siguiente.
                     var rasterStart = Stopwatch.GetTimestamp();
                     await foreach (var (pageIndex, imageBytes, width, height) in _rasterizerService.RasterizePagesToImagesAsync(
                         nextBytes, Enumerable.Range(0, pageCount).ToList(), cancellationToken))
@@ -514,7 +503,6 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             }
         }
 
-        // Una subida que falla corta la generación en la página siguiente, sin esperar al final.
         private void ThrowIfAnyUploadFailed()
         {
             var failed = _uploads.FirstOrDefault(t => t.IsFaulted || t.IsCanceled);

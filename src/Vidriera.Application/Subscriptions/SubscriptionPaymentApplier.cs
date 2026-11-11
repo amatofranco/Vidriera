@@ -7,12 +7,6 @@ namespace Vidriera.Application.Subscriptions;
 
 internal static class SubscriptionPaymentApplier
 {
-    /// <summary>
-    /// Aplica un pago de MercadoPago a la suscripción: un pago aprobado suma un mes de acceso;
-    /// uno reembolsado o con contracargo, que ya se había sumado, lo resta. Es idempotente: cada
-    /// pago suma y resta como mucho una vez, así que se puede llamar desde el webhook y desde el
-    /// /sync cuantas veces haga falta.
-    /// </summary>
     public static async Task<bool> ApplyAsync(
         ISession session,
         CompanySubscription subscription,
@@ -68,9 +62,6 @@ internal static class SubscriptionPaymentApplier
         MercadoPagoPayment payment,
         CancellationToken cancellationToken)
     {
-        // Si el pago nunca se sumó (el reembolso llegó antes que la aprobación, o nunca estuvo
-        // aprobado), no hay nada que restar — y como ya no va a volver a figurar como aprobado,
-        // tampoco se va a sumar después.
         var processed = await session.Query<ProcessedMercadoPagoPayment>()
             .FirstOrDefaultAsync(p => p.PaymentId == payment.Id, cancellationToken);
         if (processed is null || processed.RevertedAt is not null || subscription.AccessExpiresAt is null)
@@ -91,7 +82,6 @@ internal static class SubscriptionPaymentApplier
     public static bool IsApproved(MercadoPagoPayment payment) =>
         payment.Status.Equals("approved", StringComparison.OrdinalIgnoreCase);
 
-    // Los reembolsos parciales no cambian el status (sigue "approved"), así que no restan.
     public static bool IsReverted(MercadoPagoPayment payment) =>
         payment.Status.Equals("refunded", StringComparison.OrdinalIgnoreCase)
         || payment.Status.Equals("charged_back", StringComparison.OrdinalIgnoreCase);

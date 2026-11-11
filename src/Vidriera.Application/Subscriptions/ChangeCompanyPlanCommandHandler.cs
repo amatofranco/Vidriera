@@ -49,14 +49,8 @@ public class ChangeCompanyPlanCommandHandler : IRequestHandler<ChangeCompanyPlan
             _ => throw new ValidationException(ErrorMessages.InvalidSubscriptionPlan)
         };
 
-        // Si la suscripción actual tiene fecha de fin (ej. contrato anual), la nueva hereda esa
-        // misma fecha: cambiar de plan no extiende el contrato. Se consulta antes de marcar el
-        // cambio pendiente para poder rechazarlo sin dejar nada a medio hacer.
         var currentPreapproval = await _mercadoPagoClient.GetPreapprovalAsync(subscription.PreapprovalId, cancellationToken);
 
-        // Si ya había un cambio de plan pedido antes, su link también hay que darlo de baja —
-        // si no, el cliente podría autorizar los dos y pagar doble. Si ese link ya fue
-        // autorizado, el cambio está hecho (falta que llegue el webhook o correr /sync).
         var previousPending = subscription.PendingPreapprovalId is null
             ? null
             : await _mercadoPagoClient.GetPreapprovalAsync(subscription.PendingPreapprovalId, cancellationToken);
@@ -74,10 +68,6 @@ public class ChangeCompanyPlanCommandHandler : IRequestHandler<ChangeCompanyPlan
         var rate = await _exchangeRateService.GetUsdToArsOficialRateAsync(cancellationToken);
         var amountArs = Math.Round(amountUsd * rate, 2, MidpointRounding.AwayFromZero);
 
-        // PendingPlan se guarda ANTES de tocar MercadoPago — es la señal (ver SubscriptionAccess)
-        // de que la cancelación de la preapproval vieja es parte de un cambio de plan en curso y
-        // no una cancelación real, así que se siguen respetando los días de gracia. Si se guardara
-        // después, el webhook de esa cancelación podría procesarse en el medio.
         using (var markPendingTransaction = _session.BeginTransaction())
         {
             subscription.PendingPlan = request.NewPlan;
@@ -91,9 +81,6 @@ public class ChangeCompanyPlanCommandHandler : IRequestHandler<ChangeCompanyPlan
 
         // end_date en una preapproval ya autorizada no lo respeta MercadoPago (confirmado en
         // pruebas: no tira error pero tampoco lo aplica). Cancelarla sí es confiable.
-        // CancelIfNotFinal hace que el cambio se pueda reintentar: si una corrida anterior canceló
-        // la preapproval vieja y después falló al crear la nueva, la segunda corrida no vuelve a
-        // cancelar (MP puede dar error con una ya cancelada) y sigue directo a crear la nueva.
         var oldPreapprovalCancelled = await PreapprovalCanceller.CancelIfNotFinalAsync(_mercadoPagoClient, currentPreapproval, cancellationToken);
         if (previousPending is not null)
         {

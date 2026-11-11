@@ -12,10 +12,6 @@ internal static class PreapprovalCanceller
         preapproval.Status.Equals("cancelled", StringComparison.OrdinalIgnoreCase)
         || preapproval.Status.Equals("finished", StringComparison.OrdinalIgnoreCase);
 
-    /// <summary>
-    /// Cancela la preapproval en MercadoPago salvo que ya esté en un estado final (cancelar una
-    /// ya cancelada puede dar error). Devuelve el estado con el que queda.
-    /// </summary>
     public static async Task<MercadoPagoPreapproval> CancelIfNotFinalAsync(
         IMercadoPagoClient client,
         MercadoPagoPreapproval preapproval,
