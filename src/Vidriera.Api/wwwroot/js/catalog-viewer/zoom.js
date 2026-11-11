@@ -2,6 +2,20 @@ import { createHdPageUpgrader } from "./hd-pages.js";
 
 const ZOOM_LEVEL = 2;
 
+const CONTROL_SELECTOR = [
+    "button", "a", "input", "select", "textarea", "label",
+    "#toolbar", "#index-panel", "#order-drawer", "#order-checkout-modal",
+    "#page-order-bar", "#update-banner", "#page-info",
+].join(", ");
+
+export function isZoomControl(target) {
+    return typeof target?.closest === "function" && target.closest(CONTROL_SELECTOR) !== null;
+}
+
+export function isIndexJump(target) {
+    return typeof target?.closest === "function" && target.closest("#index-panel .index-item") !== null;
+}
+
 export function setupZoom(dom) {
     let zoomArmed = false;
     let isZoomed = false;
@@ -27,10 +41,6 @@ export function setupZoom(dom) {
         }
     }
 
-    function isChrome(target) {
-        return target === dom.prevBtn || target === dom.nextBtn || dom.toolbarEl.contains(target);
-    }
-
     dom.lensBtn.addEventListener("click", () => {
         zoomArmed = !zoomArmed;
         dom.lensBtn.classList.toggle("active", zoomArmed);
@@ -44,11 +54,15 @@ export function setupZoom(dom) {
     dom.lensBtn.addEventListener("pointerdown", () => hdPages.warm());
 
     dom.stageEl.addEventListener("mousedown", (e) => {
-        if (zoomArmed && !isChrome(e.target)) e.stopPropagation();
+        if (zoomArmed && !isZoomControl(e.target)) e.stopPropagation();
     }, true);
 
     dom.stageEl.addEventListener("click", (e) => {
-        if (!zoomArmed || isChrome(e.target)) return;
+        if (!zoomArmed) return;
+        if (isZoomControl(e.target)) {
+            if (isZoomed && isIndexJump(e.target)) setZoomed(false);
+            return;
+        }
         setZoomed(!isZoomed, e);
     });
 
