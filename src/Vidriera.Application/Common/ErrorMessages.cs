@@ -79,6 +79,9 @@ public static class ErrorMessages
     public static string UserLimitReached(int max) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(UserLimitReached)), max);
 
     public static string CannotChangePlanWithoutPayment => Get(nameof(CannotChangePlanWithoutPayment));
+    public static string InvalidSubscriptionDuration(int maxMonths) => string.Format(CultureInfo.CurrentUICulture, Get(nameof(InvalidSubscriptionDuration)), maxMonths);
+    public static string SubscriptionEndsBeforePlanChange => Get(nameof(SubscriptionEndsBeforePlanChange));
+    public static string SubscriptionAlreadyActive => Get(nameof(SubscriptionAlreadyActive));
 
     public static string InvalidOrExpiredResetToken => Get(nameof(InvalidOrExpiredResetToken));
 

@@ -11,7 +11,8 @@ public interface IMercadoPagoClient
         string externalReference,
         decimal amountArs,
         CancellationToken cancellationToken,
-        DateTime? startDate = null);
+        DateTime? startDate = null,
+        DateTime? endDate = null);
 
     Task<MercadoPagoPreapproval> GetPreapprovalAsync(string preapprovalId, CancellationToken cancellationToken);
 

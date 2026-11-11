@@ -205,6 +205,15 @@
   <data name="CannotChangePlanWithoutPayment" xml:space="preserve">
     <value>La empresa todavía no tuvo ningún pago aprobado — usá el alta de suscripción normal en vez de cambiar de plan.</value>
   </data>
+  <data name="InvalidSubscriptionDuration" xml:space="preserve">
+    <value>La duración de la suscripción tiene que ser entre 1 y {0} meses.</value>
+  </data>
+  <data name="SubscriptionEndsBeforePlanChange" xml:space="preserve">
+    <value>La suscripción termina antes de que el cambio de plan entre en vigencia — generá una suscripción nueva en vez de cambiar de plan.</value>
+  </data>
+  <data name="SubscriptionAlreadyActive" xml:space="preserve">
+    <value>La empresa ya tiene una suscripción autorizada en MercadoPago — para cambiarla usá el cambio de plan, o cancelala antes de generar una nueva.</value>
+  </data>
   <data name="InvalidOrExpiredResetToken" xml:space="preserve">
     <value>El link venció o ya se usó. Pedí uno nuevo.</value>
   </data>

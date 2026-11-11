@@ -66,7 +66,7 @@ public class AdminController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(
-            new CreateCompanySubscriptionCommand(companyId, request.PayerEmail, request.Plan),
+            new CreateCompanySubscriptionCommand(companyId, request.PayerEmail, request.Plan, request.DurationMonths),
             cancellationToken);
 
         return Ok(result);
@@ -185,7 +185,7 @@ public class AdminController : ControllerBase
 
 public record AddUserRequest(string Email, string Name, string Password);
 
-public record CreateSubscriptionRequest(string PayerEmail, string Plan);
+public record CreateSubscriptionRequest(string PayerEmail, string Plan, int? DurationMonths = null);
 
 public record SetSubscriptionExemptRequest(bool IsExempt);
 

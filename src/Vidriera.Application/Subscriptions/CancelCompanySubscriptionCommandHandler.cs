@@ -25,13 +25,24 @@ public class CancelCompanySubscriptionCommandHandler : IRequestHandler<CancelCom
             ErrorMessages.CompanySubscriptionNotFound(request.CompanyId),
             cancellationToken);
 
-        var preapproval = await _mercadoPagoClient.CancelPreapprovalAsync(subscription.PreapprovalId, cancellationToken);
+        // Se lee el estado en vivo antes de cancelar: durante un cambio de plan la preapproval
+        // principal ya está cancelada en MP, y la que hay que dar de baja es la pendiente —
+        // si no, el cliente podría autorizarla después y la empresa se reactivaría sola.
+        var current = await _mercadoPagoClient.GetPreapprovalAsync(subscription.PreapprovalId, cancellationToken);
+        var preapproval = await PreapprovalCanceller.CancelIfNotFinalAsync(_mercadoPagoClient, current, cancellationToken);
+
+        if (subscription.PendingPreapprovalId is not null)
+        {
+            var pending = await _mercadoPagoClient.GetPreapprovalAsync(subscription.PendingPreapprovalId, cancellationToken);
+            await PreapprovalCanceller.CancelIfNotFinalAsync(_mercadoPagoClient, pending, cancellationToken);
+        }
 
         using var transaction = _session.BeginTransaction();
 
         subscription.Status = preapproval.Status;
         subscription.UpdatedAt = DateTime.UtcNow;
         subscription.Company.IsActive = false;
+        PreapprovalCanceller.ClearPendingPlan(subscription);
         await _session.UpdateAsync(subscription, cancellationToken);
         await _session.UpdateAsync(subscription.Company, cancellationToken);
 

@@ -39,6 +39,11 @@ public class WebhooksController : ControllerBase
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 _logger.LogError(ex, "Error procesando webhook de MercadoPago: type={Type} id={ResourceId}", eventType, resourceId);
+
+                // Un status distinto de 2xx hace que MercadoPago reintente la notificación más
+                // tarde. Es seguro reprocesar: los pagos ya aplicados se descartan por payment_id
+                // (processed_mercadopago_payments) y la preapproval se relee siempre de MP.
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
 

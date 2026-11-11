@@ -29,11 +29,7 @@ internal static class PendingPlanPromoter
         // cambio, el acceso queda restablecido.
         subscription.Company.IsActive = true;
 
-        subscription.PendingPlan = null;
-        subscription.PendingPlanAmountUsd = null;
-        subscription.PendingUsdArsRate = null;
-        subscription.PendingAmountArs = null;
-        subscription.PendingPreapprovalId = null;
+        PreapprovalCanceller.ClearPendingPlan(subscription);
 
         return true;
     }

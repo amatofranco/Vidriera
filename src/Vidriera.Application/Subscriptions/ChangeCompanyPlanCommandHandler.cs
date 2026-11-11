@@ -49,6 +49,16 @@ public class ChangeCompanyPlanCommandHandler : IRequestHandler<ChangeCompanyPlan
             _ => throw new ValidationException(ErrorMessages.InvalidSubscriptionPlan)
         };
 
+        // Si la suscripción actual tiene fecha de fin (ej. contrato anual), la nueva hereda esa
+        // misma fecha: cambiar de plan no extiende el contrato. Se consulta antes de marcar el
+        // cambio pendiente para poder rechazarlo sin dejar nada a medio hacer.
+        var currentPreapproval = await _mercadoPagoClient.GetPreapprovalAsync(subscription.PreapprovalId, cancellationToken);
+        var endDate = currentPreapproval.EndDate?.UtcDateTime;
+        if (endDate.HasValue && endDate.Value <= effectiveDate)
+        {
+            throw new ValidationException(ErrorMessages.SubscriptionEndsBeforePlanChange);
+        }
+
         var rate = await _exchangeRateService.GetUsdToArsOficialRateAsync(cancellationToken);
         var amountArs = Math.Round(amountUsd * rate, 2, MidpointRounding.AwayFromZero);
 
@@ -77,7 +87,8 @@ public class ChangeCompanyPlanCommandHandler : IRequestHandler<ChangeCompanyPlan
             request.CompanyId.ToString(),
             amountArs,
             cancellationToken,
-            startDate: effectiveDate);
+            startDate: effectiveDate,
+            endDate: endDate);
 
         using var transaction = _session.BeginTransaction();
 

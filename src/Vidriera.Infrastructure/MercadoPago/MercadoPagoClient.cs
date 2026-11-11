@@ -22,7 +22,8 @@ public class MercadoPagoClient : IMercadoPagoClient
         string externalReference,
         decimal amountArs,
         CancellationToken cancellationToken,
-        DateTime? startDate = null)
+        DateTime? startDate = null,
+        DateTime? endDate = null)
     {
         var request = new CreatePreapprovalRequest(
             "Suscripción Vidriera",
@@ -30,7 +31,13 @@ public class MercadoPagoClient : IMercadoPagoClient
             payerEmail,
             _options.BackUrl,
             _options.NotificationUrl,
-            new AutoRecurringRequest(1, "months", amountArs, _options.CurrencyId, startDate.HasValue ? ToMercadoPagoDate(startDate.Value) : null));
+            new AutoRecurringRequest(
+                1,
+                "months",
+                amountArs,
+                _options.CurrencyId,
+                startDate.HasValue ? ToMercadoPagoDate(startDate.Value) : null,
+                endDate.HasValue ? ToMercadoPagoDate(endDate.Value) : null));
 
         var response = await _httpClient.PostAsJsonAsync("preapproval", request, cancellationToken);
         var result = await ReadOrThrowAsync<PreapprovalResponse>(response, cancellationToken);
@@ -112,7 +119,8 @@ public class MercadoPagoClient : IMercadoPagoClient
         [property: JsonPropertyName("frequency_type")] string FrequencyType,
         [property: JsonPropertyName("transaction_amount")] decimal TransactionAmount,
         [property: JsonPropertyName("currency_id")] string CurrencyId,
-        [property: JsonPropertyName("start_date")] string? StartDate = null);
+        [property: JsonPropertyName("start_date")] string? StartDate = null,
+        [property: JsonPropertyName("end_date"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? EndDate = null);
 
     private record UpdatePreapprovalStatusRequest([property: JsonPropertyName("status")] string Status);
 
