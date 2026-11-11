@@ -10,16 +10,21 @@ public record ProcessCatalogGenerationJobCommand(Guid JobId) : IRequest<bool>;
 
 public class ProcessCatalogGenerationJobCommandHandler : IRequestHandler<ProcessCatalogGenerationJobCommand, bool>
 {
+    private static readonly TimeSpan ProgressSaveInterval = TimeSpan.FromMilliseconds(500);
+
     private readonly ISession _session;
+    private readonly ISessionFactory _sessionFactory;
     private readonly IMediator _mediator;
     private readonly ILogger<ProcessCatalogGenerationJobCommandHandler> _logger;
 
     public ProcessCatalogGenerationJobCommandHandler(
         ISession session,
+        ISessionFactory sessionFactory,
         IMediator mediator,
         ILogger<ProcessCatalogGenerationJobCommandHandler> logger)
     {
         _session = session;
+        _sessionFactory = sessionFactory;
         _mediator = mediator;
         _logger = logger;
     }
@@ -32,8 +37,10 @@ public class ProcessCatalogGenerationJobCommandHandler : IRequestHandler<Process
             return false;
         }
 
-        using var progressLock = new SemaphoreSlim(1, 1);
-        var progressThrottle = new ProgressSaveThrottle(TimeSpan.FromMilliseconds(500));
+        var jobId = job.Id;
+        var progressReporter = new CatalogJobProgressReporter(
+            progress => SaveProgressAsync(jobId, progress), ProgressSaveInterval, _logger);
+        CatalogGenerationProgress? lastProgress = null;
 
         try
         {
@@ -42,9 +49,16 @@ public class ProcessCatalogGenerationJobCommandHandler : IRequestHandler<Process
                     job.Company.Id,
                     job.User.Id,
                     job.ShowPrices,
-                    progress => ReportProgressAsync(progressLock, progressThrottle, job, progress)),
+                    progress =>
+                    {
+                        lastProgress = progress;
+                        progressReporter.Report(progress);
+                        return Task.CompletedTask;
+                    }),
                 cancellationToken);
 
+            await progressReporter.FlushAsync();
+            ApplyProgress(job, lastProgress);
             job.Status = CatalogGenerationJobStatus.Succeeded;
             job.ResultCatalogId = result.Id;
             job.ResultUrl = result.Url;
@@ -59,6 +73,8 @@ public class ProcessCatalogGenerationJobCommandHandler : IRequestHandler<Process
                 _logger.LogError(ex, "Error inesperado generando el catálogo para el job {JobId}.", job.Id);
             }
 
+            await progressReporter.FlushAsync();
+            ApplyProgress(job, lastProgress);
             job.Status = CatalogGenerationJobStatus.Failed;
             job.ErrorMessage = isExpected
                 ? ex.Message
@@ -112,27 +128,32 @@ public class ProcessCatalogGenerationJobCommandHandler : IRequestHandler<Process
         return job;
     }
 
-    private async Task ReportProgressAsync(
-        SemaphoreSlim progressLock, ProgressSaveThrottle throttle, CatalogGenerationJob job, CatalogGenerationProgress progress)
+    private async Task SaveProgressAsync(Guid jobId, CatalogGenerationProgress progress)
     {
-        await progressLock.WaitAsync();
-        try
-        {
-            if (!throttle.ShouldSave(progress, DateTime.UtcNow))
-            {
-                return;
-            }
+        using var session = _sessionFactory.OpenSession();
+        using var transaction = session.BeginTransaction();
+        await session.CreateSQLQuery(
+                "update catalog_generation_jobs set stage = :stage, progress_current = :current, " +
+                "progress_total = :total, updated_at = :updatedAt where id = :id")
+            .SetParameter("stage", progress.Stage)
+            .SetParameter("current", progress.Current)
+            .SetParameter("total", progress.Total)
+            .SetParameter("updatedAt", DateTime.UtcNow)
+            .SetParameter("id", jobId)
+            .ExecuteUpdateAsync();
+        await transaction.CommitAsync();
+    }
 
-            job.Stage = progress.Stage;
-            job.ProgressCurrent = progress.Current;
-            job.ProgressTotal = progress.Total;
-            job.UpdatedAt = DateTime.UtcNow;
-            await SaveAsync(job);
-        }
-        finally
+    private static void ApplyProgress(CatalogGenerationJob job, CatalogGenerationProgress? progress)
+    {
+        if (progress is null)
         {
-            progressLock.Release();
+            return;
         }
+
+        job.Stage = progress.Stage;
+        job.ProgressCurrent = progress.Current;
+        job.ProgressTotal = progress.Total;
     }
 
     private async Task SaveAsync(CatalogGenerationJob job)
