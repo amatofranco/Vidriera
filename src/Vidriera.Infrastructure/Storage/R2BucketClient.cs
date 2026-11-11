@@ -53,8 +53,15 @@ public class R2BucketClient
 
     public async Task<(Stream Content, string ContentType)> DownloadWithContentTypeAsync(string key, CancellationToken cancellationToken)
     {
-        var response = await _client.GetObjectAsync(_bucketName, key, cancellationToken);
-        return (response.ResponseStream, response.Headers.ContentType);
+        try
+        {
+            var response = await _client.GetObjectAsync(_bucketName, key, cancellationToken);
+            return (response.ResponseStream, response.Headers.ContentType);
+        }
+        catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            throw new FileNotFoundException($"No existe el objeto '{key}' en R2.", key, ex);
+        }
     }
 
     public async Task<long> GetSizeAsync(string key, CancellationToken cancellationToken)
@@ -63,6 +70,21 @@ public class R2BucketClient
             new GetObjectMetadataRequest { BucketName = _bucketName, Key = key },
             cancellationToken);
         return response.ContentLength;
+    }
+
+    public async Task<bool> ExistsAsync(string key, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _client.GetObjectMetadataAsync(
+                new GetObjectMetadataRequest { BucketName = _bucketName, Key = key },
+                cancellationToken);
+            return true;
+        }
+        catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return false;
+        }
     }
 
     public async Task DeleteAsync(string key, CancellationToken cancellationToken)

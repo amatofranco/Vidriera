@@ -180,11 +180,19 @@ public class CatalogsController : ControllerBase
 
     [HttpGet("{id:guid}/pages/{pageNumber:int}")]
     [AllowAnonymous]
-    public async Task<IActionResult> GetPage(Guid id, int pageNumber, CancellationToken cancellationToken)
+    public Task<IActionResult> GetPage(Guid id, int pageNumber, CancellationToken cancellationToken) =>
+        GetPageAsync(id, pageNumber, hd: false, cancellationToken);
+
+    [HttpGet("{id:guid}/pages/{pageNumber:int}/hd")]
+    [AllowAnonymous]
+    public Task<IActionResult> GetPageHd(Guid id, int pageNumber, CancellationToken cancellationToken) =>
+        GetPageAsync(id, pageNumber, hd: true, cancellationToken);
+
+    private async Task<IActionResult> GetPageAsync(Guid id, int pageNumber, bool hd, CancellationToken cancellationToken)
     {
         try
         {
-            var result = await _mediator.Send(new GetCatalogPageQuery(id, pageNumber), cancellationToken);
+            var result = await _mediator.Send(new GetCatalogPageQuery(id, pageNumber, hd), cancellationToken);
             Response.Headers.CacheControl = "public, max-age=31536000, immutable";
             return File(result.Content, result.ContentType);
         }

@@ -26,6 +26,9 @@ public class R2PublicCatalogPageStorageService : IPublicCatalogPageStorageServic
     public Task<long> GetSizeAsync(string key, CancellationToken cancellationToken) =>
         _client.GetSizeAsync(key, cancellationToken);
 
+    public Task<bool> ExistsAsync(string key, CancellationToken cancellationToken) =>
+        _client.ExistsAsync(key, cancellationToken);
+
     public Task DeleteAsync(string key, CancellationToken cancellationToken) =>
         _client.DeleteAsync(key, cancellationToken);
 }

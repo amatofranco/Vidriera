@@ -10,5 +10,7 @@ public interface IBlobStorageService
 
     Task<long> GetSizeAsync(string key, CancellationToken cancellationToken);
 
+    Task<bool> ExistsAsync(string key, CancellationToken cancellationToken);
+
     Task DeleteAsync(string key, CancellationToken cancellationToken);
 }

@@ -123,6 +123,7 @@ body { overflow: auto; }
 .stage.zoomed #static-page-viewport {
     transform: scale(2);
 }
+.stage.zoomed #flipbook { filter: none; }
 
 .index-panel {
     position: fixed; left: 78px; top: 50%; transform: translateY(-50%);

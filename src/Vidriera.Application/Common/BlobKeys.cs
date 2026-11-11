@@ -25,4 +25,7 @@ internal static class BlobKeys
 
     public static string GeneratedCatalogPage(Guid companyId, Guid catalogId, int pageNumber) =>
         $"{GeneratedCatalogPagesPrefix(companyId, catalogId)}/{pageNumber}.jpg";
+
+    public static string GeneratedCatalogPageHd(Guid companyId, Guid catalogId, int pageNumber) =>
+        $"{GeneratedCatalogPagesPrefix(companyId, catalogId)}/{pageNumber}-hd.jpg";
 }

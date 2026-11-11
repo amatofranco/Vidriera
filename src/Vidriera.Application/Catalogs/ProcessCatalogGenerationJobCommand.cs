@@ -67,7 +67,27 @@ public class ProcessCatalogGenerationJobCommandHandler : IRequestHandler<Process
             await SaveAsync(job);
         }
 
+        if (job.Status == CatalogGenerationJobStatus.Succeeded && job.ResultCatalogId is { } catalogId)
+        {
+            await GenerateHdPagesAsync(catalogId, cancellationToken);
+        }
+
         return true;
+    }
+
+    private async Task GenerateHdPagesAsync(Guid catalogId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _mediator.Send(new GenerateCatalogHdPagesCommand(catalogId), cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "No se pudo generar la versión en alta del catálogo {CatalogId}.", catalogId);
+        }
     }
 
     private async Task<CatalogGenerationJob?> ClaimAsync(Guid jobId, CancellationToken cancellationToken)

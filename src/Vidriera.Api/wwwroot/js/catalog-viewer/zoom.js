@@ -1,9 +1,12 @@
+import { createHdPageUpgrader } from "./hd-pages.js";
+
 const ZOOM_LEVEL = 2;
 
 export function setupZoom(dom) {
     let zoomArmed = false;
     let isZoomed = false;
     const armedChangeListeners = [];
+    const hdPages = createHdPageUpgrader(currentZoomTarget);
 
     function currentZoomTarget() {
         return document.getElementById("flipbook") || document.getElementById("static-page-viewport");
@@ -33,8 +36,12 @@ export function setupZoom(dom) {
         dom.lensBtn.classList.toggle("active", zoomArmed);
         dom.stageEl.classList.toggle("zoom-armed", zoomArmed);
         if (!zoomArmed && isZoomed) setZoomed(false);
+        if (zoomArmed) hdPages.start(); else hdPages.stop();
         armedChangeListeners.forEach((listener) => listener(zoomArmed));
     });
+
+    dom.lensBtn.addEventListener("pointerenter", () => hdPages.warm());
+    dom.lensBtn.addEventListener("pointerdown", () => hdPages.warm());
 
     dom.stageEl.addEventListener("mousedown", (e) => {
         if (zoomArmed && !isChrome(e.target)) e.stopPropagation();

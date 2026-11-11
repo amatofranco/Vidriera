@@ -14,7 +14,7 @@ namespace Vidriera.Application.Catalogs;
 
 public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogCommand, GenerateCatalogResult>
 {
-    private static readonly TimeSpan GateTimeout = TimeSpan.FromSeconds(3);
+    private static readonly TimeSpan GateTimeout = TimeSpan.FromSeconds(10);
 
     private readonly ISession _session;
     private readonly IBlobStorageService _blobStorageService;
@@ -637,8 +637,11 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         await Parallel.ForEachAsync(
             Enumerable.Range(1, old.RasterizedPageCount),
             new ParallelOptions { MaxDegreeOfParallelism = MaxConcurrentDeletes, CancellationToken = cancellationToken },
-            async (pageNumber, ct) => await oldPageStorageService.DeleteAsync(
-                BlobKeys.GeneratedCatalogPage(companyId, catalogId, pageNumber), ct));
+            async (pageNumber, ct) =>
+            {
+                await oldPageStorageService.DeleteAsync(BlobKeys.GeneratedCatalogPage(companyId, catalogId, pageNumber), ct);
+                await oldPageStorageService.DeleteAsync(BlobKeys.GeneratedCatalogPageHd(companyId, catalogId, pageNumber), ct);
+            });
     }
 
     private const int MaxConcurrentDeletes = 8;

@@ -8,14 +8,28 @@ namespace Vidriera.Infrastructure.Pdf;
 public class PdfiumRasterizerService : IPdfRasterizerService
 {
     private const int Dpi = 150;
+    private const int HdDpi = 225;
     private const int ImageQuality = 85;
 
-    public async IAsyncEnumerable<(int PageIndex, byte[] ImageBytes, int Width, int Height)> RasterizePagesToImagesAsync(
+    public IAsyncEnumerable<(int PageIndex, byte[] ImageBytes, int Width, int Height)> RasterizePagesToImagesAsync(
         byte[] pdfBytes,
         IReadOnlyList<int> pageIndices,
+        CancellationToken cancellationToken) =>
+        RasterizeAsync(pdfBytes, pageIndices, Dpi, cancellationToken);
+
+    public IAsyncEnumerable<(int PageIndex, byte[] ImageBytes, int Width, int Height)> RasterizePagesToHdImagesAsync(
+        byte[] pdfBytes,
+        IReadOnlyList<int> pageIndices,
+        CancellationToken cancellationToken) =>
+        RasterizeAsync(pdfBytes, pageIndices, HdDpi, cancellationToken);
+
+    private static async IAsyncEnumerable<(int PageIndex, byte[] ImageBytes, int Width, int Height)> RasterizeAsync(
+        byte[] pdfBytes,
+        IReadOnlyList<int> pageIndices,
+        int dpi,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        var options = new RenderOptions(Dpi: Dpi);
+        var options = new RenderOptions(Dpi: dpi);
         var i = 0;
         await foreach (var bitmap in Conversion.ToImagesAsync(pdfBytes, pages: pageIndices, password: null, options: options, cancellationToken: cancellationToken))
         {

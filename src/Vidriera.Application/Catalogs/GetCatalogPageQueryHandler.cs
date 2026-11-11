@@ -32,8 +32,18 @@ public class GetCatalogPageQueryHandler : IRequestHandler<GetCatalogPageQuery, C
             throw new NotFoundException(ErrorMessages.CatalogPageNotFound(request.CatalogId, request.PageNumber));
         }
 
-        var blobKey = BlobKeys.GeneratedCatalogPage(catalog.Company.Id, catalog.Id, request.PageNumber);
-        var (content, contentType) = await _blobStorageService.DownloadWithContentTypeAsync(blobKey, cancellationToken);
-        return new CatalogPageResult(content, contentType);
+        var blobKey = request.Hd
+            ? BlobKeys.GeneratedCatalogPageHd(catalog.Company.Id, catalog.Id, request.PageNumber)
+            : BlobKeys.GeneratedCatalogPage(catalog.Company.Id, catalog.Id, request.PageNumber);
+
+        try
+        {
+            var (content, contentType) = await _blobStorageService.DownloadWithContentTypeAsync(blobKey, cancellationToken);
+            return new CatalogPageResult(content, contentType);
+        }
+        catch (FileNotFoundException) when (request.Hd)
+        {
+            throw new NotFoundException(ErrorMessages.CatalogPageNotFound(request.CatalogId, request.PageNumber));
+        }
     }
 }
