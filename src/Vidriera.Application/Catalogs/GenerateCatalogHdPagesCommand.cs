@@ -13,7 +13,7 @@ public record GenerateCatalogHdPagesCommand(Guid CatalogId) : IRequest;
 
 public class GenerateCatalogHdPagesCommandHandler : IRequestHandler<GenerateCatalogHdPagesCommand>
 {
-    private static readonly TimeSpan PendingJobCheckInterval = TimeSpan.FromSeconds(5);
+    private static readonly TimeSpan CheckInterval = TimeSpan.FromSeconds(5);
 
     private readonly ISession _session;
     private readonly IBlobStorageService _blobStorageService;
@@ -81,47 +81,39 @@ public class GenerateCatalogHdPagesCommandHandler : IRequestHandler<GenerateCata
             pdfBytes = memory.ToArray();
         }
 
-        var generated = 0;
-        var lastPendingJobCheck = Stopwatch.StartNew();
-        var pageIndices = Enumerable.Range(0, catalog.RasterizedPageCount).ToList();
+        var generator = new CatalogHdPagesGenerator(
+            pageStorage,
+            _rasterizerService,
+            _generationGate,
+            ct => IsCurrentCatalogAsync(companyId, catalogId, ct),
+            HasPendingJobAsync,
+            CheckInterval);
 
-        await foreach (var (pageIndex, imageBytes, _, _) in _rasterizerService.RasterizePagesToHdImagesAsync(pdfBytes, pageIndices, cancellationToken))
-        {
-            using (var imageStream = new MemoryStream(imageBytes))
-            {
-                await pageStorage.UploadAsync(
-                    BlobKeys.GeneratedCatalogPageHd(companyId, catalogId, pageIndex + 1), imageStream, "image/webp", cancellationToken);
-            }
-            generated++;
-
-            if (await ShouldYieldAsync(lastPendingJobCheck, cancellationToken))
-            {
-                _logger.LogInformation(
-                    "Versión en alta del catálogo {CatalogId} interrumpida para dejar pasar una generación: {Generated}/{Total} páginas en {ElapsedMs} ms.",
-                    catalogId, generated, catalog.RasterizedPageCount, stopwatch.ElapsedMilliseconds);
-                return;
-            }
-        }
+        var result = await generator.GenerateAsync(companyId, catalogId, pdfBytes, catalog.RasterizedPageCount, cancellationToken);
 
         _logger.LogInformation(
-            "Versión en alta del catálogo {CatalogId} generada: {Total} páginas en {ElapsedMs} ms.",
-            catalogId, generated, stopwatch.ElapsedMilliseconds);
+            "Versión en alta del catálogo {CatalogId}: {Outcome}, {Generated}/{Total} páginas en {ElapsedMs} ms.",
+            catalogId, DescribeOutcome(result.Outcome), result.GeneratedPages, catalog.RasterizedPageCount, stopwatch.ElapsedMilliseconds);
     }
 
-    private async Task<bool> ShouldYieldAsync(Stopwatch lastPendingJobCheck, CancellationToken cancellationToken)
+    private static string DescribeOutcome(HdPagesOutcome outcome) => outcome switch
     {
-        if (_generationGate.HasWaiters)
-        {
-            return true;
-        }
+        HdPagesOutcome.Completed => "generada",
+        HdPagesOutcome.YieldedToGeneration => "interrumpida para dejar pasar una generación",
+        HdPagesOutcome.CatalogReplaced => "cancelada porque el catálogo fue reemplazado (se borró lo generado)",
+        _ => outcome.ToString()
+    };
 
-        if (lastPendingJobCheck.Elapsed < PendingJobCheckInterval)
-        {
-            return false;
-        }
-
-        lastPendingJobCheck.Restart();
-        return await _session.Query<CatalogGenerationJob>()
-            .AnyAsync(j => j.Status == CatalogGenerationJobStatus.Pending, cancellationToken);
+    private async Task<bool> IsCurrentCatalogAsync(Guid companyId, Guid catalogId, CancellationToken cancellationToken)
+    {
+        var currentCatalogId = await _session.Query<Company>()
+            .Where(c => c.Id == companyId)
+            .Select(c => c.CurrentCatalogId)
+            .FirstOrDefaultAsync(cancellationToken);
+        return currentCatalogId == catalogId;
     }
+
+    private Task<bool> HasPendingJobAsync(CancellationToken cancellationToken) =>
+        _session.Query<CatalogGenerationJob>()
+            .AnyAsync(j => j.Status == CatalogGenerationJobStatus.Pending, cancellationToken);
 }
