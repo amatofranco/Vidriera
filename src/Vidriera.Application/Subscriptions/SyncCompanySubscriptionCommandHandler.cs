@@ -36,19 +36,6 @@ public class SyncCompanySubscriptionCommandHandler : IRequestHandler<SyncCompany
         subscription.UpdatedAt = DateTime.UtcNow;
         await _session.UpdateAsync(subscription, cancellationToken);
 
-        // Igual que en el webhook: si hay un cambio de plan en curso, la cancelación de esta
-        // preapproval es intencional (parte del cambio), no hay que cortar el acceso por eso.
-        // Se chequea PendingPlan, no PendingPreapprovalId (ver comentario en el webhook handler).
-        var isCancellationPartOfPlanChange = subscription.PendingPlan is not null;
-
-        if (!isCancellationPartOfPlanChange
-            && (preapproval.Status.Equals("cancelled", StringComparison.OrdinalIgnoreCase)
-                || preapproval.Status.Equals("paused", StringComparison.OrdinalIgnoreCase)))
-        {
-            subscription.Company.IsActive = false;
-            await _session.UpdateAsync(subscription.Company, cancellationToken);
-        }
-
         foreach (var payment in payments)
         {
             await SubscriptionPaymentApplier.ApplyAsync(_session, subscription, payment, cancellationToken);

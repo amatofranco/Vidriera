@@ -42,7 +42,8 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResult>
         var subscription = await _session.Query<CompanySubscription>()
             .FirstOrDefaultAsync(s => s.Company.Id == user.Company.Id, cancellationToken);
 
-        if (subscription is not null && !HasAccess(user.Company, subscription))
+        if (subscription is not null
+            && !SubscriptionAccess.HasAccess(user.Company, subscription, _mercadoPagoOptions.GracePeriodDays, DateTime.UtcNow))
         {
             throw new UnauthorizedException(ErrorMessages.SubscriptionAccessExpired);
         }
@@ -60,26 +61,5 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResult>
             user.Company.ShowCode,
             user.Company.ShowPrice,
             user.Company.ShowOrders);
-    }
-
-    private bool HasAccess(Company company, CompanySubscription subscription)
-    {
-        if (subscription.IsExempt)
-        {
-            return true;
-        }
-
-        if (!company.IsActive)
-        {
-            return false;
-        }
-
-        if (subscription.AccessExpiresAt is null)
-        {
-            return false;
-        }
-
-        var accessDeadline = subscription.AccessExpiresAt.Value.AddDays(_mercadoPagoOptions.GracePeriodDays);
-        return DateTime.UtcNow <= accessDeadline;
     }
 }

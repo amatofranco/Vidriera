@@ -41,10 +41,11 @@ public class CancelCompanySubscriptionCommandHandler : IRequestHandler<CancelCom
 
         subscription.Status = preapproval.Status;
         subscription.UpdatedAt = DateTime.UtcNow;
-        subscription.Company.IsActive = false;
         PreapprovalCanceller.ClearPendingPlan(subscription);
         await _session.UpdateAsync(subscription, cancellationToken);
-        await _session.UpdateAsync(subscription.Company, cancellationToken);
+
+        // No se desactiva la empresa: conserva el acceso hasta el final del período que ya pagó
+        // (AccessExpiresAt), sin días de gracia porque no va a entrar otro pago (SubscriptionAccess).
 
         await transaction.CommitAsync(cancellationToken);
     }

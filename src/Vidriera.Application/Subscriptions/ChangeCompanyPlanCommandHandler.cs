@@ -74,11 +74,10 @@ public class ChangeCompanyPlanCommandHandler : IRequestHandler<ChangeCompanyPlan
         var rate = await _exchangeRateService.GetUsdToArsOficialRateAsync(cancellationToken);
         var amountArs = Math.Round(amountUsd * rate, 2, MidpointRounding.AwayFromZero);
 
-        // PendingPlan se guarda ANTES de tocar MercadoPago — es la señal que usan el webhook y
-        // el /sync para saber que una cancelación es parte de un cambio de plan en curso, no una
-        // cancelación real. Si se guardara después de cancelar, el webhook de esa cancelación
-        // podría llegar y procesarse en el medio, antes de que quede guardado, y cortar el acceso
-        // por error (pasó en producción: race condition real, no hipotética).
+        // PendingPlan se guarda ANTES de tocar MercadoPago — es la señal (ver SubscriptionAccess)
+        // de que la cancelación de la preapproval vieja es parte de un cambio de plan en curso y
+        // no una cancelación real, así que se siguen respetando los días de gracia. Si se guardara
+        // después, el webhook de esa cancelación podría procesarse en el medio.
         using (var markPendingTransaction = _session.BeginTransaction())
         {
             subscription.PendingPlan = request.NewPlan;
