@@ -97,6 +97,9 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         if (existingCatalog is not null && CatalogRegenerationDecision.ShouldReuseCachedCatalog(
                 existingCatalog.ContentFingerprint, fingerprint, existingCatalog.PagesPublic, PagesArePublic))
         {
+            _logger.LogInformation(
+                "Catálogo de la empresa {CompanyId} sin cambios de contenido: se reutiliza el catálogo {CatalogId}.",
+                request.CompanyId, existingCatalog.Id);
             return await RefreshSnapshotOnlyAsync(request, existingCatalog, entries, cancellationToken);
         }
 
@@ -110,6 +113,10 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         var totalStopwatch = Stopwatch.StartNew();
 
         var physicalEntries = GetPhysicalEntries(entries);
+        _logger.LogInformation(
+            "Generando catálogo para la empresa {CompanyId}: {EstimatedPages} páginas estimadas, {Entries} PDFs.",
+            request.CompanyId, estimatedPages, physicalEntries.Count);
+
         var phaseStopwatch = Stopwatch.StartNew();
         var estimatedBytes = await EstimateTotalBytesAsync(physicalEntries, cancellationToken);
         timings.SizeCheckMs = phaseStopwatch.ElapsedMilliseconds;
