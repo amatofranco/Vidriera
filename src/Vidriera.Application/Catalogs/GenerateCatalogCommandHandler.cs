@@ -1,5 +1,7 @@
+using System.Diagnostics;
 using System.Text.Json;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NHibernate;
 using NHibernate.Linq;
@@ -21,6 +23,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
     private readonly IPdfRasterizerService _pdfRasterizerService;
     private readonly CatalogGenerationGate _generationGate;
     private readonly CatalogOptions _options;
+    private readonly ILogger<GenerateCatalogCommandHandler> _logger;
 
     public GenerateCatalogCommandHandler(
         ISession session,
@@ -29,7 +32,8 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         IPdfMergeService pdfMergeService,
         IPdfRasterizerService pdfRasterizerService,
         CatalogGenerationGate generationGate,
-        IOptions<CatalogOptions> options)
+        IOptions<CatalogOptions> options,
+        ILogger<GenerateCatalogCommandHandler> logger)
     {
         _session = session;
         _blobStorageService = blobStorageService;
@@ -38,6 +42,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         _pdfRasterizerService = pdfRasterizerService;
         _generationGate = generationGate;
         _options = options.Value;
+        _logger = logger;
     }
 
     private bool PagesArePublic => !string.IsNullOrEmpty(_options.PagesPublicBaseUrl);
@@ -101,21 +106,30 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             throw new ValidationException(ErrorMessages.CatalogTooLarge(estimatedPages, _options.MaxTotalPages));
         }
 
+        var timings = new CatalogGenerationTimings();
+        var totalStopwatch = Stopwatch.StartNew();
+
         var physicalEntries = GetPhysicalEntries(entries);
+        var phaseStopwatch = Stopwatch.StartNew();
         var estimatedBytes = await EstimateTotalBytesAsync(physicalEntries, cancellationToken);
+        timings.SizeCheckMs = phaseStopwatch.ElapsedMilliseconds;
         if (estimatedBytes > _options.MaxTotalBytes)
         {
             throw new ValidationException(ErrorMessages.CatalogTooHeavy(estimatedBytes, _options.MaxTotalBytes));
         }
 
         var catalogId = Guid.NewGuid();
+        phaseStopwatch.Restart();
         var mergePlan = await BuildMergeAndRasterizeAsync(
-            physicalEntries, request.CompanyId, catalogId, estimatedPages, request.OnProgress, cancellationToken);
+            physicalEntries, request.CompanyId, catalogId, estimatedPages, request.OnProgress, timings, cancellationToken);
+        timings.MergeAndRasterizePhaseMs = phaseStopwatch.ElapsedMilliseconds;
         var mergeResult = mergePlan.MergeResult;
         var indexSnapshot = CatalogMergePlanBuilder.BuildIndexSnapshot(entries, mergeResult.PageCounts, request.ShowPrices);
 
         await ReportFinalizingAsync(request.OnProgress, 1);
+        phaseStopwatch.Restart();
         var generatedBlobKey = await UploadMergedPdfAsync(request.CompanyId, mergeResult.Bytes, cancellationToken);
+        timings.MergedPdfUploadMs = phaseStopwatch.ElapsedMilliseconds;
         var previousCatalogId = company.CurrentCatalogId;
 
         await ReportFinalizingAsync(request.OnProgress, 2);
@@ -129,12 +143,29 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         if (previousCatalogId.HasValue)
         {
             await ReportFinalizingAsync(request.OnProgress, 3);
+            phaseStopwatch.Restart();
             await DeleteCatalogAsync(request.CompanyId, previousCatalogId.Value, CancellationToken.None);
+            timings.DeletePreviousMs = phaseStopwatch.ElapsedMilliseconds;
         }
+
+        timings.TotalMs = totalStopwatch.ElapsedMilliseconds;
+        LogTimings(catalog.Id, mergeResult, physicalEntries.Count, timings);
 
         var url = CatalogShareUrl.Build(_options.PublicBaseUrl, request.CompanyId, company.Slug);
         return new GenerateCatalogResult(catalog.Id, url);
     }
+
+    // Lo que no figura en el desglose de "unir+rasterizar" es tiempo esperando que lleguen las
+    // descargas de los PDFs.
+    private void LogTimings(Guid catalogId, PdfMergeResult mergeResult, int entryCount, CatalogGenerationTimings t) =>
+        _logger.LogInformation(
+            "Catálogo {CatalogId} generado: {Pages} páginas, {Entries} PDFs, {MergedMb:F1} MB. Tiempos (ms): total {TotalMs} | " +
+            "chequeo de tamaños {SizeCheckMs} | unir+rasterizar {PhaseMs} (unir {MergeMs}, rasterizar {RasterMs}, " +
+            "espera de lugar para subir {UploadWaitMs}, progreso {ProgressMs}, pausas de CPU {YieldMs}, " +
+            "subidas pendientes al final {UploadDrainMs}) | subida del PDF {MergedPdfUploadMs} | borrar anterior {DeletePreviousMs}",
+            catalogId, mergeResult.PageCounts.Sum(), entryCount, mergeResult.Bytes.Length / 1024d / 1024d, t.TotalMs,
+            t.SizeCheckMs, t.MergeAndRasterizePhaseMs, t.MergeMs, t.RasterMs,
+            t.UploadSlotWaitMs, t.ProgressMs, t.CpuYieldMs, t.UploadDrainMs, t.MergedPdfUploadMs, t.DeletePreviousMs);
 
     private const int FinalizingSteps = 3;
 
@@ -216,6 +247,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         Guid catalogId,
         int estimatedTotalPages,
         Func<CatalogGenerationProgress, Task>? onProgress,
+        CatalogGenerationTimings timings,
         CancellationToken cancellationToken)
     {
         var includedItems = new List<Item>();
@@ -239,7 +271,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         var pageStorageService = PageStorageService;
         var coordinator = new OrderedMergeRasterizeCoordinator(
             session, _pdfRasterizerService, pageStorageService, companyId, catalogId,
-            physicalEntries.Count, estimatedTotalPages, reportPages, onProgress, _options.IsWorkerNode);
+            physicalEntries.Count, estimatedTotalPages, reportPages, onProgress, _options.IsWorkerNode, timings);
 
         var pendingDownloads = new List<Task>(physicalEntries.Count);
         using var downloadSemaphore = new SemaphoreSlim(MaxConcurrentDownloads);
@@ -257,9 +289,15 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             }
 
             await Task.WhenAll(pendingDownloads);
+            await coordinator.WaitForUploadsAsync();
         }
         catch
         {
+            // Antes de limpiar se espera a que termine todo lo que está en vuelo: las descargas
+            // (si el error cortó el bucle, alguna puede seguir agregando páginas) y después las
+            // subidas (si se borrara antes, una subida que termina después quedaría huérfana en R2).
+            await WhenAllQuietlyAsync(pendingDownloads);
+            await coordinator.WaitForUploadsQuietlyAsync();
             foreach (var pageKey in coordinator.UploadedPageKeys)
             {
                 await pageStorageService.DeleteAsync(pageKey, CancellationToken.None);
@@ -270,6 +308,18 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         await SyncStoredPageCountsAsync(physicalEntries, coordinator.ResolvedPageCounts, cancellationToken);
 
         return new MergePlan(session.Complete(), includedItems, coordinator.FirstPageAspectRatio);
+    }
+
+    private static async Task WhenAllQuietlyAsync(IEnumerable<Task> tasks)
+    {
+        try
+        {
+            await Task.WhenAll(tasks);
+        }
+        catch
+        {
+            // El error que importa ya se está propagando; acá solo se espera a que terminen.
+        }
     }
 
     private static int GetKnownPageCount(MergeEntry entry) => entry switch
@@ -323,6 +373,11 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         private const int PagesPerCpuYield = 10;
         private static readonly TimeSpan CpuYieldDelay = TimeSpan.FromMilliseconds(300);
 
+        // Las imágenes se suben a R2 en paralelo mientras se rasteriza la página siguiente, en vez
+        // de esperar cada subida. El límite acota cuántas imágenes hay en memoria a la vez: si se
+        // llena, el rasterizado espera (ese tiempo queda medido en UploadSlotWaitMs).
+        private const int MaxConcurrentUploads = 6;
+
         private readonly IPdfMergeSession _mergeSession;
         private readonly IPdfRasterizerService _rasterizerService;
         private readonly IBlobStorageService _blobStorageService;
@@ -333,6 +388,9 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
         private readonly bool _reportPages;
         private readonly Func<CatalogGenerationProgress, Task>? _onProgress;
         private readonly bool _skipCpuYield;
+        private readonly CatalogGenerationTimings _timings;
+        private readonly SemaphoreSlim _uploadSlots = new(MaxConcurrentUploads, MaxConcurrentUploads);
+        private readonly List<Task> _uploads = new();
         private readonly List<string> _uploadedPageKeys = new();
         private readonly Dictionary<int, byte[]> _pending = new();
         private readonly Dictionary<int, int> _resolvedPageCounts = new();
@@ -352,7 +410,8 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             int estimatedTotalPages,
             bool reportPages,
             Func<CatalogGenerationProgress, Task>? onProgress,
-            bool skipCpuYield)
+            bool skipCpuYield,
+            CatalogGenerationTimings timings)
         {
             _mergeSession = mergeSession;
             _rasterizerService = rasterizerService;
@@ -364,6 +423,7 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
             _reportPages = reportPages;
             _onProgress = onProgress;
             _skipCpuYield = skipCpuYield;
+            _timings = timings;
         }
 
         public IReadOnlyList<string> UploadedPageKeys => _uploadedPageKeys;
@@ -381,12 +441,20 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
 
                 while (_pending.Remove(_nextIndex, out var nextBytes))
                 {
+                    var mergeStart = Stopwatch.GetTimestamp();
                     var pageCount = _mergeSession.AddDocument(nextBytes);
+                    _timings.MergeMs += ElapsedMs(mergeStart);
                     _resolvedPageCounts[_nextIndex] = pageCount;
 
+                    // El rasterizado ocurre al pedir el siguiente elemento del enumerable, así que
+                    // se mide desde el final de una vuelta hasta el principio de la siguiente.
+                    var rasterStart = Stopwatch.GetTimestamp();
                     await foreach (var (pageIndex, imageBytes, width, height) in _rasterizerService.RasterizePagesToImagesAsync(
                         nextBytes, Enumerable.Range(0, pageCount).ToList(), cancellationToken))
                     {
+                        _timings.RasterMs += ElapsedMs(rasterStart);
+                        ThrowIfAnyUploadFailed();
+
                         var pageNumber = _pageCursor + pageIndex + 1;
                         if (pageNumber == 1)
                         {
@@ -394,19 +462,28 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
                         }
 
                         var blobKey = BlobKeys.GeneratedCatalogPage(_companyId, _catalogId, pageNumber);
-                        using var stream = new MemoryStream(imageBytes);
-                        await _blobStorageService.UploadAsync(blobKey, stream, "image/webp", cancellationToken);
+                        var slotWaitStart = Stopwatch.GetTimestamp();
+                        await _uploadSlots.WaitAsync(cancellationToken);
+                        _timings.UploadSlotWaitMs += ElapsedMs(slotWaitStart);
                         _uploadedPageKeys.Add(blobKey);
+                        _uploads.Add(UploadPageAsync(blobKey, imageBytes, cancellationToken));
+
                         _rasterizedPageCount++;
                         if (_reportPages)
                         {
+                            var progressStart = Stopwatch.GetTimestamp();
                             await ReportAsync("rasterizing", _rasterizedPageCount, _estimatedTotalPages);
+                            _timings.ProgressMs += ElapsedMs(progressStart);
                         }
 
                         if (!_skipCpuYield && _rasterizedPageCount % PagesPerCpuYield == 0)
                         {
+                            var yieldStart = Stopwatch.GetTimestamp();
                             await Task.Delay(CpuYieldDelay, cancellationToken);
+                            _timings.CpuYieldMs += ElapsedMs(yieldStart);
                         }
+
+                        rasterStart = Stopwatch.GetTimestamp();
                     }
 
                     _pageCursor += pageCount;
@@ -423,6 +500,38 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
                 _lock.Release();
             }
         }
+
+        private async Task UploadPageAsync(string blobKey, byte[] imageBytes, CancellationToken cancellationToken)
+        {
+            try
+            {
+                using var stream = new MemoryStream(imageBytes);
+                await _blobStorageService.UploadAsync(blobKey, stream, "image/webp", cancellationToken);
+            }
+            finally
+            {
+                _uploadSlots.Release();
+            }
+        }
+
+        // Una subida que falla corta la generación en la página siguiente, sin esperar al final.
+        private void ThrowIfAnyUploadFailed()
+        {
+            var failed = _uploads.FirstOrDefault(t => t.IsFaulted || t.IsCanceled);
+            failed?.GetAwaiter().GetResult();
+        }
+
+        public async Task WaitForUploadsAsync()
+        {
+            var drainStart = Stopwatch.GetTimestamp();
+            await Task.WhenAll(_uploads);
+            _timings.UploadDrainMs = ElapsedMs(drainStart);
+        }
+
+        public Task WaitForUploadsQuietlyAsync() => WhenAllQuietlyAsync(_uploads);
+
+        private static long ElapsedMs(long startTimestamp) =>
+            (long)Stopwatch.GetElapsedTime(startTimestamp).TotalMilliseconds;
 
         private async Task ReportAsync(string stage, int current, int total)
         {
@@ -537,13 +646,14 @@ public class GenerateCatalogCommandHandler : IRequestHandler<GenerateCatalogComm
 
         await _blobStorageService.DeleteAsync(old.GeneratedPdfBlobKey, cancellationToken);
         var oldPageStorageService = old.PagesPublic ? (IBlobStorageService)_publicCatalogPageStorageService : _blobStorageService;
-        for (var pageNumber = 1; pageNumber <= old.RasterizedPageCount; pageNumber++)
-        {
-            await oldPageStorageService.DeleteAsync(
-                BlobKeys.GeneratedCatalogPage(companyId, catalogId, pageNumber),
-                cancellationToken);
-        }
+        await Parallel.ForEachAsync(
+            Enumerable.Range(1, old.RasterizedPageCount),
+            new ParallelOptions { MaxDegreeOfParallelism = MaxConcurrentDeletes, CancellationToken = cancellationToken },
+            async (pageNumber, ct) => await oldPageStorageService.DeleteAsync(
+                BlobKeys.GeneratedCatalogPage(companyId, catalogId, pageNumber), ct));
     }
+
+    private const int MaxConcurrentDeletes = 8;
 
     private async Task<byte[]> DownloadBytesAsync(string blobKey, CancellationToken cancellationToken)
     {

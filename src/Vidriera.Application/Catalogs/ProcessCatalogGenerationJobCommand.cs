@@ -33,6 +33,7 @@ public class ProcessCatalogGenerationJobCommandHandler : IRequestHandler<Process
         }
 
         using var progressLock = new SemaphoreSlim(1, 1);
+        var progressThrottle = new ProgressSaveThrottle(TimeSpan.FromSeconds(1));
 
         try
         {
@@ -41,7 +42,7 @@ public class ProcessCatalogGenerationJobCommandHandler : IRequestHandler<Process
                     job.Company.Id,
                     job.User.Id,
                     job.ShowPrices,
-                    progress => ReportProgressAsync(progressLock, job, progress)),
+                    progress => ReportProgressAsync(progressLock, progressThrottle, job, progress)),
                 cancellationToken);
 
             job.Status = CatalogGenerationJobStatus.Succeeded;
@@ -91,11 +92,17 @@ public class ProcessCatalogGenerationJobCommandHandler : IRequestHandler<Process
         return job;
     }
 
-    private async Task ReportProgressAsync(SemaphoreSlim progressLock, CatalogGenerationJob job, CatalogGenerationProgress progress)
+    private async Task ReportProgressAsync(
+        SemaphoreSlim progressLock, ProgressSaveThrottle throttle, CatalogGenerationJob job, CatalogGenerationProgress progress)
     {
         await progressLock.WaitAsync();
         try
         {
+            if (!throttle.ShouldSave(progress, DateTime.UtcNow))
+            {
+                return;
+            }
+
             job.Stage = progress.Stage;
             job.ProgressCurrent = progress.Current;
             job.ProgressTotal = progress.Total;
