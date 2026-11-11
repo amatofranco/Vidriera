@@ -124,6 +124,8 @@ body { overflow: auto; }
     transform: scale(2);
 }
 .stage.zoomed #flipbook { filter: none; }
+.stage.zoomed #cover-info,
+.stage.zoomed #cover-info-meta { display: none !important; }
 
 .index-panel {
     position: fixed; left: 78px; top: 50%; transform: translateY(-50%);
