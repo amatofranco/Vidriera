@@ -413,7 +413,7 @@ body { overflow: auto; }
         left: 10px; right: 10px; top: 10px;
         bottom: calc(76px + env(safe-area-inset-bottom));
         transform: none; max-width: none; min-width: 0; max-height: none;
-        border-radius: 16px;
+        border-radius: 16px; z-index: 22;
     }
 
     .index-chevron, .index-chevron-spacer { width: 34px; height: 34px; }
