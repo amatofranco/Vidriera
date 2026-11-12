@@ -1,6 +1,7 @@
 import { computeFitSize, positionSideNav, positionIndexPanel, MOBILE_BREAKPOINT } from "./layout.js";
 import { renderIndexPanel } from "./index-panel.js";
 import { buildPageUrl } from "./page-url.js";
+import { createMobileCover } from "./mobile-cover.js";
 
 const SWIPE_THRESHOLD_PX = 40;
 const SLIDE_DURATION_MS = 260;
@@ -23,6 +24,7 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
 
     let currentPage = readInitialPage();
     let isAnimating = false;
+    let cover = null;
 
     const viewport = document.createElement("div");
     viewport.id = "static-page-viewport";
@@ -65,7 +67,9 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
         if (dom.coverInfoMetaEl) dom.coverInfoMetaEl.style.display = currentPage === 1 ? "block" : "none";
         if (dom.orderCart) {
             const rect = viewport.getBoundingClientRect();
-            dom.orderCart.setCurrentPages([{ pageNumber: currentPage, centerX: rect.left + rect.width / 2 }]);
+            dom.orderCart.setCurrentPages(cover?.isShown()
+                ? []
+                : [{ pageNumber: currentPage, centerX: rect.left + rect.width / 2 }]);
         }
 
         try {
@@ -115,6 +119,10 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
     }
     rebuildRef.current = fitStatic;
 
+    if (currentPage === 1 && window.innerWidth <= MOBILE_BREAKPOINT) {
+        cover = createMobileCover({ dom, viewport, onChange: updateInfo });
+    }
+
     activeImg.src = pageUrl(currentPage);
     preloadNeighbors(currentPage);
     fitStatic();
@@ -126,21 +134,33 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
     let dragStartX = null;
     let dragDx = 0;
     let dragDirection = 0;
+    let draggingToCover = false;
 
     viewport.addEventListener("touchstart", (e) => {
         if (isAnimating) return;
         dragStartX = e.touches[0].clientX;
         dragDx = 0;
         dragDirection = 0;
+        draggingToCover = false;
     }, { passive: true });
 
     viewport.addEventListener("touchmove", (e) => {
         if (dragStartX === null) return;
         dragDx = e.touches[0].clientX - dragStartX;
 
+        if (draggingToCover) {
+            cover.dragBack(dragDx);
+            return;
+        }
+
         if (dragDirection === 0) {
             if (Math.abs(dragDx) < 5) return;
             const wantDirection = dragDx < 0 ? 1 : -1;
+            if (wantDirection === -1 && currentPage === 1 && cover) {
+                draggingToCover = true;
+                cover.dragBack(dragDx);
+                return;
+            }
             const neighbor = currentPage + wantDirection;
             if (neighbor < 1 || neighbor > pageCount) return;
 
@@ -161,6 +181,12 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
         const direction = dragDirection;
         const dx = dragDx;
         dragStartX = null;
+
+        if (draggingToCover) {
+            draggingToCover = false;
+            cover.releaseBack(dx);
+            return;
+        }
 
         if (!direction) return;
 
@@ -234,6 +260,7 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
             const dpr = window.devicePixelRatio || 1;
             const isZoomChange = Math.abs(dpr - lastDpr) > 0.01;
             lastDpr = dpr;
+            if (cover?.isShown() && window.innerWidth > MOBILE_BREAKPOINT) cover.hideInstantly();
             if (!isZoomChange) {
                 fitStatic();
                 updateInfo();
@@ -255,7 +282,12 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
 
     if (dom.indexBtn && pageCount <= 1) dom.indexBtn.style.display = "none";
 
-    renderIndexPanel({ dom, indexEntries: sectionsData, onJumpToPage: goToPage, rebuildRef });
+    function jumpToPage(n) {
+        if (cover?.isShown()) cover.hideInstantly();
+        goToPage(n);
+    }
+
+    renderIndexPanel({ dom, indexEntries: sectionsData, onJumpToPage: jumpToPage, rebuildRef });
     if (dom.indexPanel) dom.indexPanel.classList.add("visible");
     positionIndexPanel(dom);
 }
