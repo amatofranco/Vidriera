@@ -80,18 +80,28 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
         history.replaceState(null, "", url);
     }
 
-    function goToPage(n) {
+    function loadInto(img, url) {
+        if (img.getAttribute("src") !== url) {
+            img.removeAttribute("src");
+            img.src = url;
+        }
+        return img.decode().catch(() => {});
+    }
+
+    async function goToPage(n) {
         const target = Math.min(Math.max(n, 1), pageCount);
         if (target === currentPage || isAnimating) return;
         const direction = target > currentPage ? 1 : -1;
         currentPage = target;
-        preloadNeighbors(currentPage);
         isAnimating = true;
+
+        inactiveImg.style.display = "none";
+        await loadInto(inactiveImg, pageUrl(currentPage));
+        preloadNeighbors(currentPage);
 
         inactiveImg.style.transition = "none";
         inactiveImg.style.transform = `translateX(${direction * 100}%)`;
         inactiveImg.style.display = "block";
-        inactiveImg.src = pageUrl(currentPage);
 
         void inactiveImg.offsetWidth;
 
@@ -168,8 +178,8 @@ export function renderSinglePageViewer({ catalogId, pageCount, pageAspect, dom, 
             activeImg.style.transition = "none";
             inactiveImg.style.transition = "none";
             inactiveImg.style.transform = `translateX(${dragDirection * 100}%)`;
+            loadInto(inactiveImg, pageUrl(neighbor));
             inactiveImg.style.display = "block";
-            inactiveImg.src = pageUrl(neighbor);
         }
 
         activeImg.style.transform = `translateX(${dragDx}px)`;
